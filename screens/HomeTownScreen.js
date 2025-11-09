@@ -78,7 +78,7 @@ const HomeTownScreen = () => {
           autoFocus={true}
           value={hometown}
           onChangeText={text => setHomeTown(text)}
-          placeholder="HomeTown"
+          placeholder="Enter your hometown"
           style={{
             width: 340,
             marginTop: 25,

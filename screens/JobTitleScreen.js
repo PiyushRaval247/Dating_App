@@ -81,7 +81,7 @@ const JobTitleScreen = () => {
           autoFocus={true}
           value={jobTitle}
           onChangeText={text => setJobTitle(text)}
-          placeholder="HomeTown"
+          placeholder="Enter your job title"
           style={{
             width: 340,
             marginTop: 25,

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState, useContext} from 'react';
 import {View, Text, Pressable, StyleSheet} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices} from 'react-native-webrtc';
+import {RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices, RTCView} from 'react-native-webrtc';
 import {useSocketContext} from '../SocketContext';
 import {AuthContext} from '../AuthContext';
 
@@ -19,6 +19,9 @@ const VideoCallScreen = () => {
   const pcRef = useRef(null);
   const localStreamRef = useRef(null);
   const remoteStreamRef = useRef(null);
+
+  const [localStream, setLocalStream] = useState(null);
+  const [remoteStream, setRemoteStream] = useState(null);
 
   const [hasRemote, setHasRemote] = useState(false);
 
@@ -54,14 +57,21 @@ const VideoCallScreen = () => {
 
     pc.ontrack = event => {
       // Single remote stream expected
-      remoteStreamRef.current = event.streams[0];
-      setHasRemote(true);
+      const inbound = event.streams?.[0];
+      remoteStreamRef.current = inbound;
+      setRemoteStream(inbound);
+      setHasRemote(!!inbound);
     };
 
     const startLocal = async () => {
-      const stream = await mediaDevices.getUserMedia({audio: true, video: true});
-      localStreamRef.current = stream;
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      try {
+        const stream = await mediaDevices.getUserMedia({audio: true, video: true});
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+        stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      } catch (e) {
+        console.log('getUserMedia error', e?.message || e);
+      }
     };
 
     const dialIfCaller = async () => {
@@ -130,10 +140,25 @@ const VideoCallScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.videoArea}>
+        {remoteStream ? (
+          <RTCView
+            streamURL={remoteStream?.toURL?.()}
+            style={styles.remoteVideo}
+            objectFit="cover"
+            mirror={false}
+          />
+        ) : (
+          <Text style={styles.subLabel}>{hasRemote ? 'Connected' : 'Ringing / Connecting...'}</Text>
+        )}
+        {localStream ? (
+          <RTCView
+            streamURL={localStream?.toURL?.()}
+            style={styles.localPreview}
+            objectFit="cover"
+            mirror={true}
+          />
+        ) : null}
         <Text style={styles.label}>Video call with {displayName}</Text>
-        <Text style={styles.subLabel}>
-          {hasRemote ? 'Connected' : 'Ringing / Connecting...'}
-        </Text>
       </View>
       <View style={styles.controls}>
         <Pressable onPress={cleanup} style={styles.endBtn}>
@@ -147,7 +172,9 @@ const VideoCallScreen = () => {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: 'black'},
   videoArea: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  label: {color: 'white', fontSize: 16, fontWeight: '600'},
+  remoteVideo: {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
+  localPreview: {position: 'absolute', right: 12, bottom: 80, width: 120, height: 160, borderRadius: 8, overflow: 'hidden'},
+  label: {color: 'white', fontSize: 16, fontWeight: '600', position: 'absolute', top: 12},
   subLabel: {color: '#ddd', marginTop: 8},
   controls: {padding: 16, alignItems: 'center'},
   endBtn: {backgroundColor: '#e53935', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8},

@@ -387,10 +387,10 @@ const PhotoScreen = () => {
   const handleNext = () => {
     // Count only non-empty, non-whitespace strings as valid photos
     const filledImages = imageUrls.filter(url => typeof url === 'string' && url.trim() !== '').length;
-    if (filledImages < 4) {
+    if (filledImages < 1) {
       Alert.alert(
-        'Not Enough Photos',
-        'Please add at least 4 photos to continue.',
+        'Add a Photo',
+        'Please add at least 1 photo to continue.',
         [{text: 'OK'}]
       );
       return;
@@ -564,7 +564,7 @@ const PhotoScreen = () => {
                   fontWeight: '500',
                   fontSize: 15,
                 }}>
-                Add four to six photos
+                Add one or more photos
               </Text>
             </View>
 

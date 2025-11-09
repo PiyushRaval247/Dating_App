@@ -13,6 +13,7 @@ import {
 import React, {useState, useEffect} from 'react';
 import Fontisto from '@react-native-vector-icons/fontisto';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import NextButton from '../components/NextButton';
 import {useNavigation} from '@react-navigation/native';
 import {
   getRegistrationProgress,
@@ -109,16 +110,7 @@ const EmailScreen = () => {
           Note: You will be asked to verify your email
         </Text>
 
-        <TouchableOpacity
-          onPress={handleNext}
-          activeOpacity={0.8}
-          style={{marginTop: 30, marginLeft: 'auto'}}>
-          <Ionicons
-            name="chevron-forward-circle-outline"
-            size={45}
-            color="#581845"
-          />
-        </TouchableOpacity>
+        <NextButton onPress={handleNext} />
       </View>
       </ScrollView>
       </KeyboardAvoidingView>

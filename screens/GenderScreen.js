@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import React, {useState,useEffect} from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import NextButton from '../components/NextButton';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -140,16 +141,7 @@ const GenderScreen = () => {
 
         </View>
 
-        <TouchableOpacity
-            onPress={handleNext}
-          activeOpacity={0.8}
-          style={{marginTop: 30, marginLeft: 'auto'}}>
-          <Ionicons
-            name="chevron-forward-circle-outline"
-            size={45}
-            color="#581845"
-          />
-        </TouchableOpacity>
+        <NextButton onPress={handleNext} />
       </View>
     </SafeAreaView>
   );

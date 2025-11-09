@@ -97,7 +97,7 @@ const WorkPlace = () => {
         autoFocus={true}
         value={workPlace}
         onChangeText={text => setWorkPlace(text)}
-        placeholder="HomeTown"
+        placeholder="Enter your workplace"
         style={{
           width: 340,
           marginTop: 25,

@@ -177,7 +177,7 @@ const LoginScreen = () => {
                       secureTextEntry={!showPassword}
                       value={password}
                       onChangeText={text => setPassword(text)}
-                      placeholder="Required"
+                      placeholder="Enter your password"
                       placeholderTextColor={'gray'}
                       autoCapitalize="none"
                       autoCorrect={false}

@@ -21,6 +21,7 @@ import { BASE_URL } from '../urls/url';
 
 const PasswordScreen = () => {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const route = useRoute();
   const navigation = useNavigation();
   const email = route?.params?.email;
@@ -90,13 +91,7 @@ const PasswordScreen = () => {
           Please choose a password
         </Text>
 
-        <TextInput
-          value={password}
-          onChangeText={text => setPassword(text)}
-          autoFocus={true}
-          placeholder="Enter your Password"
-          secureTextEntry={true}
-          placeholderTextColor={'#BEBEBE'}
+        <View
           style={{
             width: 340,
             marginVertical: 10,
@@ -104,11 +99,41 @@ const PasswordScreen = () => {
             borderBottomColor: 'black',
             borderBottomWidth: 1,
             paddingBottom: 10,
-            fontFamily: 'GeezaPro-Bold',
-            fontSize: password ? 22 : 22,
-            color: '#000',
+            position: 'relative',
           }}
-        />
+        >
+          <TextInput
+            value={password}
+            onChangeText={text => setPassword(text)}
+            autoFocus={true}
+            placeholder="Enter your Password"
+            secureTextEntry={!showPassword}
+            placeholderTextColor={'#BEBEBE'}
+            style={{
+              fontFamily: 'GeezaPro-Bold',
+              fontSize: 22,
+              color: '#000',
+              paddingRight: 40,
+            }}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword(prev => !prev)}
+            style={{
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              height: '100%',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: 6,
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+            accessibilityHint="Toggles password visibility"
+          >
+            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="#581845" />
+          </TouchableOpacity>
+        </View>
 
         <Text style={{color: 'gray', marginTop: 7, fontSize: 15}}>
           Note: You details will be safe with us

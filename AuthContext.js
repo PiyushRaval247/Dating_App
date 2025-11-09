@@ -56,6 +56,21 @@ const AuthProvider = ({children}) => {
       setAuthUser(null);
     }
   }, [token]);
+
+  // Also decode token when it changes so userId stays up to date
+  useEffect(() => {
+    try {
+      if (token) {
+        const decodedToken = jwtDecode(token);
+        const uid = decodedToken?.userId;
+        if (uid && uid !== userId) {
+          setUserId(uid);
+        }
+      }
+    } catch (e) {
+      // ignore decode errors
+    }
+  }, [token]);
   return (
     <AuthContext.Provider
       value={{
