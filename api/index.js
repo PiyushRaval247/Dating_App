@@ -790,7 +790,7 @@ app.post('/login', async (req, res) => {
 
   const authParams = {
     AuthFlow: 'USER_PASSWORD_AUTH',
-    ClientId: 's3soknbg1t0tck6rb0361jai6',
+    ClientId: COGNITO_CLIENT_ID,
     AuthParameters: {
       USERNAME: email,
       PASSWORD: password,
