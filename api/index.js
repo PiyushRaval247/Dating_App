@@ -1,0 +1,1924 @@
+import express from 'express';
+import axios from 'axios';
+import bodyParser from 'body-parser';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import cors from 'cors';
+import dayjs from 'dayjs';
+import dotenv from 'dotenv';
+import {
+  DynamoDBClient,
+  PutItemCommand,
+  QueryCommand,
+  UpdateItemCommand,
+  CreateTableCommand,
+  DescribeTableCommand,
+} from '@aws-sdk/client-dynamodb';
+import crypto from 'crypto';
+import {
+  CognitoIdentityProviderClient,
+  ConfirmSignUpCommand,
+  InitiateAuthCommand,
+  ResendConfirmationCodeCommand,
+  SignUpCommand,
+} from '@aws-sdk/client-cognito-identity-provider';
+import {docClient, PutCommand} from './db.js';
+import {
+  BatchGetCommand,
+  GetCommand,
+  UpdateCommand,
+  ScanCommand,
+} from '@aws-sdk/lib-dynamodb';
+import {profile} from 'console';
+import http from 'http';
+import {Server, Socket} from 'socket.io';
+import fs from 'fs';
+import path from 'path';
+
+const app = express();
+app.use(cors());
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+app.use(express.json());
+
+// Use hosting provider's PORT or fallback to 4000
+const PORT = process.env.PORT || 4000;
+
+// Read AWS credentials from env only; no hardcoded fallbacks
+const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || '';
+const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || '';
+const AWS_REGION = process.env.AWS_REGION || 'eu-north-1';
+const dynamoDbClient = new DynamoDBClient({
+  region: AWS_REGION,
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+// Auto-create table for activity streaks if not present
+const ACTIVITY_TABLE = 'user_activity';
+async function ensureActivityTable() {
+  try {
+    await dynamoDbClient.send(new DescribeTableCommand({ TableName: ACTIVITY_TABLE }));
+    console.log(`[DynamoDB] Table ${ACTIVITY_TABLE} already exists`);
+  } catch (err) {
+    if (err?.name === 'ResourceNotFoundException') {
+      console.log(`[DynamoDB] Creating table ${ACTIVITY_TABLE}...`);
+      const params = {
+        TableName: ACTIVITY_TABLE,
+        AttributeDefinitions: [
+          { AttributeName: 'userId', AttributeType: 'S' },
+          { AttributeName: 'activityDate', AttributeType: 'S' },
+        ],
+        KeySchema: [
+          { AttributeName: 'userId', KeyType: 'HASH' },
+          { AttributeName: 'activityDate', KeyType: 'RANGE' },
+        ],
+        BillingMode: 'PAY_PER_REQUEST',
+      };
+      await dynamoDbClient.send(new CreateTableCommand(params));
+      console.log(`[DynamoDB] Table ${ACTIVITY_TABLE} created`);
+    } else {
+      console.log('[DynamoDB] Describe/Create table error', err);
+    }
+  }
+}
+
+// Kick off ensure-table on server start
+ensureActivityTable();
+
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: AWS_REGION,
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  },
+});
+
+const server = http.createServer(app);
+
+app.post('/register', async (req, res) => {
+  try {
+    const userData = req.body;
+
+    console.log('Data', userData);
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+    const userId = crypto.randomUUID();
+
+    const newUser = {
+      userId,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: hashedPassword,
+      gender: userData.gender,
+      dateOfBirth: userData.dateOfBirth,
+      type: userData.type,
+      location: userData.location,
+      hometown: userData.hometown,
+      workPlace: userData.workPlace,
+      jobTitle: userData.jobTitle,
+      datingPreferences: userData.datingPreferences || [],
+      lookingFor: userData.lookingFor,
+      imageUrls: userData.imageUrls,
+      prompts: userData.prompts,
+      likes: 2,
+      roses: 5,
+      likedProfiles: [],
+      receivedLikes: [],
+      matches: [],
+      blockedUsers: [],
+      streakCount: 0,
+      lastActiveAt: new Date().toISOString(),
+    };
+
+    const params = {
+      TableName: 'usercollection',
+      Item: newUser,
+    };
+
+    await docClient.send(new PutCommand(params));
+
+    const JWT_SECRET = process.env.JWT_SECRET || 'insecure_dev_secret';
+    const token = jwt.sign({userId: newUser.userId}, JWT_SECRET);
+
+    res.status(200).json({token});
+  } catch (error) {
+    console.log('Error creating user', error);
+    res.status(500).json({error: 'Internal server error'});
+  }
+});
+
+app.post('/sendOtp', async (req, res) => {
+  const {email, password} = req.body;
+
+  console.log('email', email);
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({error: 'Invalid email format.'});
+  }
+
+  const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
+  const signUpParams = {
+    ClientId: COGNITO_CLIENT_ID,
+    Username: email,
+    Password: password,
+    UserAttributes: [{Name: 'email', Value: email}],
+  };
+
+  try {
+    const command = new SignUpCommand(signUpParams);
+    await cognitoClient.send(command);
+
+    res.status(200).json({message: 'OTP sent to email!'});
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    res.status(400).json({error: 'Failed to send OTP. Please try again.'});
+  }
+});
+
+app.post('/resendOtp', async (req, res) => {
+  const {email} = req.body;
+
+  const resendParams = {
+    ClientId: COGNITO_CLIENT_ID,
+    Username: email,
+  };
+
+  try {
+    const command = new ResendConfirmationCodeCommand(resendParams);
+    await cognitoClient.send(command);
+
+    res.status(200).json({message: 'New otp sent to mail'});
+  } catch (error) {
+    console.log('Error', error);
+  }
+});
+
+app.post('/confirmSignup', async (req, res) => {
+  const {email, otpCode} = req.body;
+
+  const confirmParams = {
+    ClientId: COGNITO_CLIENT_ID,
+    Username: email,
+    ConfirmationCode: otpCode,
+  };
+
+  try {
+    const command = new ConfirmSignUpCommand(confirmParams);
+    await cognitoClient.send(command);
+
+    res.status(200).json({message: 'Email verified successfully!'});
+  } catch (error) {
+    console.log('Error confirming Sign Up', error);
+  }
+});
+
+app.get('/matches', async (req, res) => {
+  const {userId} = req.query;
+
+  // console.log('user', userId);
+
+  try {
+    if (!userId) {
+      return res.status(400).json({message: 'UserId is required'});
+    }
+
+    const userParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+    };
+
+    const userResult = await docClient.send(new GetCommand(userParams));
+
+    if (!userResult.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    const user = {
+      userId: userResult.Item.userId,
+      gender: userResult.Item.gender,
+      datingPreferences:
+        userResult.Item.datingPreferences?.map(pref => pref) || [],
+      matches: userResult.Item.matches?.map(match => match) || [],
+      likedProfiles:
+        userResult?.Item.likedProfiles?.map(lp => lp.likedUserId) || [],
+    };
+
+    const genderFilter = user?.datingPreferences || [];
+    const blockedResp = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId: user.userId },
+      ProjectionExpression: 'blockedUsers'
+    }));
+    const blockedUsers = blockedResp?.Item?.blockedUsers || [];
+    const excludeIds = [
+      ...user.matches,
+      ...user.likedProfiles,
+      user.userId,
+      ...blockedUsers,
+    ];
+
+    const scanParams = {
+      TableName: 'usercollection',
+      FilterExpression:
+        'userId <> :currentUserId AND (contains(:genderPref,gender)) AND NOT contains(:excludedIds,userId)',
+      ExpressionAttributeValues: {
+        ':currentUserId': user.userId,
+        ':genderPref': genderFilter.length > 0 ? genderFilter : ['None'],
+        ':excludedIds': excludeIds,
+      },
+    };
+
+    const scanResult = await docClient.send(new ScanCommand(scanParams));
+
+    const matches = scanResult.Items.map(item => ({
+      userId: item?.userId,
+      email: item?.email,
+      firstName: item?.firstName,
+      gender: item?.gender,
+      location: item?.location,
+      lookingFor: item?.lookingFor,
+      dateOfBirth: item.dateOfBirth,
+      hometown: item.hometown,
+      type: item.type,
+      jobTitle: item.jobTitle,
+      workPlace: item.workPlace,
+      imageUrls: item.imageUrls || [],
+      prompts: item?.prompts || [],
+    }));
+
+    res.status(200).json({matches});
+  } catch (error) {
+    console.log('Error fetching matches', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+// Utility function to clean DynamoDB data format
+const cleanUserData = (userData) => {
+  if (!userData) return userData;
+  
+  const cleaned = { ...userData };
+  
+  // Clean common fields that might be in DynamoDB format
+  if (cleaned.roses && typeof cleaned.roses === 'object' && cleaned.roses.N !== undefined) {
+    cleaned.roses = Number(cleaned.roses.N);
+  }
+  if (cleaned.likes && typeof cleaned.likes === 'object' && cleaned.likes.N !== undefined) {
+    cleaned.likes = Number(cleaned.likes.N);
+  }
+  if (cleaned.likesLastUpdated && typeof cleaned.likesLastUpdated === 'object' && cleaned.likesLastUpdated.S !== undefined) {
+    cleaned.likesLastUpdated = cleaned.likesLastUpdated.S;
+  }
+  
+  return cleaned;
+};
+
+app.get('/user-info', async (req, res) => {
+  const {userId} = req.query;
+
+  console.log('User ID', userId);
+
+  if (!userId) {
+    return res.status(400).json({message: 'User id is required'});
+  }
+
+  try {
+    const params = {
+      TableName: 'usercollection',
+      Key: {userId},
+    };
+    const command = new GetCommand(params);
+    const result = await docClient.send(command);
+
+    if (!result.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    console.log('res', result);
+
+  // Clean the user data to handle any legacy DynamoDB format
+  const cleanedUser = cleanUserData(result.Item);
+
+  // Ensure a minimum of 5 roses for existing users and persist change if needed
+  if (cleanedUser.roses === undefined || cleanedUser.roses === null || cleanedUser.roses < 5) {
+    try {
+      await docClient.send(new UpdateCommand({
+        TableName: 'usercollection',
+        Key: {userId},
+        UpdateExpression: 'SET roses = :minRoses',
+        ExpressionAttributeValues: {
+          ':minRoses': 5,
+        },
+      }));
+      cleanedUser.roses = 5;
+    } catch (updateErr) {
+      console.log('Error updating minimum roses', updateErr);
+      // Even if persist fails, still return minimum in response
+      cleanedUser.roses = 5;
+    }
+  }
+
+  // Ensure default streak fields
+  if (cleanedUser.streakCount === undefined || cleanedUser.streakCount === null) {
+    try {
+      await docClient.send(new UpdateCommand({
+        TableName: 'usercollection',
+        Key: {userId},
+        UpdateExpression: 'SET streakCount = if_not_exists(streakCount, :default), lastActiveAt = if_not_exists(lastActiveAt, :now)',
+        ExpressionAttributeValues: {
+          ':default': 0,
+          ':now': new Date().toISOString(),
+        },
+      }));
+      cleanedUser.streakCount = 0;
+      cleanedUser.lastActiveAt = new Date().toISOString();
+    } catch (streakErr) {
+      console.log('Error initializing streak fields', streakErr);
+      cleanedUser.streakCount = 0;
+      cleanedUser.lastActiveAt = new Date().toISOString();
+    }
+  }
+
+  res.status(200).json({user: cleanedUser});
+  } catch (error) {
+    console.log('Error fetching user details', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+// Authentication middleware must be declared before any route uses it
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    return res.status(404).json({message: 'Token is required'});
+  }
+
+  const token = authHeader.split(' ')[1];
+  console.log('recieived token', token);
+
+  const secretKey =
+    '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0'; // Use a better key management
+
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) {
+      return res.status(403).json({message: 'Invalid or expired token'});
+    }
+
+    req.user = user;
+    next();
+  });
+};
+
+// Update profile fields (partial updates)
+app.patch('/user-info', authenticateToken, async (req, res) => {
+  try {
+    const { userId, ...body } = req.body || {};
+    if (!userId) {
+      return res.status(400).json({ message: 'User id is required' });
+    }
+    if (req.user?.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    const allowedKeys = new Set([
+      'firstName',
+      'jobTitle',
+      'workPlace',
+      'location',
+      'hometown',
+      'lookingFor',
+      'imageUrls',
+      'prompts',
+    ]);
+
+    const updateKeys = Object.keys(body).filter((k) => allowedKeys.has(k) && body[k] !== undefined);
+    if (!updateKeys.length) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    const exprNames = {};
+    const exprValues = {};
+    const setParts = [];
+    for (const key of updateKeys) {
+      const nameKey = `#${key}`;
+      const valueKey = `:${key}`;
+      exprNames[nameKey] = key;
+      exprValues[valueKey] = body[key];
+      setParts.push(`${nameKey} = ${valueKey}`);
+    }
+
+    const updateExpr = `SET ${setParts.join(', ')}`;
+
+    const result = await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: updateExpr,
+      ExpressionAttributeNames: exprNames,
+      ExpressionAttributeValues: exprValues,
+      ReturnValues: 'ALL_NEW',
+    }));
+
+    const updated = result?.Attributes || {};
+    // Clean updated user to avoid legacy format issues
+    const cleanedUser = cleanUserData(updated);
+    return res.status(200).json({ user: cleanedUser });
+  } catch (error) {
+    console.log('Error updating user info', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Record daily check-in and update streak
+app.post('/activity/check-in', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+    if (req.user.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    const today = dayjs().format('YYYY-MM-DD');
+    const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+
+    // Find latest activity for this user
+    const latestQuery = new QueryCommand({
+      TableName: ACTIVITY_TABLE,
+      KeyConditionExpression: 'userId = :uid',
+      ExpressionAttributeValues: { ':uid': { S: userId } },
+      ScanIndexForward: false,
+      Limit: 1,
+    });
+    const latestResult = await dynamoDbClient.send(latestQuery);
+    const latestItem = latestResult.Items?.[0] || null;
+    const latestDate = latestItem?.activityDate?.S || null;
+
+    // Fetch current streak from user
+    const userResult = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'streakCount',
+    }));
+    const currentStreak = Number(userResult?.Item?.streakCount || 0);
+
+    // Put today's activity (idempotent)
+    try {
+      await dynamoDbClient.send(new PutItemCommand({
+        TableName: ACTIVITY_TABLE,
+        Item: {
+          userId: { S: userId },
+          activityDate: { S: today },
+        },
+        ConditionExpression: 'attribute_not_exists(activityDate)',
+      }));
+    } catch (putErr) {
+      // If already exists, just return current streak
+      if (putErr?.name === 'ConditionalCheckFailedException') {
+        return res.status(200).json({ message: 'Already checked in today', streakCount: currentStreak });
+      }
+      throw putErr;
+    }
+
+    let newStreak = 1;
+    if (latestDate === yesterday) {
+      newStreak = currentStreak + 1;
+    }
+
+    // Update user streak fields
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET streakCount = :c, lastActiveAt = :now',
+      ExpressionAttributeValues: {
+        ':c': newStreak,
+        ':now': new Date().toISOString(),
+      },
+    }));
+
+    return res.status(200).json({ message: 'Check-in recorded', streakCount: newStreak, date: today });
+  } catch (error) {
+    console.log('Error in check-in', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+app.post('/like-profile', authenticateToken, async (req, res) => {
+  const {userId, likedUserId, image, comment = null, type, prompt} = req.body;
+
+  if (req.user.userId !== userId) {
+    return res.status(403).json({message: 'unauthorized action'});
+  }
+  if (!userId || !likedUserId) {
+    return res.status(404).json({message: 'Missing required parametered'});
+  }
+
+  try {
+    const userParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+    };
+
+    const userData = await docClient.send(new GetCommand(userParams));
+
+    if (!userData.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    const user = userData.Item;
+    const likesRemaining = user.likes || 0;
+    console.log('likes remaining', likesRemaining);
+    const likesLastUpdated = user?.likesLastUpdated ? new Date(user.likesLastUpdated) : new Date('1970-01-01');
+    console.log('Likes last updated', likesLastUpdated);
+    const now = new Date();
+    const maxLikes = 2;
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    const timeSinceLastUpdate = now - likesLastUpdated;
+    
+    console.log('Time since last update (hours):', timeSinceLastUpdate / (1000 * 60 * 60));
+
+    if (timeSinceLastUpdate >= oneDay || !user.likesLastUpdated) {
+      console.log('Resetting likes to max:', maxLikes);
+      const resetParams = {
+        TableName: 'usercollection',
+        Key: {userId},
+        UpdateExpression: 'SET likes = :maxLikes, likesLastUpdated = :now',
+        ExpressionAttributeValues: {
+          ':maxLikes': maxLikes,
+          ':now': now.toISOString(),
+        },
+      };
+      await docClient.send(new UpdateCommand(resetParams));
+
+      user.likes = maxLikes;
+    } else if (likesRemaining <= 0) {
+      console.log('Daily like limit reached for user:', userId);
+      return res.status(403).json({
+        message: 'Daily like limit reached, please subscribe or try again tomorrow',
+        remainingTime: Math.ceil((oneDay - timeSinceLastUpdate) / (1000 * 60 * 60)) + ' hours'
+      });
+    }
+
+    const newLikes = likesRemaining - 1;
+
+    const decrementLikesParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+      UpdateExpression: 'SET likes = :newLikes',
+      ExpressionAttributeValues: {
+        ':newLikes': newLikes,
+      },
+    };
+
+    await docClient.send(new UpdateCommand(decrementLikesParams));
+
+    let newLike = {userId, type};
+
+    if (type == 'image') {
+      if (!image) {
+        return res.status(404).json({message: 'Image url is required'});
+      }
+      newLike.image = image;
+    } else if (type == 'prompt') {
+      if (!prompt || !prompt.question || !prompt.answer) {
+        return res.status(400).json({message: 'Prompts are required'});
+      }
+      newLike.prompt = prompt;
+    }
+
+    if (comment) {
+      newLike.comment = comment;
+    }
+
+    //step 1
+    const updatedReceivedLikesParams = {
+      TableName: 'usercollection',
+      Key: {userId: likedUserId},
+      UpdateExpression:
+        'SET receivedLikes = list_append(if_not_exists(receivedLikes, :empty_list), :newLike)',
+      ExpressionAttributeValues: {
+        ':newLike': [newLike],
+        ':empty_list': [],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    await docClient.send(new UpdateCommand(updatedReceivedLikesParams));
+
+    //step 2
+
+    const updatedLikedParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+      UpdateExpression:
+        'SET likedProfiles = list_append(if_not_exists(likedProfiles, :empty_list), :likedUserId)',
+      ExpressionAttributeValues: {
+        ':likedUserId': [{likedUserId}],
+        ':empty_list': [],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    await docClient.send(new UpdateCommand(updatedLikedParams));
+
+    // Check if this creates a mutual like (automatic matching)
+    const likedUserResponse = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: {userId: likedUserId},
+      ProjectionExpression: 'likedProfiles'
+    }));
+
+    const likedUserProfiles = likedUserResponse?.Item?.likedProfiles || [];
+    const hasMutualLike = likedUserProfiles.some(profile => profile.likedUserId === userId);
+
+    if (hasMutualLike) {
+      // Auto-create match when both users have liked each other
+      console.log('Creating automatic match between users:', userId, 'and', likedUserId);
+      
+      // Add each user to the other's matches array
+      const addMatchForUser1 = {
+        TableName: 'usercollection',
+        Key: {userId},
+        UpdateExpression: 'SET matches = list_append(if_not_exists(matches, :empty_list), :matchedUserList)',
+        ConditionExpression: 'attribute_not_exists(matches) OR NOT contains(matches, :matchedUserVal)',
+        ExpressionAttributeValues: {
+          ':matchedUserList': [likedUserId],
+          ':matchedUserVal': likedUserId,
+          ':empty_list': [],
+        },
+      };
+      
+      const addMatchForUser2 = {
+        TableName: 'usercollection',
+        Key: {userId: likedUserId},
+        UpdateExpression: 'SET matches = list_append(if_not_exists(matches, :empty_list), :matchedUserList)',
+        ConditionExpression: 'attribute_not_exists(matches) OR NOT contains(matches, :matchedUserVal)',
+        ExpressionAttributeValues: {
+          ':matchedUserList': [userId],
+          ':matchedUserVal': userId,
+          ':empty_list': [],
+        },
+      };
+      
+      await Promise.all([
+        docClient.send(new UpdateCommand(addMatchForUser1)),
+        docClient.send(new UpdateCommand(addMatchForUser2))
+      ]);
+      
+      console.log('Automatic match created successfully!');
+      return res.status(200).json({message: 'Profile liked and match created!', matched: true});
+    }
+
+    res.status(200).json({message: 'Profile Likes succesfully!', matched: false});
+  } catch (error) {
+    console.log('Error liking', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+app.get('/received-likes/:userId', authenticateToken, async (req, res) => {
+  const {userId} = req.params;
+
+  console.log('User', userId);
+
+  try {
+    const params = {
+      TableName: 'usercollection',
+      Key: {userId: userId},
+      ProjectionExpression: 'receivedLikes',
+    };
+
+    const data = await docClient.send(new GetCommand(params));
+    console.log('User', data);
+
+    if (!data.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    const receivedLikes = data?.Item?.receivedLikes || [];
+
+    const enrichedLikes = await Promise.all(
+      receivedLikes.map(async like => {
+        const userParams = {
+          TableName: 'usercollection',
+          Key: {userId: like.userId},
+          ProjectionExpression: 'userId, firstName, imageUrls, prompts',
+        };
+
+        const userData = await docClient.send(new GetCommand(userParams));
+        console.log('User data', userData);
+
+        const user = userData?.Item
+          ? {
+              userId: userData.Item.userId,
+              firstName: userData.Item.firstName,
+              imageUrls: userData.Item.imageUrls || null,
+              prompts: userData.Item.prompts,
+            }
+          : {userId: like.userId, firstName: null, imageUrl: null};
+
+        return {...like, userId: user};
+      }),
+    );
+
+    console.log('Encriches', enrichedLikes);
+
+    res.status(200).json({receivedLikes: enrichedLikes});
+  } catch (error) {
+    console.log('Error getting the likes');
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const {email, password} = req.body;
+
+  console.log('Email', email);
+  console.log('password', password);
+
+  const authParams = {
+    AuthFlow: 'USER_PASSWORD_AUTH',
+    ClientId: 's3soknbg1t0tck6rb0361jai6',
+    AuthParameters: {
+      USERNAME: email,
+      PASSWORD: password,
+    },
+  };
+
+  try {
+    const authCommand = new InitiateAuthCommand(authParams);
+    const authResult = await cognitoClient.send(authCommand);
+
+    const {IdToken, AccessToken, RefreshToken} =
+      authResult.AuthenticationResult;
+
+    // Alternative approach using scan instead of query (less efficient but works without GSI)
+    const userParams = {
+      TableName: 'usercollection',
+      FilterExpression: 'email = :emailValue',
+      ExpressionAttributeValues: {
+        ':emailValue': email,
+      },
+    };
+
+    const userResult = await docClient.send(new ScanCommand(userParams));
+
+    if (!userResult.Items || userResult.Items.length == 0) {
+      return res.status(404).json({error: 'User not found'});
+    }
+
+    const user = userResult.Items[0];
+    const userId = user?.userId;
+
+    const secretKey =
+      '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0'; // Use a better key management
+
+    const token = jwt.sign({userId: userId, email: email}, secretKey);
+
+    res.status(200).json({token, IdToken, AccessToken});
+  } catch (error) {
+    console.log('Error', error);
+    return res.status(500).json({message: 'Interval server error'});
+  }
+});
+
+async function getIndexToRemove(selectedUserId, currentUserId) {
+  const result = await docClient.send(
+    new GetCommand({
+      TableName: 'usercollection',
+      Key: {userId: selectedUserId},
+      ProjectionExpression: 'likedProfiles',
+    }),
+  );
+
+  const likedProfiles = result?.Item?.likedProfiles || [];
+  return likedProfiles?.findIndex(
+    profile => profile.likedUserId == currentUserId,
+  );
+}
+
+app.post('/create-match', authenticateToken, async (req, res) => {
+  try {
+    console.log('Hey');
+    const {currentUserId, selectedUserId} = req.body;
+
+    console.log('current', currentUserId);
+    console.log('selected', selectedUserId);
+
+    const userResponse = await docClient.send(
+      new GetCommand({
+        TableName: 'usercollection',
+        Key: {userId: currentUserId},
+      }),
+    );
+
+    const receivedLikes = userResponse?.Item?.receivedLikes || [];
+
+    // Remove ALL likes from selectedUserId in currentUser's receivedLikes
+    const filteredReceivedLikes = receivedLikes.filter(
+      like => like.userId !== selectedUserId,
+    );
+
+    // Fetch selected user's likedProfiles to remove ALL occurrences of currentUserId
+    const selectedUserLikedProfilesResponse = await docClient.send(
+      new GetCommand({
+        TableName: 'usercollection',
+        Key: {userId: selectedUserId},
+        ProjectionExpression: 'likedProfiles',
+      }),
+    );
+
+    const selectedUserLikedProfiles =
+      selectedUserLikedProfilesResponse?.Item?.likedProfiles || [];
+
+    const filteredLikedProfiles = selectedUserLikedProfiles.filter(
+      profile => profile?.likedUserId !== currentUserId,
+    );
+
+    // First, append match for selected user if not already present (idempotent)
+    try {
+      await docClient.send(
+        new UpdateCommand({
+          TableName: 'usercollection',
+          Key: {userId: selectedUserId},
+          UpdateExpression:
+            'SET #matches = list_append(if_not_exists(#matches, :emptyList), :currentUserList)',
+          ConditionExpression:
+            'attribute_not_exists(#matches) OR NOT contains(#matches, :currentUserVal)',
+          ExpressionAttributeNames: {
+            '#matches': 'matches',
+          },
+          ExpressionAttributeValues: {
+            ':currentUserList': [currentUserId],
+            ':currentUserVal': currentUserId,
+            ':emptyList': [],
+          },
+        }),
+      );
+    } catch (err) {
+      const isConditional =
+        err?.name === 'ConditionalCheckFailedException' ||
+        String(err?.__type || '').includes('ConditionalCheckFailedException');
+      if (!isConditional) throw err; // ignore duplicate; continue
+    }
+
+    // Remove ALL likedProfiles entries for currentUserId from selected user's list
+    await docClient.send(
+      new UpdateCommand({
+        TableName: 'usercollection',
+        Key: {userId: selectedUserId},
+        UpdateExpression: 'SET #likedProfiles = :filteredLikedProfiles',
+        ExpressionAttributeNames: {
+          '#likedProfiles': 'likedProfiles',
+        },
+        ExpressionAttributeValues: {
+          ':filteredLikedProfiles': filteredLikedProfiles,
+        },
+      }),
+    );
+
+    try {
+      await docClient.send(
+        new UpdateCommand({
+          TableName: 'usercollection',
+          Key: {userId: currentUserId},
+          UpdateExpression:
+            'SET #matches = list_append(if_not_exists(#matches, :emptyList), :selectedUserList)',
+          ConditionExpression:
+            'attribute_not_exists(#matches) OR NOT contains(#matches, :selectedUserVal)',
+          ExpressionAttributeNames: {
+            '#matches': 'matches',
+          },
+          ExpressionAttributeValues: {
+            ':selectedUserList': [selectedUserId],
+            ':selectedUserVal': selectedUserId,
+            ':emptyList': [],
+          },
+        }),
+      );
+    } catch (err) {
+      const isConditional =
+        err?.name === 'ConditionalCheckFailedException' ||
+        String(err?.__type || '').includes('ConditionalCheckFailedException');
+      if (!isConditional) throw err; // ignore duplicate; continue
+    }
+
+    // Persist filtered receivedLikes so none of this user's likes remain
+    await docClient.send(
+      new UpdateCommand({
+        TableName: 'usercollection',
+        Key: {userId: currentUserId},
+        UpdateExpression: 'SET #receivedLikes = :filteredReceivedLikes',
+        ExpressionAttributeNames: {
+          '#receivedLikes': 'receivedLikes',
+        },
+        ExpressionAttributeValues: {
+          ':filteredReceivedLikes': filteredReceivedLikes,
+        },
+      }),
+    );
+
+    res.status(200).json({message: 'Match created successfully!'});
+  } catch (error) {
+    console.log('Error creating a match', error);
+  }
+});
+
+app.get('/get-matches/:userId', authenticateToken, async (req, res) => {
+  try {
+    const {userId} = req.params;
+
+    const userResult = await docClient.send(
+      new GetCommand({
+        TableName: 'usercollection',
+        Key: {userId},
+        ProjectionExpression: 'matches',
+      }),
+    );
+
+    const matches = userResult?.Item?.matches || [];
+    // De-duplicate match IDs to avoid DynamoDB BatchGet validation errors
+    const uniqueMatches = Array.from(new Set(matches.filter(id => !!id)));
+
+    if (!uniqueMatches.length) {
+      return res.status(200).json({matches: []});
+    }
+
+    const batchGetParams = {
+      RequestItems: {
+        usercollection: {
+          Keys: uniqueMatches.map(matchId => ({userId: matchId})),
+          ProjectionExpression: 'userId, firstName, imageUrls, prompts',
+        },
+      },
+    };
+
+    const matchResult = await docClient.send(
+      new BatchGetCommand(batchGetParams),
+    );
+
+    const matchedUsersRaw = matchResult?.Responses?.usercollection || [];
+    // Exclude users that current user has blocked
+    const blockedResp = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'blockedUsers'
+    }));
+    const blockedUsers = blockedResp?.Item?.blockedUsers || [];
+    const matchedUsers = matchedUsersRaw.filter(u => !blockedUsers.includes(u.userId));
+
+    res.status(200).json({matches: matchedUsers});
+  } catch (error) {
+    console.log('Error getting matches', error);
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
+
+// Socket.IO initialized below with explicit CORS settings
+
+const userSocketMap = {};
+const userPresence = {};
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(UPLOAD_DIR)) {
+  try {
+    fs.mkdirSync(UPLOAD_DIR);
+  } catch (e) {
+    console.log('Error creating uploads dir', e?.message);
+  }
+}
+app.use('/uploads', express.static(UPLOAD_DIR));
+
+// Configure Socket.IO to accept external origins when hosted
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', socket => {
+  const userId = socket.handshake.query.userId;
+
+  if (userId !== undefined) {
+    userSocketMap[userId] = socket.id;
+    userPresence[userId] = { online: true, lastSeen: new Date().toISOString() };
+  }
+
+  console.log('User socket data', userSocketMap);
+
+  socket.on('disconnect', () => {
+    console.log('User disconnected', socket.id);
+    delete userSocketMap[userId];
+    if (userId !== undefined) {
+      userPresence[userId] = { online: false, lastSeen: new Date().toISOString() };
+    }
+  });
+
+  socket.on('sendMessage', ({senderId, receiverId, message}) => {
+    const receiverSocketId = userSocketMap[receiverId];
+
+    console.log('receiver ID', receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('receiveMessage', {
+        senderId,
+        message,
+      });
+    }
+  });
+
+  // Typing indicator events (ephemeral, no DB changes)
+  socket.on('typing', ({senderId, receiverId}) => {
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('typing', {senderId});
+    }
+  });
+
+  socket.on('stopTyping', ({senderId, receiverId}) => {
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('stopTyping', {senderId});
+    }
+  });
+
+  // Video call signaling events
+  socket.on('call:invite', ({from, to}) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('call:incoming', {from});
+    }
+    // Push notification for incoming call (if device token exists)
+    (async () => {
+      try {
+        const resp = await docClient.send(
+          new GetCommand({
+            TableName: 'usercollection',
+            Key: {userId: to},
+            ProjectionExpression: 'deviceToken',
+          }),
+        );
+        const token = resp?.Item?.deviceToken;
+        if (token) {
+          await sendPushNotification(token, 'Incoming call', 'You have a video call', {
+            type: 'call',
+            from,
+          });
+        }
+      } catch (e) {
+        console.log('Error sending call push', e?.response?.data || e?.message || e);
+      }
+    })();
+  });
+
+  socket.on('call:accept', ({from, to}) => {
+    const callerSocketId = userSocketMap[from];
+    if (callerSocketId) {
+      io.to(callerSocketId).emit('call:accepted', {to});
+    }
+  });
+
+  socket.on('call:reject', ({from, to}) => {
+    const callerSocketId = userSocketMap[from];
+    if (callerSocketId) {
+      io.to(callerSocketId).emit('call:rejected', {to});
+    }
+  });
+
+  socket.on('webrtc:offer', ({from, to, sdp}) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('webrtc:offer', {from, sdp});
+    }
+  });
+
+  socket.on('webrtc:answer', ({from, to, sdp}) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('webrtc:answer', {from, sdp});
+    }
+  });
+
+  socket.on('webrtc:candidate', ({from, to, candidate}) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('webrtc:candidate', {from, candidate});
+    }
+  });
+
+  socket.on('call:end', ({from, to}) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('call:end', {from});
+    }
+  });
+
+  // Message reactions (ephemeral, relayed via socket)
+  socket.on('messages:reaction', ({ messageId, reaction, senderId, receiverId }) => {
+    try {
+      if (!messageId || !reaction || !senderId || !receiverId) return;
+      const receiverSocketId = userSocketMap[receiverId];
+      const senderSocketId = userSocketMap[senderId];
+      const payload = { messageId, reaction, senderId };
+      if (receiverSocketId) io.to(receiverSocketId).emit('messages:reaction', payload);
+      if (senderSocketId) io.to(senderSocketId).emit('messages:reaction', payload);
+    } catch (e) {
+      console.log('messages:reaction relay error', e?.message || e);
+    }
+  });
+});
+
+// FCM push notification helper (legacy API key)
+const sendPushNotification = async (deviceToken, title, body, data = {}) => {
+  try {
+    const serverKey = process.env.FCM_SERVER_KEY;
+    if (!serverKey || !deviceToken) return;
+    await axios.post(
+      'https://fcm.googleapis.com/fcm/send',
+      {
+        to: deviceToken,
+        notification: {title, body},
+        data,
+        priority: 'high',
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `key=${serverKey}`,
+        },
+      },
+    );
+  } catch (error) {
+    console.log('FCM send error', error?.response?.data || error?.message || error);
+  }
+};
+
+// Presence API: returns online state and lastSeen
+app.get('/presence', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'Missing userId' });
+    const presence = userPresence[userId] || { online: false, lastSeen: null };
+    return res.status(200).json(presence);
+  } catch (error) {
+    console.log('Presence error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/sendMessage', async (req, res) => {
+  try {
+    const {senderId, receiverId, message, type, audioUrl, imageUrl} = req.body;
+
+    if (!senderId || !receiverId || !message) {
+      return res.status(400).json({error: 'Missing fields'});
+    }
+
+    // Block check: do not allow sending if either side has blocked the other
+    try {
+      const [senderData, receiverData] = await Promise.all([
+        docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId: senderId }, ProjectionExpression: 'blockedUsers' })),
+        docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId: receiverId }, ProjectionExpression: 'blockedUsers' })),
+      ]);
+      const senderBlocked = senderData?.Item?.blockedUsers || [];
+      const receiverBlocked = receiverData?.Item?.blockedUsers || [];
+      const isBlocked = senderBlocked.includes(receiverId) || receiverBlocked.includes(senderId);
+      if (isBlocked) {
+        return res.status(403).json({ message: 'Messaging blocked', blocked: true });
+      }
+    } catch (e) {
+      // fail open if user records missing
+    }
+
+    const messageId = crypto.randomUUID();
+
+    const params = {
+      TableName: 'messages',
+      Item: {
+        messageId: {S: messageId},
+        senderId: {S: senderId},
+        receiverId: {S: receiverId},
+        message: {S: message},
+        timestamp: {S: new Date().toISOString()},
+        ...(type ? {type: {S: type}} : {}),
+        ...(audioUrl ? {audioUrl: {S: audioUrl}} : {}),
+        ...(imageUrl ? {imageUrl: {S: imageUrl}} : {}),
+      },
+    };
+
+    const command = new PutItemCommand(params);
+    await dynamoDbClient.send(command);
+
+    const receiverSocketId = userSocketMap[receiverId];
+    if (receiverSocketId) {
+      console.log('Emitting new message to the reciever', receiverId);
+      io.to(receiverSocketId).emit('newMessage', {
+        senderId,
+        receiverId,
+        message,
+        type: type || 'text',
+        audioUrl: audioUrl || null,
+        imageUrl: imageUrl || null,
+        messageId,
+      });
+      // Mark delivered immediately when receiver is online
+      try {
+        const updateDelivered = new UpdateItemCommand({
+          TableName: 'messages',
+          Key: { messageId: { S: messageId } },
+          UpdateExpression: 'SET deliveredAt = :ts',
+          ExpressionAttributeValues: { ':ts': { S: new Date().toISOString() } },
+        });
+        await dynamoDbClient.send(updateDelivered);
+        const senderSocketId = userSocketMap[senderId];
+        if (senderSocketId) {
+          io.to(senderSocketId).emit('message:delivered', { messageId });
+        }
+      } catch (e) {
+        console.log('Error marking delivered', e?.message || e);
+      }
+    } else {
+      console.log('Receiver socket ID not found');
+    }
+
+    // Push notification to receiver if token exists
+    try {
+      const resp = await docClient.send(
+        new GetCommand({
+          TableName: 'usercollection',
+          Key: {userId: receiverId},
+          ProjectionExpression: 'deviceToken, firstName',
+        }),
+      );
+      const token = resp?.Item?.deviceToken;
+      if (token) {
+        await sendPushNotification(
+          token,
+          'New message',
+          type === 'audio' ? 'Sent you a voice message' : message,
+          {type: 'message', from: senderId},
+        );
+      }
+    } catch (e) {
+      console.log('Error sending message push', e?.response?.data || e?.message || e);
+    }
+
+    res.status(201).json({message: 'Message sent successfully!'});
+  } catch (error) {
+    console.log('Error', error);
+    res.status(500).json({message: 'internal server error'});
+  }
+});
+
+app.get('/messages', async (req, res) => {
+  try {
+    const {senderId, receiverId} = req.query;
+
+    if (!senderId || !receiverId) {
+      return res.status(400).json({error: 'missing fields'});
+    }
+
+    // Block check for conversation fetch
+    try {
+      const [senderData, receiverData] = await Promise.all([
+        docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId: senderId }, ProjectionExpression: 'blockedUsers' })),
+        docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId: receiverId }, ProjectionExpression: 'blockedUsers' })),
+      ]);
+      const senderBlocked = senderData?.Item?.blockedUsers || [];
+      const receiverBlocked = receiverData?.Item?.blockedUsers || [];
+      if (senderBlocked.includes(receiverId)) {
+        return res.status(403).json({ message: 'You blocked this user', blocked: true, blockedByPeer: false });
+      }
+      if (receiverBlocked.includes(senderId)) {
+        return res.status(403).json({ message: 'You are blocked by this user', blocked: true, blockedByPeer: true });
+      }
+    } catch (e) {
+      // fail open
+    }
+
+    const senderQueryParams = {
+      TableName: 'messages',
+      IndexName: 'senderId-index',
+      KeyConditionExpression: 'senderId = :senderId',
+      ExpressionAttributeValues: {
+        ':senderId': {S: senderId},
+      },
+    };
+
+    const receiverQueryParams = {
+      TableName: 'messages',
+      IndexName: 'receiverId-index',
+      KeyConditionExpression: 'receiverId = :receiverId',
+      ExpressionAttributeValues: {
+        ':receiverId': {S: senderId},
+      },
+    };
+
+    const senderQueryCommand = new QueryCommand(senderQueryParams);
+    const receiverQueryCommand = new QueryCommand(receiverQueryParams);
+
+    const senderResults = await dynamoDbClient.send(senderQueryCommand);
+    const receiverResults = await dynamoDbClient.send(receiverQueryCommand);
+
+    const filteredSenderMessages = senderResults.Items.filter(
+      item => item.receiverId.S == receiverId,
+    );
+
+    const filteredReceiverMessages = receiverResults.Items.filter(
+      item => item.senderId.S == receiverId,
+    );
+
+    const combinedMessages = [
+      ...filteredSenderMessages,
+      ...filteredReceiverMessages,
+    ]
+      .map(item => ({
+        messageId: item.messageId.S,
+        senderId: item.senderId.S,
+        receiverId: item.receiverId.S,
+        message: item.message.S,
+        timestamp: item.timestamp.S,
+        type: item?.type?.S || 'text',
+        audioUrl: item?.audioUrl?.S || null,
+        imageUrl: item?.imageUrl?.S || null,
+        deliveredAt: item?.deliveredAt?.S || null,
+        readAt: item?.readAt?.S || null,
+      }))
+      .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+    res.status(200).json(combinedMessages);
+  } catch (error) {
+    console.log('Error fetching messages', error);
+  }
+});
+
+// Block a user (adds to blockedUsers of the actor). Emits socket to both.
+app.post('/block', async (req, res) => {
+  try {
+    const { userId, blockedUserId } = req.body;
+    if (!userId || !blockedUserId) {
+      return res.status(400).json({ message: 'Missing userId or blockedUserId' });
+    }
+    const current = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'blockedUsers',
+    }));
+    const list = current?.Item?.blockedUsers || [];
+    const next = Array.from(new Set([ ...list, blockedUserId ].filter(Boolean)));
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET blockedUsers = :list',
+      ExpressionAttributeValues: { ':list': next },
+    }));
+    // Notify both parties via socket
+    try {
+      const actorSocketId = userSocketMap[userId];
+      const targetSocketId = userSocketMap[blockedUserId];
+      const payload = { actorId: userId, targetId: blockedUserId };
+      if (actorSocketId) io.to(actorSocketId).emit('user:block', payload);
+      if (targetSocketId) io.to(targetSocketId).emit('user:block', payload);
+    } catch (e) {}
+    return res.status(200).json({ message: 'User blocked' });
+  } catch (error) {
+    console.log('Block error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Unblock a user
+app.delete('/block', async (req, res) => {
+  try {
+    const { userId, blockedUserId } = req.body;
+    if (!userId || !blockedUserId) {
+      return res.status(400).json({ message: 'Missing userId or blockedUserId' });
+    }
+    const current = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'blockedUsers',
+    }));
+    const list = current?.Item?.blockedUsers || [];
+    const next = list.filter(id => id !== blockedUserId);
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET blockedUsers = :list',
+      ExpressionAttributeValues: { ':list': next },
+    }));
+    // Notify actor (optional)
+    try {
+      const actorSocketId = userSocketMap[userId];
+      const payload = { actorId: userId, targetId: blockedUserId };
+      if (actorSocketId) io.to(actorSocketId).emit('user:unblock', payload);
+    } catch (e) {}
+    return res.status(200).json({ message: 'User unblocked' });
+  } catch (error) {
+    console.log('Unblock error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// List blocked users for a user (returns full profiles)
+app.get('/blocked-users', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+    const current = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'blockedUsers',
+    }));
+    const list = current?.Item?.blockedUsers || [];
+    // Ensure we only request valid, unique userIds
+    const validIds = Array.from(new Set(list.filter(id => !!id)));
+    if (!validIds.length) return res.status(200).json([]);
+    const keys = validIds.map(id => ({ userId: id }));
+    const batch = await docClient.send(new BatchGetCommand({
+      RequestItems: {
+        usercollection: {
+          Keys: keys,
+          // Fetch all attributes to avoid ProjectionExpression reserved word issues
+        }
+      }
+    }));
+    const items = batch?.Responses?.usercollection || [];
+    return res.status(200).json(items);
+  } catch (error) {
+    console.log('Blocked users list error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Report a user (append to reported user's reports list)
+app.post('/report', async (req, res) => {
+  try {
+    const { reporterId, reportedUserId, reason } = req.body;
+    if (!reporterId || !reportedUserId) {
+      return res.status(400).json({ message: 'Missing reporterId or reportedUserId' });
+    }
+    const reportItem = { reporterId, reason: reason || null, timestamp: new Date().toISOString() };
+    const current = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId: reportedUserId },
+      ProjectionExpression: 'reports',
+    }));
+    const list = current?.Item?.reports || [];
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId: reportedUserId },
+      UpdateExpression: 'SET reports = list_append(if_not_exists(reports, :empty), :new)',
+      ExpressionAttributeValues: { ':empty': [], ':new': [reportItem] },
+    }));
+    return res.status(200).json({ message: 'Report submitted' });
+  } catch (error) {
+    console.log('Report error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Mark messages as read for a conversation (peerId -> userId)
+app.post('/messages/mark-read', async (req, res) => {
+  try {
+    const { userId, peerId } = req.body;
+    if (!userId || !peerId) {
+      return res.status(400).json({ message: 'Missing userId or peerId' });
+    }
+
+    // Query messages sent by peerId to userId
+    const receiverQueryParams = {
+      TableName: 'messages',
+      IndexName: 'receiverId-index',
+      KeyConditionExpression: 'receiverId = :receiverId',
+      ExpressionAttributeValues: {
+        ':receiverId': { S: userId },
+      },
+    };
+    const receiverResults = await dynamoDbClient.send(new QueryCommand(receiverQueryParams));
+    const toMark = receiverResults.Items.filter(item => item.senderId.S === peerId && !item.readAt);
+
+    const now = new Date().toISOString();
+    const updatedIds = [];
+    for (const item of toMark) {
+      const mid = item.messageId.S;
+      try {
+        await dynamoDbClient.send(new UpdateItemCommand({
+          TableName: 'messages',
+          Key: { messageId: { S: mid } },
+          UpdateExpression: 'SET readAt = :ts',
+          ExpressionAttributeValues: { ':ts': { S: now } },
+        }));
+        updatedIds.push(mid);
+      } catch (e) {
+        console.log('Update readAt error', e?.message || e);
+      }
+    }
+
+    // Notify sender if online
+    const senderSocketId = userSocketMap[peerId];
+    if (senderSocketId && updatedIds.length) {
+      io.to(senderSocketId).emit('messages:read', { messageIds: updatedIds, by: userId });
+    }
+
+    return res.status(200).json({ updated: updatedIds.length });
+  } catch (error) {
+    console.log('Mark read error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Simple base64 image upload endpoint (optional helper)
+app.post('/upload-image', async (req, res) => {
+  try {
+    const { imageBase64, ext = 'jpg' } = req.body || {};
+    if (!imageBase64) return res.status(400).json({ message: 'Missing imageBase64' });
+    const safeExt = ['jpg','jpeg','png','webp'].includes(String(ext).toLowerCase()) ? String(ext).toLowerCase() : 'jpg';
+    const id = crypto.randomUUID();
+    const filename = `${id}.${safeExt}`;
+    const filePath = path.join(UPLOAD_DIR, filename);
+    const buffer = Buffer.from(imageBase64, 'base64');
+    fs.writeFileSync(filePath, buffer);
+    return res.status(200).json({ url: `/uploads/${filename}` });
+  } catch (error) {
+    console.log('Upload image error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Store a device token for push notifications
+app.post('/register-device-token', authenticateToken, async (req, res) => {
+  try {
+    const {userId, deviceToken} = req.body;
+    if (!userId || !deviceToken) {
+      return res.status(400).json({message: 'Missing userId or deviceToken'});
+    }
+    await docClient.send(
+      new UpdateCommand({
+        TableName: 'usercollection',
+        Key: {userId},
+        UpdateExpression: 'SET deviceToken = :t',
+        ExpressionAttributeValues: {':t': deviceToken},
+      }),
+    );
+    res.status(200).json({message: 'Device token registered'});
+  } catch (error) {
+    console.log('Error registering device token', error);
+    res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+app.post('/subscribe', authenticateToken, async (req, res) => {
+  const {userId, plan, type} = req.body;
+
+  console.log('User', userId);
+  console.log('plan', plan);
+  console.log('type', type);
+
+  if (!userId || !plan) {
+    return res.status(400).json({message: 'Missing required fields'});
+  }
+
+  try {
+    const startDate = new Date().toISOString();
+    const duration =
+      plan?.plan === '1 week'
+        ? 7
+        : plan?.plan === '1 month'
+        ? 30
+        : plan?.plan === '3 months'
+        ? 90
+        : 180;
+    const endDate = dayjs(startDate).add(duration, 'day').toISOString();
+
+    const paymentId = crypto.randomUUID();
+
+    const params = {
+      TableName: 'subscriptions',
+      Item: {
+        userId: {S: userId},
+        subscriptionId: {S: paymentId},
+        plan: {S: type},
+        planName: {S: plan?.plan},
+        price: {S: plan?.price},
+        startDate: {S: startDate},
+        endDate: {S: endDate},
+        status: {S: 'active'},
+      },
+    };
+
+    await dynamoDbClient.send(new PutItemCommand(params));
+
+    const updateParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+      UpdateExpression:
+        'SET subscriptions = list_append(if_not_exists(subscriptions, :empty_list), :new_subscription)',
+      ExpressionAttributeValues: {
+        ':new_subscription': [
+          {
+            subscriptionId: paymentId,
+            planName: plan.plan,
+            price: plan.price,
+            plan: type,
+            startDate: startDate,
+            endDate: endDate,
+            status: 'active',
+          },
+        ],
+        ':empty_list': [],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    await docClient.send(new UpdateCommand(updateParams));
+
+    res.status(200).json({message: 'Subscription saved successfully!'});
+  } catch (error) {
+    console.log('ERROR subscribing', error);
+    return res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+app.post('/payment-success', async (req, res) => {
+  try {
+    const {userId, rosesToAdd} = req.body;
+
+    const userParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+    };
+    const userData = await docClient.send(new GetCommand(userParams));
+
+    if (!userData.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    const user = userData.Item;
+    const roses = user.roses || 0;
+
+    const newRoses = Number(roses) + Number(rosesToAdd);
+
+    const updatedRoseParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+      UpdateExpression: 'SET roses = :newRoses',
+      ExpressionAttributeValues: {
+        ':newRoses': newRoses,
+      },
+    };
+
+    await docClient.send(new UpdateCommand(updatedRoseParams));
+
+    const paymentId = crypto.randomUUID();
+    const paymentParams = {
+      TableName: 'payments',
+      Item: {
+        paymentId: {S: paymentId},
+        userId: {S: userId},
+        // DynamoDB low-level client requires number values as string for N
+        rosesPurchased: {N: String(rosesToAdd)},
+      },
+    };
+
+    await dynamoDbClient.send(new PutItemCommand(paymentParams));
+
+    return res
+      .status(200)
+      .json({message: 'Payment successful and roses updated', roses: newRoses});
+  } catch (error) {
+    console.log('Error', error);
+    return res.status(500).json({message: 'Interval server error'});
+  }
+});
+
+app.post('/send-rose', authenticateToken, async (req, res) => {
+  const {userId, likedUserId, image, comment = null, type, prompt} = req.body;
+
+  if (req.user.userId !== userId) {
+    return res.status(403).json({message: 'Unauthorized action'});
+  }
+
+  if (!userId) {
+    return res.status(400).json({message: 'Missing req parameters'});
+  }
+
+  try {
+    const userParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+    };
+
+    const userData = await docClient.send(new GetCommand(userParams));
+
+    if (!userData.Item) {
+      return res.status(404).json({message: 'User not found'});
+    }
+
+    const user = userData.Item;
+
+    const rosesRemaining = user?.roses || 0;
+
+    if (rosesRemaining <= 0) {
+      return res.status(403).json({message: 'No roses remaining to send'});
+    }
+
+    const newRosesCount = rosesRemaining - 1;
+
+    const decrementRosesParams = {
+      TableName: 'usercollection',
+      Key: {userId},
+      UpdateExpression: 'SET roses = :newRoses',
+      ExpressionAttributeValues: {
+        ':newRoses': newRosesCount,
+      },
+    };
+
+    const category = 'Rose';
+
+    await docClient.send(new UpdateCommand(decrementRosesParams));
+
+    let newLike = {userId, type, category};
+
+    if (type === 'image') {
+      if (!image) {
+        return res
+          .status(400)
+          .json({message: 'Image URL is required for type "image"'});
+      }
+      newLike.image = image;
+    } else if (type === 'prompt') {
+      if (!prompt || !prompt.question || !prompt.answer) {
+        return res.status(400).json({
+          message: 'Prompt question and answer are required for type "prompt"',
+        });
+      }
+      newLike.prompt = prompt;
+    }
+
+    if (comment) {
+      newLike.comment = comment;
+    }
+
+    // Step 1: Update the liked user's 'receivedLikes' array
+    const updateReceivedLikesParams = {
+      TableName: 'usercollection',
+      Key: {userId: likedUserId}, // Key for the liked user
+      UpdateExpression:
+        'SET receivedLikes = list_append(if_not_exists(receivedLikes, :empty_list), :newLike)',
+      ExpressionAttributeValues: {
+        ':newLike': [newLike],
+        ':empty_list': [],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    await docClient.send(new UpdateCommand(updateReceivedLikesParams));
+
+    // Step 2: Update the current user's 'likedProfiles' array
+    const updateLikedProfilesParams = {
+      TableName: 'usercollection',
+      Key: {userId}, // Key for the current user
+      UpdateExpression:
+        'SET likedProfiles = list_append(if_not_exists(likedProfiles, :empty_list), :likedUserId)',
+      ExpressionAttributeValues: {
+        ':likedUserId': [{likedUserId}],
+        ':empty_list': [],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    };
+
+    await docClient.send(new UpdateCommand(updateLikedProfilesParams));
+
+    res.status(200).json({message: 'Rose sent successfully'});
+  } catch (error) {
+    console.log('Error', error);
+    return res.status(500).json({message: 'Interval server error'});
+  }
+});
+
+// Saved Openers: list/add/delete
+app.get('/openers', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.query.userId || req.user?.userId;
+    if (!userId) return res.status(400).json({ message: 'Missing userId' });
+
+    const userResp = await docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId }, ProjectionExpression: 'savedOpeners' }));
+    const savedOpeners = userResp?.Item?.savedOpeners || [];
+    return res.status(200).json({ savedOpeners });
+  } catch (error) {
+    console.log('Error listing openers', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.post('/openers', authenticateToken, async (req, res) => {
+  try {
+    const { userId, text } = req.body;
+    if (!userId || !text || String(text).trim().length < 2) {
+      return res.status(400).json({ message: 'Missing userId or text' });
+    }
+    if (req.user.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    const opener = { openerId: crypto.randomUUID(), text: String(text).trim() };
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET savedOpeners = list_append(if_not_exists(savedOpeners, :empty), :new)',
+      ExpressionAttributeValues: {
+        ':empty': [],
+        ':new': [opener],
+      },
+      ReturnValues: 'UPDATED_NEW',
+    }));
+    return res.status(200).json({ opener });
+  } catch (error) {
+    console.log('Error adding opener', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.delete('/openers/:openerId', authenticateToken, async (req, res) => {
+  try {
+    const { openerId } = req.params;
+    const userId = req.query.userId || req.user?.userId;
+    if (!userId || !openerId) {
+      return res.status(400).json({ message: 'Missing userId or openerId' });
+    }
+    if (req.user.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    const userResp = await docClient.send(new GetCommand({ TableName: 'usercollection', Key: { userId }, ProjectionExpression: 'savedOpeners' }));
+    const savedOpeners = userResp?.Item?.savedOpeners || [];
+    const filtered = savedOpeners.filter(item => item?.openerId !== openerId);
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET savedOpeners = :list',
+      ExpressionAttributeValues: { ':list': filtered },
+    }));
+    return res.status(200).json({ deleted: openerId });
+  } catch (error) {
+    console.log('Error deleting opener', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+// Load environment variables from .env (for local dev). Hosts like Render use dashboard envs.
+dotenv.config();

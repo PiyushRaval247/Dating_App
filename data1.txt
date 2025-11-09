@@ -1,0 +1,136 @@
+// heart image to show for each image on profile
+https://cdn-icons-png.flaticon.com/128/2724/2724657.png
+
+//cross button to show for a profile
+https://cdn-icons-png.flaticon.com/128/17876/17876989.png
+
+//chat screen images: 
+https://cdn-icons-png.flaticon.com/128/5065/5065340.png
+
+//dot image for all the common screens ie in Auth stack screens:
+https://cdn-icons-png.flaticon.com/128/10613/10613685.png
+
+//HINGE PLUS main image:
+uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQSs48AlXs6q_E_rz9UGJDy8wyj6-Mft76F2wHjs2uboOn-TDF-XMfXSeiYNi0L_3sWQFY&usqp=CAU',
+
+const plans = [
+    {
+      id: '0',
+      plan: '1 week',
+      price: '1650.00/wk',
+      name: 'New',
+    },
+    {
+      id: '1',
+      plan: '1 month',
+      price: '3450.00/wk',
+      name: 'Save 51%',
+    },
+    {
+      id: '2',
+      plan: '3 months',
+      price: '2133.33/wk',
+      name: 'Save 70%',
+    },
+    {
+      id: '3',
+      plan: '6 months',
+      price: '1633.33/wk',
+      name: 'Save 77%',
+    },
+  ];
+
+//HINGE X main image:
+uri: 'https://images.pexels.com/photos/6265422/pexels-photo-6265422.jpeg?auto=compress&cs=tinysrgb&w=800',
+
+const planss = [
+    {
+      id: '0',
+      plan: '1 week',
+      price: '1199.00/wk',
+      name: 'New',
+    },
+    {
+      id: '1',
+      plan: '1 month',
+      price: '2499.00/wk',
+      name: 'Save 51%',
+    },
+    {
+      id: '2',
+      plan: '3 months',
+      price: '1666.33/wk',
+      name: 'Save 70%',
+    },
+    {
+      id: '3',
+      plan: '6 months',
+      price: '1933.33/wk',
+      name: 'Save 77%',
+    },
+  ];
+
+
+
+//profile screen image:
+https://cdn.sanity.io/images/l7pj44pm/production/5f4e26a82da303138584cff340f3eff9e123cd56-1280x720.jpg
+
+uri: 'https://images.hinge.co/6e7d61055e6f7783f84a1e41bc85aa3807f9ddba-1200x1094.jpg?w=1200&q=75',
+
+
+
+     <View style={{position: 'relative'}}>
+                <Image
+                  source={{
+                    uri: 'https://www.instagram.com/p/C27SU9sNMXO/media/?size=l',
+                  }}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 10,
+                    position: 'absolute',
+                    top: 0,
+                    left: 20,
+                    transform: [{rotate: '-10deg'}],
+                    zIndex: 2,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                  }}
+                />
+
+                <Image
+                  source={{
+                    uri: 'https://www.instagram.com/p/C1Rzh7KJ0OY/media/?size=l',
+                  }}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 10,
+                    position: 'absolute',
+                    top: 40,
+                    left: 0,
+                    transform: [{rotate: '10deg'}],
+                    zIndex: 1,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                  }}
+                />
+              </View>
+
+//login screen:
+     uri: 'https://cdn-icons-png.flaticon.com/128/6809/6809493.png',
+
+//likes screen:
+
+  <Image
+              style={{width: 100, height: 100}}
+              source={{
+                uri: 'https://cdn-icons-png.flaticon.com/128/38/38384.png',
+              }}
+            />
+
+            <View>
+              <Text
+                style={{fontSize: 22, fontWeight: 'bold', textAlign: 'center'}}>
+                You're new, no likes yet
+              </Text>
