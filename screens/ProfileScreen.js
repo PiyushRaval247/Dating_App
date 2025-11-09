@@ -1003,17 +1003,30 @@ const ProfileScreen = () => {
                 userInfo: userInfo,
               })
             }>
-            <Image
-              style={{
+            {(() => {
+              const images = Array.isArray(userInfo?.imageUrls)
+                ? userInfo.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
+                : [];
+              const avatar = images[0];
+              const commonStyle = {
                 width: 100,
                 height: 100,
                 borderRadius: 50,
-                resizeMode: 'cover',
                 borderColor: planDisplay.border,
                 borderWidth: 3,
-              }}
-              source={{uri: userInfo?.imageUrls[1]}}
-            />
+              };
+              if (avatar) {
+                return (
+                  <Image
+                    style={{...commonStyle, resizeMode: 'cover'}}
+                    source={{uri: avatar}}
+                  />
+                );
+              }
+              return (
+                <View style={{...commonStyle, backgroundColor: '#eee'}} />
+              );
+            })()}
           </Pressable>
 
           <Text style={{marginTop: 10, fontSize: 24, fontWeight: '500'}}>

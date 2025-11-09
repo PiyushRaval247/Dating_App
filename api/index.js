@@ -788,6 +788,10 @@ app.post('/login', async (req, res) => {
   console.log('Email', email);
   console.log('password', password);
 
+  if (!email || !password) {
+    return res.status(400).json({message: 'Email and password are required'});
+  }
+
   const authParams = {
     AuthFlow: 'USER_PASSWORD_AUTH',
     ClientId: COGNITO_CLIENT_ID,
@@ -829,8 +833,22 @@ app.post('/login', async (req, res) => {
 
     res.status(200).json({token, IdToken, AccessToken});
   } catch (error) {
-    console.log('Error', error);
-    return res.status(500).json({message: 'Interval server error'});
+    console.log('Login error', error?.name || error?.message || error);
+    // Map Cognito errors to sensible HTTP statuses/messages
+    const name = error?.name || '';
+    if (name === 'NotAuthorizedException') {
+      return res.status(401).json({message: 'Incorrect password'});
+    }
+    if (name === 'UserNotFoundException') {
+      return res.status(404).json({message: 'Email not found'});
+    }
+    if (name === 'UserNotConfirmedException') {
+      return res.status(403).json({message: 'Account not confirmed'});
+    }
+    if (name === 'PasswordResetRequiredException') {
+      return res.status(403).json({message: 'Password reset required'});
+    }
+    return res.status(500).json({message: 'Login failed'});
   }
 });
 

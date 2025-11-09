@@ -50,14 +50,18 @@ const UserChat = ({item, userId}) => {
   console.log("last",lastMessage)
   return (
     <Pressable
-      onPress={() =>
+      onPress={() => {
+        const images = Array.isArray(item?.imageUrls)
+          ? item.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
+          : [];
+        const avatar = images[0] || null;
         navigation.navigate('ChatRoom', {
-          image: item?.imageUrls[0],
+          image: avatar,
           name: item?.firstName,
           receiverId: item?.userId,
           senderId: userId,
-        })
-      }
+        });
+      }}
       style={{
         flexDirection: 'row',
         alignItems: 'center',
@@ -66,10 +70,17 @@ const UserChat = ({item, userId}) => {
       }}>
       <View>
         <NotificationBadge count={unreadCount}>
-          <Image
-            style={{width: 70, height: 70, borderRadius: 35}}
-            source={{uri: item?.imageUrls[0]}}
-          />
+          {(() => {
+            const images = Array.isArray(item?.imageUrls)
+              ? item.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
+              : [];
+            const avatar = images[0] || null;
+            const style = {width: 70, height: 70, borderRadius: 35};
+            if (avatar) {
+              return <Image style={style} source={{uri: avatar}} />;
+            }
+            return <View style={{...style, backgroundColor: '#ddd'}} />;
+          })()}
         </NotificationBadge>
       </View>
 

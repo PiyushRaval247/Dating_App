@@ -26,6 +26,9 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const {token,setToken} = useContext(AuthContext);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [generalError, setGeneralError] = useState('');
 
   const createAccount = () => {
     setOption('Create account');
@@ -34,10 +37,25 @@ const LoginScreen = () => {
   };
   const handleLogin = async () => {
     setOption('Sign In');
+    setEmailError('');
+    setPasswordError('');
+    setGeneralError('');
 
-    if (!word || !password) {
-      return;
+    // Basic client-side validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    let hasError = false;
+    if (!word) {
+      setEmailError('Email is required');
+      hasError = true;
+    } else if (!emailRegex.test(word)) {
+      setEmailError('Enter a valid email');
+      hasError = true;
     }
+    if (!password) {
+      setPasswordError('Password is required');
+      hasError = true;
+    }
+    if (hasError) return;
 
     try {
       const user = {
@@ -53,10 +71,25 @@ const LoginScreen = () => {
       setToken(token);
       await AsyncStorage.setItem('idToken', IdToken);
       await AsyncStorage.setItem('accessToken', AccessToken);
+      // Clear errors on successful login
+      setEmailError('');
+      setPasswordError('');
+      setGeneralError('');
     } catch (error) {
-      console.log('Login error:', error?.response?.data || error?.message);
-      // Optional: surface to user
-      // Alert.alert('Login failed', error?.response?.data?.message || 'Please check your credentials.');
+      const status = error?.response?.status;
+      const message = error?.response?.data?.message || error?.message;
+      console.log('Login error:', status, message);
+      if (status === 404) {
+        setEmailError('Email not found');
+      } else if (status === 401) {
+        setPasswordError('Incorrect password');
+      } else if (status === 400) {
+        setGeneralError('Email and password are required');
+      } else if (status === 403) {
+        setGeneralError(message || 'Account issue: check your email or reset password');
+      } else {
+        setGeneralError('Login failed. Please try again.');
+      }
     }
   };
 
@@ -153,6 +186,11 @@ const LoginScreen = () => {
                       autoCorrect={false}
                       textContentType="emailAddress"
                     />
+                    {!!emailError && (
+                      <Text style={{position: 'absolute', bottom: -20, left: 0, color: '#d32f2f', fontSize: 12}}>
+                        {emailError}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -190,6 +228,11 @@ const LoginScreen = () => {
                         color="#800080"
                       />
                     </Pressable>
+                    {!!passwordError && (
+                      <Text style={{position: 'absolute', bottom: -20, left: 0, color: '#d32f2f', fontSize: 12}}>
+                        {passwordError}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -224,6 +267,12 @@ const LoginScreen = () => {
           )}
 
           <View style={{marginTop: 40}} />
+
+          {!!generalError && (
+            <View style={{marginHorizontal: 20, marginTop: 10, padding: 10, backgroundColor: '#fdecea', borderColor: '#f5c6cb', borderWidth: 1, borderRadius: 8}}>
+              <Text style={{color: '#d32f2f'}}>{generalError}</Text>
+            </View>
+          )}
 
           <Pressable
             onPress={createAccount}
