@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BASE_URL } from '../urls/url';
 import { AuthContext } from '../AuthContext';
+import { useSocketContext } from '../SocketContext';
 
 const NotificationContext = createContext();
 
@@ -17,7 +18,9 @@ export const useNotification = () => {
 export const NotificationProvider = ({ children }) => {
   const [messageCount, setMessageCount] = useState(0);
   const [likeCount, setLikeCount] = useState(0);
+  const [incomingCall, setIncomingCall] = useState(null); // { from: userId }
   const { userId } = useContext(AuthContext);
+  const { socket } = useSocketContext();
 
   // Fetch unread message count
   const fetchMessageCount = async () => {
@@ -112,12 +115,33 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [userId]);
 
+  // Global incoming call listener
+  useEffect(() => {
+    if (!socket) return;
+    const onIncoming = (payload) => {
+      const from = payload?.from;
+      if (!from) return;
+      setIncomingCall({ from });
+    };
+    const onEnd = () => {
+      setIncomingCall(null);
+    };
+    socket.on('call:incoming', onIncoming);
+    socket.on('call:end', onEnd);
+    return () => {
+      socket.off('call:incoming', onIncoming);
+      socket.off('call:end', onEnd);
+    };
+  }, [socket]);
+
   const value = {
     messageCount,
     likeCount,
     refreshCounts,
     clearMessageCount,
     clearLikeCount,
+    incomingCall,
+    setIncomingCall,
   };
 
   return (

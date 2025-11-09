@@ -38,6 +38,7 @@ import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ProfileDetailScreen from '../screens/ProfileDetailScreen';
 import NotificationBadge from '../components/NotificationBadge';
 import { NotificationProvider, useNotification } from '../context/NotificationContext';
+import IncomingCallBanner from '../components/IncomingCallBanner';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
 
@@ -283,6 +284,7 @@ const StackNavigator = () => {
   function MainStack() {
     return (
       <NotificationProvider>
+        <IncomingCallBanner />
         <Stack.Navigator>
           <Stack.Screen
             name="Main"

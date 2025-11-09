@@ -344,7 +344,7 @@ const ChatRoom = () => {
   };
 
   listenMessages();
-  const [incomingCallFrom, setIncomingCallFrom] = useState(null);
+  // Incoming call banner moved to global app overlay (NotificationContext)
 
   const requestGalleryPermission = async () => {
     if (Platform.OS !== 'android') return true;
@@ -386,31 +386,9 @@ const ChatRoom = () => {
     }
   };
 
-  // Listen for incoming call invites
-  useEffect(() => {
-    const onIncoming = ({from}) => {
-      // Only prompt if this is the current chat partner
-      if (from === route?.params?.receiverId) {
-        setIncomingCallFrom(from);
-      }
-    };
-    socket?.on('call:incoming', onIncoming);
-    return () => socket?.off('call:incoming', onIncoming);
-  }, [socket, route?.params?.receiverId]);
+  // Incoming call prompts are handled globally; no local listener here
 
-  const acceptCall = () => {
-    if (!incomingCallFrom) return;
-    socket?.emit('call:accept', {from: userId, to: incomingCallFrom});
-    const name = route?.params?.name;
-    setIncomingCallFrom(null);
-    navigation.navigate('VideoCall', {peerId: incomingCallFrom, name, isCaller: false});
-  };
-
-  const rejectCall = () => {
-    if (!incomingCallFrom) return;
-    socket?.emit('call:reject', {from: userId, to: incomingCallFrom});
-    setIncomingCallFrom(null);
-  };
+  // Accept/Reject handled by global banner
   const keyboardVerticalOffset = Platform.OS == 'ios' ? 65 : 0;
   console.log('Messages', messages);
   return (
@@ -485,19 +463,7 @@ const ChatRoom = () => {
             </Text>
           </View>
         )}
-        {incomingCallFrom && (
-          <View style={{position: 'absolute', top: 70, left: 10, right: 10, zIndex: 10, backgroundColor: 'white', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#ddd'}}>
-            <Text style={{fontWeight: '600', marginBottom: 8}}>Incoming video call</Text>
-            <View style={{flexDirection: 'row', justifyContent: 'flex-end', gap: 12}}>
-              <Pressable onPress={rejectCall} style={{paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#ddd', borderRadius: 6}}>
-                <Text>Reject</Text>
-              </Pressable>
-              <Pressable onPress={acceptCall} style={{paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#5b0d63', borderRadius: 6}}>
-                <Text style={{color: 'white'}}>Accept</Text>
-              </Pressable>
-            </View>
-          </View>
-        )}
+        {/* Incoming video call UI is now global */}
         {messages?.map((item, index) => {
           return (
             <Pressable
