@@ -6,6 +6,8 @@ import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import dayjs from 'dayjs';
 import dotenv from 'dotenv';
+// Load env variables early
+dotenv.config();
 import {
   DynamoDBClient,
   PutItemCommand,
@@ -45,16 +47,14 @@ app.use(express.json());
 // Use hosting provider's PORT or fallback to 4000
 const PORT = process.env.PORT || 4000;
 
-// Read AWS credentials from env only; no hardcoded fallbacks
-const AWS_ACCESS_KEY_ID = process.env.AWS_ACCESS_KEY_ID || '';
-const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY || '';
+// AWS configuration from env; use default provider chain if not provided
 const AWS_REGION = process.env.AWS_REGION || 'eu-north-1';
+const awsCredentials = (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY)
+  ? { accessKeyId: process.env.AWS_ACCESS_KEY_ID, secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY }
+  : undefined;
 const dynamoDbClient = new DynamoDBClient({
   region: AWS_REGION,
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
-  },
+  credentials: awsCredentials,
 });
 
 // Auto-create table for activity streaks if not present
@@ -86,16 +86,20 @@ async function ensureActivityTable() {
   }
 }
 
-// Kick off ensure-table on server start
-ensureActivityTable();
+// Kick off ensure-table on server start only if credentials are present
+if (awsCredentials) {
+  ensureActivityTable();
+} else {
+  console.warn('[DynamoDB] AWS credentials not set; skipping ensureActivityTable');
+}
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: AWS_REGION,
-  credentials: {
-    accessKeyId: AWS_ACCESS_KEY_ID,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
-  },
+  credentials: awsCredentials,
 });
+
+// Cognito App Client ID
+const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
 
 const server = http.createServer(app);
 
@@ -162,7 +166,6 @@ app.post('/sendOtp', async (req, res) => {
     return res.status(400).json({error: 'Invalid email format.'});
   }
 
-  const COGNITO_CLIENT_ID = process.env.COGNITO_CLIENT_ID || '';
   const signUpParams = {
     ClientId: COGNITO_CLIENT_ID,
     Username: email,
