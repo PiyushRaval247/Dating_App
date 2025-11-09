@@ -2,6 +2,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Text,
@@ -79,11 +80,31 @@ const ChatRoom = () => {
   const formatTime = iso => {
     if (!iso) return '';
     try {
-      return new Date(iso).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      const d = new Date(iso);
+      let h = d.getHours();
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12; // convert 0-23 to 1-12
+      return `${h}:${m} ${suffix}`;
     } catch (e) {
       return '';
     }
   };
+  const handleVideoPress = React.useCallback(() => {
+    if (isBlocked || blockedByPeer) return;
+    const peerId = route?.params?.receiverId;
+    if (!peerId) return;
+    navigation.navigate('VideoCall', {
+      peerId,
+      name: route?.params?.name,
+      isCaller: true,
+    });
+  }, [isBlocked, blockedByPeer, route?.params?.receiverId, route?.params?.name, navigation]);
+
+  const handleMenuPress = React.useCallback(() => {
+    setShowActions(true);
+  }, []);
+
   useLayoutEffect(() => {
     return navigation.setOptions({
       headerTitle: '',
@@ -104,33 +125,28 @@ const ChatRoom = () => {
         </Pressable>
       ),
       headerRight: () => (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 16}}>
-          <Pressable
-            onPress={() => {
-              if (isBlocked || blockedByPeer) return;
-              const peerId = route?.params?.receiverId;
-              if (!peerId) return;
-              navigation.navigate('VideoCall', {
-                peerId,
-                name: route?.params?.name,
-                isCaller: true,
-              });
-            }}
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, pointerEvents: 'box-none'}}>
+          <TouchableOpacity
+            onPress={handleVideoPress}
             disabled={isBlocked || blockedByPeer}
-            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            activeOpacity={0.6}
+            style={{width: 44, height: 44, alignItems: 'center', justifyContent: 'center'}}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
           >
-            <Ionicons name="videocam-outline" size={24} color={(isBlocked || blockedByPeer) ? '#aaa' : 'black'} />
-          </Pressable>
-          <Pressable
-            onPress={() => setShowActions(true)}
-            hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+            <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? '#aaa' : 'black'} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleMenuPress}
+            activeOpacity={0.6}
+            style={{width: 44, height: 44, alignItems: 'center', justifyContent: 'center'}}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
           >
-            <Ionicons name="ellipsis-vertical" size={22} color="black" />
-          </Pressable>
+            <Ionicons name="ellipsis-vertical" size={24} color="black" />
+          </TouchableOpacity>
         </View>
       ),
     });
-  }, [presence, route?.params?.name, route?.params?.receiverId, isBlocked, blockedByPeer]);
+  }, [presence?.online, presence?.lastSeen, route?.params?.name, route?.params?.receiverId, isBlocked, blockedByPeer, handleVideoPress, handleMenuPress]);
   const sendMessage = async (senderId, receiverId) => {
     try {
       if (isBlocked || blockedByPeer) return;
@@ -470,7 +486,7 @@ const ChatRoom = () => {
           </View>
         )}
         {incomingCallFrom && (
-          <View style={{position: 'absolute', top: 10, left: 10, right: 10, zIndex: 10, backgroundColor: 'white', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#ddd'}}>
+          <View style={{position: 'absolute', top: 70, left: 10, right: 10, zIndex: 10, backgroundColor: 'white', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#ddd'}}>
             <Text style={{fontWeight: '600', marginBottom: 8}}>Incoming video call</Text>
             <View style={{flexDirection: 'row', justifyContent: 'flex-end', gap: 12}}>
               <Pressable onPress={rejectCall} style={{paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#ddd', borderRadius: 6}}>

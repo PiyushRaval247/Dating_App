@@ -133,41 +133,9 @@ const ChatScreen = () => {
                 Matches
               </Text>
 
-              {categorizedChats?.theirTurn.length > 0 && (
-                <>
-                  <Text
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 'bold',
-                      marginVertical: 12,
-                    }}>
-                    Their Turn
-                  </Text>
-                  {categorizedChats?.theirTurn.map((item, index) => (
-                    <UserChat key={index} item={item} userId={userId} />
-                  ))}
-                </>
-              )}
-
-              {categorizedChats.yourTurn.length > 0 && (
-                <>
-                  <Text
-                    style={{
-                      fontSize: 22,
-                      fontWeight: 'bold',
-                      marginVertical: 12,
-                    }}>
-                    Your Turn
-                  </Text>
-                  {categorizedChats.yourTurn.map((item, index) => (
-                    <UserChat key={index} userId={userId} item={item} />
-                  ))}
-                </>
-              )}
-
-              {/* {matches?.map((item, index) => (
+              {matches?.map((item, index) => (
                 <UserChat key={index} item={item} userId={userId} />
-              ))} */}
+              ))}
             </>
           ) : (
             <View
