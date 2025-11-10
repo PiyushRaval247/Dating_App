@@ -136,6 +136,8 @@ const SettingsScreen = () => {
         <Separator />
         <Row icon="shield-checkmark-outline" label="Privacy" onPress={() => navigation.navigate('Privacy')} />
         <Separator />
+        <Row icon="ban-outline" label="Blocked Users" onPress={() => navigation.navigate('BlockedUsers')} />
+        <Separator />
         <Row icon="people-outline" label="Invite friends" onPress={() => Alert.alert('Invite', 'Coming soon')} />
 
         <Separator />
