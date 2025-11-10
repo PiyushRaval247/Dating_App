@@ -118,7 +118,7 @@ const ChatScreen = () => {
 
   return (
     <ScrollView
-      style={{marginTop: 55}}
+      style={{marginTop: 0}}
       contentContainerStyle={{
         flexGrow: 1,
         backgroundColor: 'white',

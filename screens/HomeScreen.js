@@ -260,7 +260,7 @@ const HomeScreen = () => {
   console.log('info', userInfo);
   return (
     <>
-      <ScrollView contentContainerStyle={{flexGrow: 1, marginTop: 55}}>
+      <ScrollView contentContainerStyle={{flexGrow: 1, marginTop: 0}}>
         <View
           style={{
             padding: 10,
