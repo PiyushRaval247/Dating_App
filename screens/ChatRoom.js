@@ -111,8 +111,8 @@ const ChatRoom = () => {
       headerLeft: () => (
         <Pressable
           onPress={() => navigation.goBack()}
-          style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
-          hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+          style={{flexDirection: 'row', alignItems: 'center', gap: 14}}
+          hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}>
           <Ionicons name="arrow-back" size={24} color="black" />
           <View>
             <Text style={{fontSize: 16, fontWeight: 'bold'}}>
@@ -125,21 +125,21 @@ const ChatRoom = () => {
         </Pressable>
       ),
       headerRight: () => (
-        <View style={{flexDirection: 'row', alignItems: 'center', gap: 12, pointerEvents: 'box-none'}}>
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
           <TouchableOpacity
             onPress={handleVideoPress}
             disabled={isBlocked || blockedByPeer}
             activeOpacity={0.6}
-            style={{width: 44, height: 44, alignItems: 'center', justifyContent: 'center'}}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            style={{width: 48, height: 48, alignItems: 'center', justifyContent: 'center'}}
+            hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
           >
             <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? '#aaa' : 'black'} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleMenuPress}
             activeOpacity={0.6}
-            style={{width: 44, height: 44, alignItems: 'center', justifyContent: 'center'}}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            style={{width: 48, height: 48, alignItems: 'center', justifyContent: 'center'}}
+            hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
           >
             <Ionicons name="ellipsis-vertical" size={24} color="black" />
           </TouchableOpacity>
