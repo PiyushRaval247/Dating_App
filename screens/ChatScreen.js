@@ -163,7 +163,7 @@ const ChatScreen = () => {
                     fontSize: 15,
                     textAlign: 'center',
                   }}>
-                  Matches are more considered on hinge. We can help improve your
+            Matches are more considered on SouleMate. We can help improve your
                   chances
                 </Text>
               </View>
@@ -204,7 +204,7 @@ const ChatScreen = () => {
                     fontWeight: '500',
                     fontSize: 15,
                   }}>
-                  Upgrage to HingeX
+          Upgrage to SouleMateX
                 </Text>
               </Pressable>
             </View>

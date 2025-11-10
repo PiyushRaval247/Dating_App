@@ -203,7 +203,7 @@ const LikesScreen = () => {
             Likes You
           </Text>
           <Pressable
-            onPress={() => navigation.navigate('Subscription', {tab: 'hingeX'})}
+        onPress={() => navigation.navigate('Subscription', {tab: 'soulemateX'})}
             style={{
               backgroundColor: '#008B8B',
               padding: 10,
@@ -335,7 +335,7 @@ const LikesScreen = () => {
               })()}
             </Text>
             <Pressable
-              onPress={() => navigation.navigate('Subscription', {tab: 'hingeplus'})}
+        onPress={() => navigation.navigate('Subscription', {tab: 'soulemateplus'})}
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 6,
@@ -346,7 +346,7 @@ const LikesScreen = () => {
               }}>
               <Text
                 style={{textAlign: 'center', color: 'white', fontSize: 13}}>
-                Get Hinge +
+          Get SouleMate +
               </Text>
             </Pressable>
           </View>
@@ -442,7 +442,7 @@ const LikesScreen = () => {
         <View style={{marginTop: 50}} />
 
         <Pressable
-          onPress={() => navigation.navigate('Subscription', {tab: 'hingeX'})}
+        onPress={() => navigation.navigate('Subscription', {tab: 'soulemateX'})}
           style={{
             padding: 12,
             borderRadius: 22,
@@ -461,7 +461,7 @@ const LikesScreen = () => {
         </Pressable>
 
         <Pressable
-          onPress={() => navigation.navigate('Subscription', {tab: 'hingeX'})}
+        onPress={() => navigation.navigate('Subscription', {tab: 'soulemateX'})}
           style={{
             padding: 12,
             borderRadius: 22,
@@ -473,7 +473,7 @@ const LikesScreen = () => {
           }}>
           <Text
             style={{textAlign: 'center', fontWeight: '500', fontSize: 15}}>
-            Upgrage to HingeX
+          Upgrage to SouleMateX
           </Text>
         </Pressable>
       </View>

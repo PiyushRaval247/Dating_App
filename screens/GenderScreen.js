@@ -72,7 +72,7 @@ const GenderScreen = () => {
         </Text>
 
         <Text style={{fontSize: 15, marginTop: 20, color: 'gray'}}>
-          Hinge users are matched based on these gender groups. You can add more
+  SouleMate users are matched based on these gender groups. You can add more
           about gender after registering
         </Text>
 

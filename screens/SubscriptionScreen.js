@@ -2,25 +2,25 @@ import {StyleSheet, Text, View, ScrollView, SafeAreaView} from 'react-native';
 import React, {useState} from 'react';
 import { useRoute } from '@react-navigation/native';
 import {TabBar, TabView} from 'react-native-tab-view';
-import HingePlus from './HingePlus';
-import HingeX from './HingeX';
+import SouleMatePlus from './SouleMatePlus';
+import SouleMateX from './SouleMateX';
 import BackHeader from '../components/BackHeader';
 
 const SubscriptionScreen = () => {
   const route = useRoute();
   const initialTab = route?.params?.tab;
-  const [index, setIndex] = useState(initialTab === 'hingeX' ? 1 : 0);
+  const [index, setIndex] = useState(initialTab === 'soulemateX' ? 1 : 0);
 
   const [routes] = useState([
-    {key: 'hingeplus', title: 'Hinge+'},
-    {key: 'hingeX', title: 'HingeX'},
+  {key: 'soulemateplus', title: 'SouleMate+'},
+  {key: 'soulemateX', title: 'SouleMateX'},
   ]);
   const renderScene = ({route}) => {
     switch (route.key) {
-      case 'hingeplus':
-        return <HingePlus />;
-      case 'hingeX':
-        return <HingeX />;
+    case 'soulemateplus':
+      return <SouleMatePlus />;
+    case 'soulemateX':
+      return <SouleMateX />;
       default:
         return null;
     }
@@ -28,7 +28,7 @@ const SubscriptionScreen = () => {
   return (
     <ScrollView contentContainerStyle={{flexGrow:1}}>
       <SafeAreaView style={{flex: 1, backgroundColor: '#F8F8F8'}}>
-        <BackHeader title={index === 1 ? 'HingeX' : 'Hinge+'} />
+  <BackHeader title={index === 1 ? 'SouleMateX' : 'SouleMate+'} />
         <TabView
           navigationState={{index, routes}}
           renderScene={renderScene}

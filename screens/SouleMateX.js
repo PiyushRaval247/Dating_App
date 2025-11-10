@@ -17,7 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BASE_URL, RAZORPAY_KEY_ID } from '../urls/url';
 
-const HingeX = () => {
+const SouleMateX = () => {
   const planss = [
     {
       id: '0',
@@ -63,9 +63,9 @@ const HingeX = () => {
       }
 
       const options = {
-        description: 'Hinge X Subscription',
+  description: 'SouleMate X Subscription',
         currency: 'INR',
-        name: 'Hinge',
+  name: 'SouleMate',
         key: RAZORPAY_KEY_ID,
         amount: String(amount),
         prefill: {
@@ -82,7 +82,7 @@ const HingeX = () => {
         const data = await RazorpayCheckout.open(options);
         console.log('Payment successful:', data);
 
-        const type = 'Hinge X';
+  const type = 'SouleMate X';
         const token = await AsyncStorage.getItem('token');
 
         const response = await axios.post(
@@ -110,7 +110,7 @@ const HingeX = () => {
           } catch (e) {
             console.log('Error refreshing user info after subscription', e);
           }
-          Alert.alert('Success', 'You have been subscribed to Hinge X', [
+  Alert.alert('Success', 'You have been subscribed to SouleMate X', [
             {
               text: 'Cancel',
               onPress: () => console.log('Cancel Pressed'),
@@ -355,7 +355,7 @@ const HingeX = () => {
                 fontWeight: 'bold',
                 color: 'white',
               }}>
-              Includes all Hinge+ benefits
+  Includes all SouleMate+ benefits
             </Text>
 
             <View style={{marginTop: 30}}>
@@ -506,6 +506,6 @@ const HingeX = () => {
   );
 };
 
-export default HingeX;
+export default SouleMateX;
 
 const styles = StyleSheet.create({});

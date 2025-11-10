@@ -92,7 +92,7 @@ const ProfileScreen = () => {
   const [routes] = useState([
     {key: 'getMore', title: 'Get More'},
     {key: 'safety', title: 'Safety'},
-    {key: 'myHinge', title: 'My Hinge'},
+  {key: 'myHinge', title: 'My SouleMate'},
   ]);
 
   const [index, setIndex] = useState(0);
@@ -206,7 +206,7 @@ const ProfileScreen = () => {
       const options = {
         description: 'Adding To Wallet',
         currency: 'INR',
-        name: 'Hinge',
+  name: 'SouleMate',
         key: RAZORPAY_KEY_ID,
         amount: String(amount),
         prefill: {
@@ -330,11 +330,11 @@ const ProfileScreen = () => {
   const {isActive, planType, planName, endDate, daysLeft} = getActiveSubscription();
 
   const planDisplay = (() => {
-    if (/hinge\s*x/i.test(String(planType))) {
-      return {label: 'HingeX', bg: '#181818', fg: '#FFD700', border: '#FFD700'};
+  if (/soulemate\s*x/i.test(String(planType))) {
+  return {label: 'SouleMateX', bg: '#181818', fg: '#FFD700', border: '#FFD700'};
     }
-    if (/hinge\s*plus/i.test(String(planType))) {
-      return {label: 'Hinge+', bg: '#9f4ec2', fg: '#FFFFFF', border: '#9f4ec2'};
+  if (/soulemate\s*plus/i.test(String(planType))) {
+  return {label: 'SouleMate+', bg: '#9f4ec2', fg: '#FFFFFF', border: '#9f4ec2'};
     }
     return {label: null, bg: 'purple', fg: '#FFFFFF', border: 'purple'};
   })();
@@ -342,14 +342,7 @@ const ProfileScreen = () => {
   const GetMore = ({modalVisible, setModalVisible}) => (
     <ScrollView contentContainerStyle={{paddingBottom: 120}}>
       <View style={{flex: 1, marginTop: 30, marginHorizontal: 20}}>
-      <Pressable onPress={() => navigation.navigate('Subscription')}>
-        <Image
-          style={{height: 250, width: '100%', borderRadius: 10}}
-          source={{
-            uri: 'https://cdn.sanity.io/images/l7pj44pm/production/5f4e26a82da303138584cff340f3eff9e123cd56-1280x720.jpg',
-          }}
-        />
-      </Pressable>
+      {/* Removed promotional hero image per request */}
 
       {/* Boost Explainer Card */}
       <View
@@ -744,7 +737,7 @@ const ProfileScreen = () => {
             onPress={() => {
               try {
                 Share.share({
-                  message: 'Check out Hinge! Find real connections.',
+  message: 'Check out SouleMate! Find real connections.',
                 });
               } catch (e) {}
             }}
@@ -764,7 +757,7 @@ const ProfileScreen = () => {
           <Pressable
             onPress={() => {
               Linking.openURL(
-                'mailto:support@hinge.example?subject=Help%20with%20Hinge&body=Describe%20your%20issue%20here',
+  'mailto:support@soulemate.example?subject=Help%20with%20SouleMate&body=Describe%20your%20issue%20here',
               );
             }}
             style={{
@@ -782,7 +775,7 @@ const ProfileScreen = () => {
           </Pressable>
           <Pressable
             onPress={async () => {
-              const pkg = Platform.OS === 'android' ? 'com.hinge.clone' : 'id000000';
+  const pkg = Platform.OS === 'android' ? 'com.soulemate.clone' : 'id000000';
               const androidUrl = `market://details?id=${pkg}`;
               const webUrl = `https://play.google.com/store/apps/details?id=${pkg}`;
               try {
@@ -980,7 +973,7 @@ const ProfileScreen = () => {
           }}>
           <View>
             <Text style={{fontSize: 26, fontFamily: 'Helvetica-Bold'}}>
-              HINGE
+  SOULEMATE
             </Text>
           </View>
 

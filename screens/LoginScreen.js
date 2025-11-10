@@ -119,7 +119,7 @@ const LoginScreen = () => {
             fontFamily: 'GeezaPro-bold',
             color: 'white',
           }}>
-          Hinge
+        SouleMate
         </Text>
       </View>
 

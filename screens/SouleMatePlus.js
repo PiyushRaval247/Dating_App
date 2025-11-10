@@ -17,7 +17,7 @@ import {BASE_URL, RAZORPAY_KEY_ID} from '../urls/url';
 import {useNavigation} from '@react-navigation/native';
 import { AuthContext } from '../AuthContext';
 
-const HingePlus = () => {
+const SouleMatePlus = () => {
   const plans = [
     {
       id: '0',
@@ -63,9 +63,9 @@ const HingePlus = () => {
       }
 
       const options = {
-        description: 'Hinge Plus Subscription',
+  description: 'SouleMate Plus Subscription',
         currency: 'INR',
-        name: 'Hinge',
+  name: 'SouleMate',
         key: RAZORPAY_KEY_ID,
         amount: String(amount),
         prefill: {
@@ -83,7 +83,7 @@ const HingePlus = () => {
         console.log('Payment successful:', data);
         
         const token = await AsyncStorage.getItem('token');
-        const type = 'Hinge plus';
+  const type = 'SouleMate plus';
 
         const response = await axios.post(
           `${BASE_URL}/subscribe`,
@@ -110,7 +110,7 @@ const HingePlus = () => {
           } catch (e) {
             console.log('Error refreshing user info after subscription', e);
           }
-          Alert.alert('Success', 'You have been subscribed to Hinge Plus', [
+  Alert.alert('Success', 'You have been subscribed to SouleMate Plus', [
             {
               text: 'Cancel',
               onPress: () => console.log('Cancel Pressed'),
@@ -372,6 +372,6 @@ const HingePlus = () => {
   );
 };
 
-export default HingePlus;
+export default SouleMatePlus;
 
 const styles = StyleSheet.create({});
