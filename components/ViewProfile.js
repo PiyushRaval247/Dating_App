@@ -11,6 +11,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import Feather from '@react-native-vector-icons/feather';
 import Entypo from '@react-native-vector-icons/entypo';
 import ImageCarousel from './ImageCarousel';
+import { getAgeFromDob } from '../utils/dateUtils';
 
 const ViewProfile = ({userInfo}) => {
   const {userInfo: currentUserInfo} = useContext(AuthContext);
@@ -31,7 +32,11 @@ const ViewProfile = ({userInfo}) => {
               <View
                 style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
                 <Text style={{fontSize: 22, fontWeight: 'bold'}}>
-                  {userInfo?.firstName}
+                  {(() => {
+                    const name = userInfo?.firstName || '';
+                    const age = getAgeFromDob(userInfo?.dateOfBirth);
+                    return age != null ? `${name}, ${age}` : name;
+                  })()}
                 </Text>
                 <View
                   style={{
@@ -110,7 +115,14 @@ const ViewProfile = ({userInfo}) => {
                     size={22}
                     color="black"
                   /> */}
-                  <Text style={{fontSize: 15}}>{userInfo?.dateOfBirth}</Text>
+                  {(() => {
+                    const age = getAgeFromDob(userInfo?.dateOfBirth);
+                    return (
+                      <Text style={{fontSize: 15}}>
+                        {age != null ? `Age: ${age}` : (userInfo?.dateOfBirth || 'Age not set')}
+                      </Text>
+                    );
+                  })()}
                 </View>
 
                 <View

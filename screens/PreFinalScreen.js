@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Alert,
 } from 'react-native';
 import React, {useState, useEffect, useContext} from 'react';
 import LottieView from 'lottie-react-native';
@@ -15,6 +16,7 @@ import axios from 'axios';
 import {BASE_URL} from '../urls/url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {AuthContext} from '../AuthContext';
+import { resetToMain } from '../navigation/RootNavigation';
 
 const PreFinalScreen = () => {
   const [userData, setUserData] = useState();
@@ -98,21 +100,21 @@ const PreFinalScreen = () => {
       const response = await axios.post(`${BASE_URL}/register`, userData);
       
       console.log('Response', response);
-      const token = response.data.token;
+      const token = response?.data?.token;
+      if (!token || typeof token !== 'string' || token.trim().length < 10) {
+        setLoading(false);
+        Alert.alert('Registration failed', 'No token returned. Please try again.');
+        return;
+      }
       await AsyncStorage.setItem('token', token);
       setToken(token);
-      
+
       await clearAllScreenData();
-      // Ensure we land in Main after token is set. Use a short delay
-      // so NavigationContainer can re-render with the new token.
+      // Perform a root-level reset to Main once NavigationContainer is ready.
+      // Using the global ref avoids stack mismatch during Auth->Main switch.
       setTimeout(() => {
-        try {
-          const parentNav = navigation.getParent?.() || navigation;
-          parentNav.reset({ index: 0, routes: [{ name: 'Main' }] });
-        } catch (e) {
-          console.log('Navigation reset error (post-register):', e?.message || e);
-        }
-      }, 150);
+        resetToMain();
+      }, 200);
     } catch (error) {
       console.log('Error registering user:', error);
       // Add user feedback here if needed

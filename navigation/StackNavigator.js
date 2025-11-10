@@ -10,6 +10,7 @@ import LikesScreen from '../screens/LikesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import {NavigationContainer} from '@react-navigation/native';
+import { navigationRef } from './RootNavigation';
 import LoginScreen from '../screens/LoginScreen';
 import BasicInfo from '../screens/BasicInfo';
 import NameScreen from '../screens/NameScreen';
@@ -374,7 +375,7 @@ const StackNavigator = () => {
     );
   }
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {token == null || token == '' ? <AuthStack /> : <MainStack />}
     </NavigationContainer>
   );

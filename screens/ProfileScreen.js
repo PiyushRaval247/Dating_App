@@ -22,6 +22,7 @@ import {AuthContext} from '../AuthContext';
 import {TabBar, TabView} from 'react-native-tab-view';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
+import { getDaysLeft } from '../utils/dateUtils';
 import {BASE_URL} from '../urls/url';
 import {BottomModal} from 'react-native-modals';
 import {SlideAnimation} from 'react-native-modals';
@@ -312,10 +313,7 @@ const ProfileScreen = () => {
       return {isActive: false, planType: null, planName: null, startDate: null, endDate: null, daysLeft: null};
     }
 
-    const end = active.endDate ? new Date(active.endDate) : null;
-    const now = new Date();
-    const diffMs = end ? end - now : null;
-    const daysLeft = diffMs != null ? Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24))) : null;
+    const daysLeft = active.endDate ? getDaysLeft(active.endDate) : null;
 
     return {
       isActive: true,
@@ -1030,7 +1028,17 @@ const ProfileScreen = () => {
           </Pressable>
 
           <Text style={{marginTop: 10, fontSize: 24, fontWeight: '500'}}>
-            {userInfo?.firstName}
+            {(() => {
+              const name = userInfo?.firstName || '';
+              // dateOfBirth may be stored as DD/MM/YYYY or ISO
+              try {
+                const { getAgeFromDob } = require('../utils/dateUtils');
+                const age = getAgeFromDob(userInfo?.dateOfBirth);
+                return age != null ? `${name}, ${age}` : name;
+              } catch (e) {
+                return name;
+              }
+            })()}
           </Text>
 
           {isActive && planDisplay.label && (

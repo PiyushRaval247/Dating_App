@@ -19,7 +19,8 @@ import {BASE_URL} from '../urls/url';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import Entypo from '@react-native-vector-icons/entypo';
 import LottieView from 'lottie-react-native';
-import ImageCarousel from '../components/ImageCarousel';
+ import ImageCarousel from '../components/ImageCarousel';
+ import { getAgeFromDob } from '../utils/dateUtils';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -433,7 +434,13 @@ const HomeScreen = () => {
                           justifyContent: 'space-between',
                         }}>
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                          <Text style={{fontSize: 20, fontWeight: '700'}}>{currentProfile?.firstName}</Text>
+                          <Text style={{fontSize: 20, fontWeight: '700'}}>
+                            {(() => {
+                              const name = currentProfile?.firstName || '';
+                              const age = getAgeFromDob(currentProfile?.dateOfBirth);
+                              return age != null ? `${name}, ${age}` : name;
+                            })()}
+                          </Text>
                           <View
                             style={{
                               backgroundColor: '#452c63',
