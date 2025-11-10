@@ -116,6 +116,8 @@ const LocationScreen = () => {
         flex: 1,
         backgroundColor: 'white',
       }}>
+      {/* Top-right Next button overlay for map page */}
+      <NextButton onPress={handleNext} placement="top-right" />
       <ScrollView contentContainerStyle={{marginTop: 80, marginHorizontal: 20, paddingBottom: 120}}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <View
@@ -190,9 +192,7 @@ const LocationScreen = () => {
   />
 )}
 
-
-        {/* Floating Next button pinned bottom-right above the map */}
-        <NextButton onPress={handleNext} />
+        {/* Next button moved to top-right overlay */}
       </ScrollView>
     </SafeAreaView>
   );

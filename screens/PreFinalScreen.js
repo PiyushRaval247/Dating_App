@@ -103,16 +103,16 @@ const PreFinalScreen = () => {
       setToken(token);
       
       await clearAllScreenData();
-
-      // Ensure user is taken to the main app after successful registration
-      // Give the NavigationContainer a brief moment to re-render with the new token
+      // Ensure we land in Main after token is set. Use a short delay
+      // so NavigationContainer can re-render with the new token.
       setTimeout(() => {
         try {
-          navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+          const parentNav = navigation.getParent?.() || navigation;
+          parentNav.reset({ index: 0, routes: [{ name: 'Main' }] });
         } catch (e) {
           console.log('Navigation reset error (post-register):', e?.message || e);
         }
-      }, 50);
+      }, 150);
     } catch (error) {
       console.log('Error registering user:', error);
       // Add user feedback here if needed

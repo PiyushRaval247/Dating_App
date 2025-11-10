@@ -10,12 +10,13 @@ import {
   TextInput,
   Image,
 } from 'react-native';
-import React from 'react';
+import React, { useEffect } from 'react';
 import MaterialDesignIcons from '@react-native-vector-icons/material-icons';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import {useState} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import { saveRegistrationProgress } from '../utils/registrationUtils';
+import { saveRegistrationProgress, getRegistrationProgress } from '../utils/registrationUtils';
+import { Alert } from 'react-native';
 import axios from 'axios';
 import { BASE_URL } from '../urls/url';
 
@@ -24,28 +25,47 @@ const PasswordScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const route = useRoute();
   const navigation = useNavigation();
-  const email = route?.params?.email;
+  const emailParam = route?.params?.email;
+  const [resolvedEmail, setResolvedEmail] = useState(emailParam || '');
+
+  // Fallback to saved email if route param is missing
+  useEffect(() => {
+    const loadEmail = async () => {
+      if (!emailParam) {
+        const progress = await getRegistrationProgress('Email');
+        const savedEmail = progress?.email || '';
+        setResolvedEmail(savedEmail);
+      }
+    };
+    loadEmail();
+  }, [emailParam]);
+
   const handleSendOtp = async () => {
-    if(!email){
+    if (!resolvedEmail) {
+      Alert.alert('Email required', 'Please enter your email first.');
+      navigation.navigate('Email');
       return;
     }
 
     try{
       const response = await axios.post(`${BASE_URL}/sendOtp`,{
-        email,
+        email: resolvedEmail,
         password
       });
       console.log(response.data.message);
-      navigation.navigate('Otp', {email});
+      navigation.navigate('Otp', {email: resolvedEmail});
 
     } catch(error){
       console.log("Error sending the OTP",error)
+      Alert.alert('Error', 'Could not send OTP. Please try again.');
     }
   }
   const handleNext = () => {
-    if(password.trim() !== ''){
-      saveRegistrationProgress('Password',{password});
+    if(password.trim() === ''){
+      Alert.alert('Password required', 'Please enter a password to continue.');
+      return;
     }
+    saveRegistrationProgress('Password',{password});
     // navigation.navigate('Otp', {email});
 
     handleSendOtp();
