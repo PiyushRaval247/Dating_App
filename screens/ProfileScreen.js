@@ -35,7 +35,7 @@ const ProfileScreen = () => {
 
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
-  const [plan, setPlan] = useState('');
+  const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -170,13 +170,14 @@ const ProfileScreen = () => {
     }
   };
 
-  const initiatePayment = async () => {
+  const initiatePayment = async (selectedItem) => {
     try {
       console.log('=== PAYMENT DEBUG START ===');
-      console.log('Plan:', plan);
+      const effectivePlan = selectedItem || plan;
+      console.log('Plan:', effectivePlan);
       console.log('RAZORPAY_KEY_ID:', RAZORPAY_KEY_ID);
       
-      if (!plan || !plan.price) {
+      if (!effectivePlan || !effectivePlan.price) {
         console.log('ERROR: Invalid plan or price');
         Alert.alert('Error', 'Please select a valid plan');
         return;
@@ -191,7 +192,7 @@ const ProfileScreen = () => {
       setIsLoading(true);
 
       // Robust amount parsing: extract numeric (with decimals), convert to paise, fallback to ₹1.00
-      const priceText = String(plan?.price || '');
+      const priceText = String(effectivePlan?.price || '');
       const match = priceText.match(/[0-9]+(?:\.[0-9]+)?/);
       const amountRupees = match ? parseFloat(match[0]) : 0;
       let amount = Math.round(amountRupees * 100);
@@ -225,7 +226,7 @@ const ProfileScreen = () => {
         console.log('Payment successful! Data:', data);
         
         // Payment successful, now update backend
-        const rosesToAdd = plan?.plan.split(' ')[0];
+        const rosesToAdd = effectivePlan?.plan.split(' ')[0];
 
         const response = await axios.post(`${BASE_URL}/payment-success`, {
           userId,
@@ -297,7 +298,7 @@ const ProfileScreen = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'OK', onPress: () => initiatePayment()},
+      {text: 'OK', onPress: () => initiatePayment(item)},
     ]);
   };
 
