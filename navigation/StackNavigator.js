@@ -43,6 +43,11 @@ import { NotificationProvider, useNotification } from '../context/NotificationCo
 import IncomingCallBanner from '../components/IncomingCallBanner';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import PrivacyScreen from '../screens/PrivacyScreen';
+import FAQScreen from '../screens/FAQScreen';
+import AboutUsScreen from '../screens/AboutUsScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
 
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
@@ -375,6 +380,31 @@ const StackNavigator = () => {
             name="BlockedUsers"
             component={BlockedUsersScreen}
             options={{ headerTitle: 'Blocked Users' }}
+          />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Privacy"
+            component={PrivacyScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="FAQ"
+            component={FAQScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AboutUs"
+            component={AboutUsScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="PrivacyPolicy"
+            component={PrivacyPolicyScreen}
+            options={{ headerShown: false }}
           />
         </Stack.Navigator>
       </NotificationProvider>

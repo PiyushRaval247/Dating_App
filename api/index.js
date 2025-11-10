@@ -13,6 +13,7 @@ import {
   PutItemCommand,
   QueryCommand,
   UpdateItemCommand,
+  DeleteItemCommand,
   CreateTableCommand,
   DescribeTableCommand,
 } from '@aws-sdk/client-dynamodb';
@@ -30,6 +31,7 @@ import {
   GetCommand,
   UpdateCommand,
   ScanCommand,
+  DeleteCommand,
 } from '@aws-sdk/lib-dynamodb';
 import {profile} from 'console';
 import http from 'http';
@@ -392,6 +394,54 @@ app.get('/user-info', async (req, res) => {
   } catch (error) {
     console.log('Error fetching user details', error);
     res.status(500).json({message: 'Internal server error'});
+  }
+});
+
+// Delete account for the authenticated user
+app.delete('/account/:userId', authenticateToken, async (req, res) => {
+  try {
+    const { userId } = req.params;
+    if (!userId) {
+      return res.status(400).json({ message: 'User id is required' });
+    }
+    if (req.user?.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    // Delete user from main user table
+    await docClient.send(new DeleteCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+    }));
+
+    // Best-effort cleanup: remove activity items for this user
+    try {
+      const q = new QueryCommand({
+        TableName: ACTIVITY_TABLE,
+        KeyConditionExpression: 'userId = :uid',
+        ExpressionAttributeValues: { ':uid': { S: userId } },
+      });
+      const result = await dynamoDbClient.send(q);
+      const items = Array.isArray(result.Items) ? result.Items : [];
+      for (const it of items) {
+        const key = {
+          userId: { S: userId },
+          activityDate: it.activityDate,
+        };
+        await dynamoDbClient.send(new DeleteItemCommand({
+          TableName: ACTIVITY_TABLE,
+          Key: key,
+        }));
+      }
+    } catch (e) {
+      // Ignore activity cleanup errors; deletion of user still succeeds
+      console.log('Activity cleanup error', e?.message || e);
+    }
+
+    return res.status(200).json({ message: 'Account deleted' });
+  } catch (error) {
+    console.log('Delete account error', error);
+    return res.status(500).json({ message: 'Internal server error' });
   }
 });
 

@@ -39,7 +39,7 @@ const ProfileScreen = () => {
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [settingsVisible, setSettingsVisible] = useState(false);
+  // Settings now opens as a full screen; remove modal state
   const getProfileCompleteness = () => {
     const info = userInfo || {};
     const imageCount = Array.isArray(info?.imageUrls) ? (info?.imageUrls?.length || 0) : 0;
@@ -150,7 +150,7 @@ const ProfileScreen = () => {
   };
 
   const openSettings = () => {
-    setSettingsVisible(true);
+    navigation.navigate('Settings');
   };
 
   const renderScene = ({route}) => {
@@ -1232,134 +1232,7 @@ const ProfileScreen = () => {
         </ModalContent>
       </BottomModal>
 
-      {/* Settings side pane */}
-      <BottomModal
-        swipeDirection={['left', 'right']}
-        swipeThreshold={200}
-        modalAnimation={new SlideAnimation({slideFrom: 'right'})}
-        visible={settingsVisible}
-        onTouchOutside={() => setSettingsVisible(false)}
-        onHardwareBackPress={() => setSettingsVisible(false)}>
-        <ModalContent style={{ width: '78%', height: '100%', padding: 0 }}>
-          <View style={{ flex: 1, backgroundColor: colors.card }}>
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingHorizontal: spacing.lg,
-              paddingTop: spacing.lg,
-              paddingBottom: spacing.md,
-            }}>
-              <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>Settings</Text>
-              <Pressable onPress={() => setSettingsVisible(false)} hitSlop={10}>
-                <Ionicons name="close" size={22} color={colors.text} />
-              </Pressable>
-            </View>
-
-            <View style={{ height: 1, backgroundColor: colors.border }} />
-
-            <ScrollView contentContainerStyle={{ paddingVertical: spacing.md }}>
-              <Text style={{
-                color: colors.textMuted,
-                fontSize: 12,
-                letterSpacing: 0.3,
-                paddingHorizontal: spacing.lg,
-                marginTop: spacing.sm,
-                marginBottom: spacing.xs,
-              }}>Account</Text>
-              <Pressable
-                onPress={() => {
-                  setSettingsVisible(false);
-                  navigation.navigate('EditProfile', {userInfo});
-                }}
-                style={{
-                  paddingVertical: spacing.md,
-                  paddingHorizontal: spacing.lg,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}>
-                <Ionicons name="person-circle-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Edit Profile</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-              <View style={{ height: 1, backgroundColor: colors.border }} />
-
-              <Pressable
-                onPress={() => Alert.alert('Notifications', 'Sample setting')}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="notifications-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Notifications</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-              <View style={{ height: 1, backgroundColor: colors.border }} />
-
-              <Pressable
-                onPress={() => Alert.alert('Privacy', 'Sample setting')}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="shield-checkmark-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Privacy</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-              <View style={{ height: 1, backgroundColor: colors.border }} />
-
-              <Pressable
-                onPress={() => {
-                  setSettingsVisible(false);
-                  navigation.navigate('BlockedUsers');
-                }}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="ban-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Blocked Users</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-
-              <Text style={{
-                color: colors.textMuted,
-                fontSize: 12,
-                letterSpacing: 0.3,
-                paddingHorizontal: spacing.lg,
-                marginTop: spacing.lg,
-                marginBottom: spacing.xs,
-              }}>Support</Text>
-
-              <Pressable
-                onPress={() => Alert.alert('Help Center', 'Sample setting')}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="help-circle-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Help Center</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-
-              <Pressable
-                onPress={() => Alert.alert('About', 'Sample setting')}
-                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="information-circle-outline" size={22} color={colors.text} />
-                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>About</Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-              </Pressable>
-
-              <View style={{height: spacing.md}} />
-              <View style={{height: 1, backgroundColor: colors.border}} />
-              <View style={{height: spacing.md}} />
-
-              <Pressable
-                onPress={() => {
-                  setSettingsVisible(false);
-                  clearAuthToken();
-                }}
-                style={{
-                  paddingVertical: spacing.md,
-                  paddingHorizontal: spacing.lg,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}>
-                <Ionicons name="log-out-outline" size={22} color={colors.danger} />
-                <Text style={{ fontSize: 16, color: colors.danger, fontWeight: '600', marginLeft: spacing.md }}>Logout</Text>
-              </Pressable>
-            </ScrollView>
-          </View>
-        </ModalContent>
-      </BottomModal>
+      {/* Settings modal removed; using full-screen SettingsScreen now */}
     </>
   );
 };
