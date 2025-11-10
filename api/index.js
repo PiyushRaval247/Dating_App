@@ -481,6 +481,7 @@ app.patch('/user-info', authenticateToken, async (req, res) => {
     }
 
     const allowedKeys = new Set([
+      // Existing editable fields
       'firstName',
       'jobTitle',
       'workPlace',
@@ -489,6 +490,12 @@ app.patch('/user-info', authenticateToken, async (req, res) => {
       'lookingFor',
       'imageUrls',
       'prompts',
+      // Expanded fields requested for full profile editing
+      'lastName',
+      'gender',
+      'dateOfBirth',
+      'type',
+      'datingPreferences',
     ]);
 
     const updateKeys = Object.keys(body).filter((k) => allowedKeys.has(k) && body[k] !== undefined);
