@@ -5,11 +5,13 @@ import {TabBar, TabView} from 'react-native-tab-view';
 import ViewProfile from '../components/ViewProfile';
 import {AuthContext} from '../AuthContext';
 import BackHeader from '../components/BackHeader';
+import axios from 'axios';
+import { BASE_URL } from '../urls/url';
 
 const ProfileDetailScreen = () => {
   const [index, setIndex] = useState(0);
   const route = useRoute();
-  const {setUserInfo, userInfo: ctxUserInfo} = useContext(AuthContext);
+  const {setUserInfo, userInfo: ctxUserInfo, userId, token} = useContext(AuthContext);
   const viewOnly = route?.params?.viewOnly === true;
   const [routes] = useState(viewOnly ? [
     {key: 'view', title: 'View'},
@@ -35,8 +37,8 @@ const ProfileDetailScreen = () => {
     const [hometown, setHometown] = useState(userInfo?.hometown || '');
     const [lookingFor, setLookingFor] = useState(userInfo?.lookingFor || '');
 
-    const onSave = () => {
-      const updated = {
+    const onSave = async () => {
+      const updatedLocal = {
         ...userInfo,
         firstName,
         jobTitle,
@@ -45,13 +47,38 @@ const ProfileDetailScreen = () => {
         hometown,
         lookingFor,
       };
-      setUserInfo && setUserInfo(updated);
-      if (Platform.OS === 'android') {
-        ToastAndroid.show('Profile updated', ToastAndroid.SHORT);
-      } else {
-        Alert.alert('Saved', 'Profile updated');
+      try {
+        if (userId && token) {
+          const resp = await axios.patch(`${BASE_URL}/user-info`, {
+            userId,
+            firstName,
+            jobTitle,
+            workPlace,
+            location,
+            hometown,
+            lookingFor,
+          }, { headers: { Authorization: `Bearer ${token}` } });
+          const updated = resp?.data?.user || updatedLocal;
+          setUserInfo && setUserInfo(updated);
+        } else {
+          // Fallback: update locally if auth not available
+          setUserInfo && setUserInfo(updatedLocal);
+        }
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Profile updated', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Saved', 'Profile updated');
+        }
+        setIndex(1);
+      } catch (error) {
+        setUserInfo && setUserInfo(updatedLocal);
+        const msg = error?.response?.data?.message || error?.message || 'Failed to save changes';
+        if (Platform.OS === 'android') {
+          ToastAndroid.show(msg, ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Error', msg);
+        }
       }
-      setIndex(1); // switch to View tab
     };
 
     return (

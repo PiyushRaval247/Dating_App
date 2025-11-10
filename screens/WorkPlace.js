@@ -16,15 +16,23 @@ const WorkPlace = () => {
     const route = useRoute();
     const { userInfo, setUserInfo, userId, token } = useContext(AuthContext);
     useEffect(() => {
-      getRegistrationProgress('WorkPlace').then(progressData => {
-       if(progressData){
-         setWorkPlace(progressData.workPlace);
-       }
-      })
+      // Prefer the standardized key 'Workplace', fallback to legacy 'WorkPlace'
+      (async () => {
+        const primary = await getRegistrationProgress('Workplace');
+        if (primary && typeof primary.workPlace === 'string') {
+          setWorkPlace(primary.workPlace);
+          return;
+        }
+        const legacy = await getRegistrationProgress('WorkPlace');
+        if (legacy && typeof legacy.workPlace === 'string') {
+          setWorkPlace(legacy.workPlace);
+        }
+      })();
     },[])
     const handleNext = async () => {
        if(workPlace.trim() !== ''){
-         saveRegistrationProgress('WorkPlace',{workPlace});
+         // Save using standardized key to ensure PreFinal aggregation picks it up
+         saveRegistrationProgress('Workplace',{workPlace});
        }
        // If opened from Profile completion chips, go back instead of onboarding flow
        if (route?.params?.fromProfile) {

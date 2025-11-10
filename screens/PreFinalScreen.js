@@ -42,7 +42,9 @@ const PreFinalScreen = () => {
         'Dating',
         'LookingFor',
         'Hometown',
+        // Read standardized and legacy keys to avoid missing data
         'Workplace',
+        'WorkPlace',
         'JobTitle',
         'Photos',
         'Prompts',
@@ -78,6 +80,7 @@ const PreFinalScreen = () => {
         'LookingFor',
         'Hometown',
         'Workplace',
+        'WorkPlace',
         'JobTitle',
         'Photos',
         'Prompts',
