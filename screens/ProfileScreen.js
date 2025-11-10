@@ -29,6 +29,7 @@ import {SlideAnimation} from 'react-native-modals';
 import {ModalContent} from 'react-native-modals';
 import RazorpayCheckout from 'react-native-razorpay';
 import { RAZORPAY_KEY_ID } from '../urls/url';
+import { colors, spacing, radii } from '../utils/theme';
 
 const ProfileScreen = () => {
   const {token, userId, userInfo, setUserInfo, setToken, setAuthUser, setUserId} = useContext(AuthContext);
@@ -1118,7 +1119,7 @@ const ProfileScreen = () => {
                 </ScrollView>
               )}
               <Pressable
-                onPress={() => navigation.navigate('ProfileDetail', {userInfo})}
+                onPress={() => navigation.navigate('EditProfile', {userInfo})}
                 style={{marginTop: 4, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#662d91'}}>
                 <Text style={{color: 'white', fontWeight: '600'}}>Update Profile</Text>
               </Pressable>
@@ -1239,79 +1240,107 @@ const ProfileScreen = () => {
         visible={settingsVisible}
         onTouchOutside={() => setSettingsVisible(false)}
         onHardwareBackPress={() => setSettingsVisible(false)}>
-        <ModalContent style={{width: '75%', height: '100%'}}>
-          <View style={{flex: 1, backgroundColor: 'white'}}>
+        <ModalContent style={{ width: '78%', height: '100%', padding: 0 }}>
+          <View style={{ flex: 1, backgroundColor: colors.card }}>
             <View style={{
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'space-between',
-              paddingVertical: 12,
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.lg,
+              paddingBottom: spacing.md,
             }}>
-              <Text style={{fontSize: 18, fontWeight: '700'}}>Settings</Text>
-              <Pressable onPress={() => setSettingsVisible(false)}>
-                <Ionicons name="close" size={24} color="#111" />
+              <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text }}>Settings</Text>
+              <Pressable onPress={() => setSettingsVisible(false)} hitSlop={10}>
+                <Ionicons name="close" size={22} color={colors.text} />
               </Pressable>
             </View>
 
-            <View style={{height: 1, backgroundColor: '#E0E0E0'}} />
+            <View style={{ height: 1, backgroundColor: colors.border }} />
 
-            <ScrollView contentContainerStyle={{paddingVertical: 12}}>
+            <ScrollView contentContainerStyle={{ paddingVertical: spacing.md }}>
+              <Text style={{
+                color: colors.textMuted,
+                fontSize: 12,
+                letterSpacing: 0.3,
+                paddingHorizontal: spacing.lg,
+                marginTop: spacing.sm,
+                marginBottom: spacing.xs,
+              }}>Account</Text>
               <Pressable
                 onPress={() => {
                   setSettingsVisible(false);
-                  navigation.navigate('ProfileDetail', {userInfo});
+                  navigation.navigate('EditProfile', {userInfo});
                 }}
                 style={{
-                  paddingVertical: 14,
+                  paddingVertical: spacing.md,
+                  paddingHorizontal: spacing.lg,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 12,
                 }}>
-                <Ionicons name="person-circle-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>Edit Profile</Text>
+                <Ionicons name="person-circle-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Edit Profile</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
+              <View style={{ height: 1, backgroundColor: colors.border }} />
 
               <Pressable
                 onPress={() => Alert.alert('Notifications', 'Sample setting')}
-                style={{paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <Ionicons name="notifications-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>Notifications</Text>
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="notifications-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Notifications</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
+              <View style={{ height: 1, backgroundColor: colors.border }} />
 
               <Pressable
                 onPress={() => Alert.alert('Privacy', 'Sample setting')}
-                style={{paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <Ionicons name="shield-checkmark-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>Privacy</Text>
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="shield-checkmark-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Privacy</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
+              <View style={{ height: 1, backgroundColor: colors.border }} />
 
               <Pressable
                 onPress={() => {
                   setSettingsVisible(false);
                   navigation.navigate('BlockedUsers');
                 }}
-                style={{paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <Ionicons name="ban-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>Blocked Users</Text>
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="ban-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Blocked Users</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
+
+              <Text style={{
+                color: colors.textMuted,
+                fontSize: 12,
+                letterSpacing: 0.3,
+                paddingHorizontal: spacing.lg,
+                marginTop: spacing.lg,
+                marginBottom: spacing.xs,
+              }}>Support</Text>
 
               <Pressable
                 onPress={() => Alert.alert('Help Center', 'Sample setting')}
-                style={{paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <Ionicons name="help-circle-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>Help Center</Text>
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="help-circle-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>Help Center</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
 
               <Pressable
                 onPress={() => Alert.alert('About', 'Sample setting')}
-                style={{paddingVertical: 14, flexDirection: 'row', alignItems: 'center', gap: 12}}>
-                <Ionicons name="information-circle-outline" size={22} color="#111" />
-                <Text style={{fontSize: 15}}>About</Text>
+                style={{ paddingVertical: spacing.md, paddingHorizontal: spacing.lg, flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="information-circle-outline" size={22} color={colors.text} />
+                <Text style={{ fontSize: 16, color: colors.text, marginLeft: spacing.md, flex: 1 }}>About</Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
               </Pressable>
 
-              <View style={{height: 12}} />
-              <View style={{height: 1, backgroundColor: '#E0E0E0'}} />
-              <View style={{height: 12}} />
+              <View style={{height: spacing.md}} />
+              <View style={{height: 1, backgroundColor: colors.border}} />
+              <View style={{height: spacing.md}} />
 
               <Pressable
                 onPress={() => {
@@ -1319,13 +1348,13 @@ const ProfileScreen = () => {
                   clearAuthToken();
                 }}
                 style={{
-                  paddingVertical: 14,
+                  paddingVertical: spacing.md,
+                  paddingHorizontal: spacing.lg,
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 12,
                 }}>
-                <Ionicons name="log-out-outline" size={22} color="#d32f2f" />
-                <Text style={{fontSize: 15, color: '#d32f2f', fontWeight: '600'}}>Logout</Text>
+                <Ionicons name="log-out-outline" size={22} color={colors.danger} />
+                <Text style={{ fontSize: 16, color: colors.danger, fontWeight: '600', marginLeft: spacing.md }}>Logout</Text>
               </Pressable>
             </ScrollView>
           </View>

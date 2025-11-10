@@ -228,19 +228,7 @@ const ViewProfile = ({userInfo}) => {
                 <Text>{userInfo?.lookingFor}</Text>
               </View>
 
-              <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  marginTop: 15,
-                  borderBottomWidth: 0.7,
-                  borderBottomColor: '#E0E0E0',
-                  paddingBottom: 10,
-                }}>
-                <Ionicons name="heart-outline" size={20} color="black" />
-                <Text>Monogamy</Text>
-              </View>
+              
             </View>
 
             <View>{null}</View>

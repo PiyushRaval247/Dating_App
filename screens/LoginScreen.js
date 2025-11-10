@@ -7,7 +7,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  TextInput,
   Pressable,
 } from 'react-native';
 import React, {useState,useContext} from 'react';
@@ -18,6 +17,9 @@ import {BASE_URL} from '../urls/url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthContext } from '../AuthContext';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import PrimaryButton from '../components/PrimaryButton';
+import TextInputField from '../components/TextInputField';
+import { colors, spacing, radii } from '../utils/theme';
 
 const LoginScreen = () => {
   const [option, setOption] = useState('Sign In');
@@ -94,8 +96,8 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
-      <View style={{height: 200, backgroundColor: '#581845', width: '100%'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.bg}}>
+      <View style={{height: 200, backgroundColor: colors.primary, width: '100%'}}>
         <View
           style={{
             justifyContent: 'center',
@@ -133,7 +135,7 @@ const LoginScreen = () => {
               fontSize: 20,
               fontWeight: 'bold',
               marginTop: 25,
-              color: '#581845',
+              color: colors.primary,
             }}>
             Designed to be deleted
           </Text>
@@ -155,96 +157,45 @@ const LoginScreen = () => {
           </View>
         )}
 
-        <View style={{marginHorizontal: 20, marginTop: 20}}>
+        <View style={{marginHorizontal: spacing.lg, marginTop: spacing.lg}}>
           {option == 'Sign In' ? (
             <>
               <View>
-                <View style={{marginTop: 14}}>
-                  <View
-                    style={{
-                      padding: 14,
-                      backgroundColor: 'white',
-                      borderRadius: 8,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 15,
-                      borderColor: '#E0E0E0',
-                      borderWidth: 0.6,
-                    }}>
-                    <Text style={{fontSize: 14, color: '#800080', width: 70}}>
-                      Email
-                    </Text>
-
-                    <TextInput
-                      style={{flex: 1, color: '#000'}}
-                      value={word}
-                      onChangeText={text => setWord(text)}
-                      placeholder="User@example.com"
-                      placeholderTextColor={'gray'}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      textContentType="emailAddress"
-                    />
-                    {!!emailError && (
-                      <Text style={{position: 'absolute', bottom: -20, left: 0, color: '#d32f2f', fontSize: 12}}>
-                        {emailError}
-                      </Text>
-                    )}
-                  </View>
+                <View style={{marginTop: spacing.md}}>
+                  <TextInputField
+                    label="Email"
+                    value={word}
+                    onChangeText={setWord}
+                    placeholder="you@example.com"
+                    keyboardType="email-address"
+                    icon="mail-outline"
+                    error={emailError}
+                  />
                 </View>
 
-                <View style={{marginTop: 20}}>
-                  <View
-                    style={{
-                      padding: 14,
-                      backgroundColor: 'white',
-                      borderRadius: 8,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 15,
-                      borderColor: '#E0E0E0',
-                      borderWidth: 0.6,
-                    }}>
-                    <Text style={{fontSize: 14, color: '#800080', width: 70}}>
-                      Password
-                    </Text>
-
-                    <TextInput
-                      style={{flex: 1, color: '#000'}}
-                      secureTextEntry={!showPassword}
-                      value={password}
-                      onChangeText={text => setPassword(text)}
-                      placeholder="Enter your password"
-                      placeholderTextColor={'gray'}
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      textContentType="password"
-                    />
-                    <Pressable onPress={() => setShowPassword(prev => !prev)}>
-                      <Ionicons
-                        name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                        size={20}
-                        color="#800080"
-                      />
-                    </Pressable>
-                    {!!passwordError && (
-                      <Text style={{position: 'absolute', bottom: -20, left: 0, color: '#d32f2f', fontSize: 12}}>
-                        {passwordError}
-                      </Text>
-                    )}
-                  </View>
+                <View style={{marginTop: spacing.md}}>
+                  <TextInputField
+                    label="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    icon="lock-closed-outline"
+                    secure
+                    error={passwordError}
+                  />
                 </View>
 
                 <View
                   style={{
-                    marginTop: 12,
+                    marginTop: spacing.sm,
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                   }}>
-                  <Text>Keep me logged in</Text>
-                  <Text>Forgot Password</Text>
+                  <Text style={{color: '#606060'}}>Keep me logged in</Text>
+                  <Pressable onPress={() => console.log('Forgot Password')}>
+                    <Text style={{color: colors.primary}}>Forgot Password</Text>
+                  </Pressable>
                 </View>
               </View>
             </>
@@ -274,49 +225,25 @@ const LoginScreen = () => {
             </View>
           )}
 
-          <Pressable
-            onPress={createAccount}
-            style={{
-              width: 300,
-              backgroundColor:
-                option == 'Create account' ? '#581845' : 'transparent',
-              borderRadius: 6,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              padding: 15,
-              borderRadius: 30,
-            }}>
-            <Text
+          <View style={{width: 300, alignSelf: 'center'}}>
+            <PrimaryButton
+              title="Create Account"
+              onPress={createAccount}
               style={{
-                textAlign: 'center',
-                color: option == 'Create account' ? 'white' : 'black',
-                fontSize: 16,
-                fontWeight: 'bold',
-              }}>
-              Create Account
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={handleLogin}
-            style={{
-              width: 300,
-              backgroundColor: option == 'Sign In' ? '#581845' : 'transparent',
-              borderRadius: 6,
-              marginLeft: 'auto',
-              marginRight: 'auto',
-              padding: 15,
-              borderRadius: 30,
-            }}>
-            <Text
+                backgroundColor: option == 'Create account' ? colors.primary : '#EFE8F4',
+                marginBottom: spacing.sm,
+              }}
+              textStyle={{ color: option == 'Create account' ? 'white' : '#1A1A1A' }}
+            />
+            <PrimaryButton
+              title="Sign In"
+              onPress={handleLogin}
               style={{
-                textAlign: 'center',
-                color: option == 'Sign In' ? 'white' : 'black',
-                fontSize: 16,
-                fontWeight: 'bold',
-              }}>
-              Sign In
-            </Text>
-          </Pressable>
+                backgroundColor: option == 'Sign In' ? colors.primary : '#EFE8F4',
+              }}
+              textStyle={{ color: option == 'Sign In' ? 'white' : '#1A1A1A' }}
+            />
+          </View>
         </View>
         </ScrollView>
       </KeyboardAvoidingView>

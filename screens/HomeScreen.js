@@ -552,41 +552,7 @@ const HomeScreen = () => {
                         </Text>
                       </View>
 
-                      <Pressable
-                        onPress={() =>
-                          navigation.navigate('SendLike', {
-                            type: 'prompt',
-                            name: currentProfile?.firstName,
-                            userId: userId,
-                            likedUserId: currentProfile?.userId,
-                            prompt: {
-                              question: prompt.question,
-                              answer: prompt.answer,
-                            },
-                          })
-                        }
-                        style={{
-                          position: 'absolute',
-                          bottom: 10,
-                          right: 10,
-                          backgroundColor: 'white',
-                          width: 50,
-                          height: 50,
-                          borderRadius: 25,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}>
-                        <Image
-                          style={{
-                            width: 30,
-                            height: 30,
-                            resizeMode: 'contain',
-                          }}
-                          source={{
-                            uri: 'https://cdn-icons-png.flaticon.com/128/2724/2724657.png',
-                          }}
-                        />
-                      </Pressable>
+                      
                     </>
                   ))}
                 </View>
@@ -617,41 +583,7 @@ const HomeScreen = () => {
                         </Text>
                       </View>
 
-                      <Pressable
-                        onPress={() =>
-                          navigation.navigate('SendLike', {
-                            type: 'prompt',
-                            name: currentProfile?.firstName,
-                            userId: userId,
-                            likedUserId: currentProfile?.userId,
-                            prompt: {
-                              question: prompt.question,
-                              answer: prompt.answer,
-                            },
-                          })
-                        }
-                        style={{
-                          position: 'absolute',
-                          bottom: 10,
-                          right: 10,
-                          backgroundColor: 'white',
-                          width: 50,
-                          height: 50,
-                          borderRadius: 25,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}>
-                        <Image
-                          style={{
-                            width: 30,
-                            height: 30,
-                            resizeMode: 'contain',
-                          }}
-                          source={{
-                            uri: 'https://cdn-icons-png.flaticon.com/128/2724/2724657.png',
-                          }}
-                        />
-                      </Pressable>
+                      
                     </>
                   ))}
                 </View>
@@ -684,41 +616,7 @@ const HomeScreen = () => {
                         </Text>
                       </View>
 
-                      <Pressable
-                        onPress={() =>
-                          navigation.navigate('SendLike', {
-                            type: 'prompt',
-                            name: currentProfile?.firstName,
-                            userId: userId,
-                            likedUserId: currentProfile?.userId,
-                            prompt: {
-                              question: prompt.question,
-                              answer: prompt.answer,
-                            },
-                          })
-                        }
-                        style={{
-                          position: 'absolute',
-                          bottom: 10,
-                          right: 10,
-                          backgroundColor: 'white',
-                          width: 50,
-                          height: 50,
-                          borderRadius: 25,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}>
-                        <Image
-                          style={{
-                            width: 30,
-                            height: 30,
-                            resizeMode: 'contain',
-                          }}
-                          source={{
-                            uri: 'https://cdn-icons-png.flaticon.com/128/2724/2724657.png',
-                          }}
-                        />
-                      </Pressable>
+                      
                     </>
                   ))}
                 </View>

@@ -37,6 +37,7 @@ import HandleLikeScreen from '../screens/HandleLikeScreen';
 import ChatRoom from '../screens/ChatRoom';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ProfileDetailScreen from '../screens/ProfileDetailScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import NotificationBadge from '../components/NotificationBadge';
 import { NotificationProvider, useNotification } from '../context/NotificationContext';
 import IncomingCallBanner from '../components/IncomingCallBanner';
@@ -358,6 +359,11 @@ const StackNavigator = () => {
           <Stack.Screen
             name="Subscription"
             component={SubscriptionScreen}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
             options={{headerShown: false}}
           />
             <Stack.Screen
