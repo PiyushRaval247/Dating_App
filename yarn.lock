@@ -1899,7 +1899,7 @@
   dependencies:
     color "^4.2.3"
 
-"@react-navigation/native-stack@^7.2.0":
+"@react-navigation/native-stack@^7.2.0", "@react-navigation/native-stack@>=6.0.0":
   version "7.2.0"
   resolved "https://registry.npmjs.org/@react-navigation/native-stack/-/native-stack-7.2.0.tgz"
   integrity sha512-mw7Nq9qQrGsmJmCTwIIWB7yY/3tWYXvQswx+HJScGAadIjemvytJXm1fcl3+YZ9T9Ym0aERcVe5kDs+ny3X4vA==
@@ -1907,7 +1907,7 @@
     "@react-navigation/elements" "^2.2.5"
     warn-once "^0.1.1"
 
-"@react-navigation/native@^7.0.14":
+"@react-navigation/native@^7.0.14", "@react-navigation/native@>=6.0.0":
   version "7.0.14"
   resolved "https://registry.npmjs.org/@react-navigation/native/-/native-7.0.14.tgz"
   integrity sha512-Gi6lLw4VOGSWAhmUdJOMauOKGK51/YA1CprjXm91sNfgERWvznqEMw8QmUQx9SEqYfi0LfZhbzpMst09SJ00lw==
@@ -2236,6 +2236,16 @@
   version "0.8.10"
   resolved "https://registry.npmjs.org/@xmldom/xmldom/-/xmldom-0.8.10.tgz"
   integrity sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==
+
+"@zegocloud/zego-uikit-prebuilt-call-rn@^6.6.2":
+  version "6.6.2"
+  resolved "https://registry.npmjs.org/@zegocloud/zego-uikit-prebuilt-call-rn/-/zego-uikit-prebuilt-call-rn-6.6.2.tgz"
+  integrity sha512-1niSjONDWaRAsZfuBDgYdYKB6IzPbIwPF4tlV2BE91xg6RW/hQAVvgLxyeTGiDlId75iFBbgv597EUxwwuct+w==
+
+"@zegocloud/zego-uikit-rn@^2.18.8", "@zegocloud/zego-uikit-rn@>=2.18.8":
+  version "2.18.8"
+  resolved "https://registry.npmjs.org/@zegocloud/zego-uikit-rn/-/zego-uikit-rn-2.18.8.tgz"
+  integrity sha512-04+tP+FQGBWPwKTrjOQC9cfVE4s5vXZz9DbrleNJu+O2oZ7FaPOipe+A4YAK/SV5BTynNzkkptMd5Mv5XuDAbQ==
 
 abort-controller@^3.0.0:
   version "3.0.0"
@@ -6262,6 +6272,13 @@ range-parser@~1.2.1:
   resolved "https://registry.npmjs.org/range-parser/-/range-parser-1.2.1.tgz"
   integrity sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==
 
+react-delegate-component@*:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/react-delegate-component/-/react-delegate-component-1.0.0.tgz"
+  integrity sha512-xdpNHPoiBQF0Ob4z5EqQUEK2sBjy0ooXe9xqsLlaA19l5dUASu3mIkfXMdBmMLCSfByPa0NluEN6BUDaI5EnlQ==
+  dependencies:
+    prop-types "^15.6.0"
+
 react-devtools-core@^5.3.1:
   version "5.3.2"
   resolved "https://registry.npmjs.org/react-devtools-core/-/react-devtools-core-5.3.2.tgz"
@@ -6300,6 +6317,11 @@ react-is@^18.3.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-18.3.1.tgz"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
+react-native-encrypted-storage@*:
+  version "4.0.3"
+  resolved "https://registry.npmjs.org/react-native-encrypted-storage/-/react-native-encrypted-storage-4.0.3.tgz"
+  integrity sha512-0pJA4Aj2S1PIJEbU7pN/Qvf7JIJx3hFywx+i+bLHtgK0/6Zryf1V2xVsWcrD50dfiu3jY1eN2gesQ5osGxE7jA==
+
 react-native-geolocation-service@^5.3.1:
   version "5.3.1"
   resolved "https://registry.npmjs.org/react-native-geolocation-service/-/react-native-geolocation-service-5.3.1.tgz"
@@ -6309,6 +6331,16 @@ react-native-image-picker@^8.2.1:
   version "8.2.1"
   resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-8.2.1.tgz"
   integrity sha512-FBeGYJGFDjMdGCcyubDJgBAPCQ4L1D3hwLXyUU91jY9ahOZMTbluceVvRmrEKqnDPFJ0gF1NVhJ0nr1nROFLdg==
+
+react-native-incall-manager@^4.2.1:
+  version "4.2.1"
+  resolved "https://registry.npmjs.org/react-native-incall-manager/-/react-native-incall-manager-4.2.1.tgz"
+  integrity sha512-HTdtzQ/AswUbuNhcL0gmyZLAXo8VqBO7SIh+BwbeeM1YMXXlR+Q2MvKxhD4yanjJPeyqMfuRhryCQCJhPlsdAw==
+
+react-native-keep-awake@*:
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/react-native-keep-awake/-/react-native-keep-awake-4.0.0.tgz"
+  integrity sha512-0Fotox+eLXQooeibVs3P60yASYUWjtRw9MZNmbuHt5UZQrgUrAKsE4jm7gTr4tPU1m1RkwGzcgUFpcOkh/ec7g==
 
 react-native-maps@^1.20.1:
   version "1.20.1"
@@ -6340,12 +6372,12 @@ react-native-razorpay@^2.3.0:
   resolved "https://registry.npmjs.org/react-native-razorpay/-/react-native-razorpay-2.3.0.tgz"
   integrity sha512-xxiZCPuZmiRq5UHDr+D4OoyxEjMu0ujC+RaE+rYo938EK0Vc21dZRUVxMVP1L2WgzA8PYwmD5FWvdHNtWLQC4Q==
 
-react-native-safe-area-context@^5.0.0, "react-native-safe-area-context@>= 4.0.0":
+react-native-safe-area-context@*, react-native-safe-area-context@^5.0.0, "react-native-safe-area-context@>= 4.0.0":
   version "5.1.0"
   resolved "https://registry.npmjs.org/react-native-safe-area-context/-/react-native-safe-area-context-5.1.0.tgz"
   integrity sha512-Y4vyJX+0HPJUQNVeIJTj2/UOjbSJcB09OEwirAWDrOZ67Lz5p43AmjxSy8nnZft1rMzoh3rcPuonB6jJyHTfCw==
 
-react-native-screens@^4.4.0, "react-native-screens@>= 4.0.0":
+react-native-screens@*, react-native-screens@^4.4.0, "react-native-screens@>= 4.0.0":
   version "4.5.0"
   resolved "https://registry.npmjs.org/react-native-screens/-/react-native-screens-4.5.0.tgz"
   integrity sha512-yBWeN5EHNeew9f0ia9VE7JSlUQzCZEwkb87r7A7/Sg41OJHuRKHNRhmdCOiMBUqwwQi3F+b4NZGywjeM/gWMyg==
@@ -6353,12 +6385,22 @@ react-native-screens@^4.4.0, "react-native-screens@>= 4.0.0":
     react-freeze "^1.0.0"
     warn-once "^0.1.0"
 
+react-native-sound@*, react-native-sound@^0.13.0:
+  version "0.13.0"
+  resolved "https://registry.npmjs.org/react-native-sound/-/react-native-sound-0.13.0.tgz"
+  integrity sha512-SnREzaV0fmpYNuDV1Y8M7FutmaYei0pKBgpldULKKJMkoA3DBv5ppyRxY+oxRQ7HwEpt6LsonrKgM+13GH/tCw==
+
 react-native-tab-view@^4.0.5:
   version "4.0.5"
   resolved "https://registry.npmjs.org/react-native-tab-view/-/react-native-tab-view-4.0.5.tgz"
   integrity sha512-Xn3TpYo4yvKRC/f4+cOcvsXlitdnSaYkacshckrEI3JiDmFKNFIRVNxtZFggm4MwbJafq2RzuzR6xrgKoxgkTw==
   dependencies:
     use-latest-callback "^0.2.1"
+
+react-native-uuid@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.npmjs.org/react-native-uuid/-/react-native-uuid-2.0.3.tgz"
+  integrity sha512-f/YfIS2f5UB+gut7t/9BKGSCYbRA9/74A5R1MDp+FLYsuS+OSWoiM/D8Jko6OJB6Jcu3v6ONuddvZKHdIGpeiw==
 
 react-native-webrtc@^124.0.7:
   version "124.0.7"
@@ -6369,7 +6411,7 @@ react-native-webrtc@^124.0.7:
     debug "4.3.4"
     event-target-shim "6.0.2"
 
-react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", "react-native@>= 0.64.3", react-native@>=0.46, react-native@>=0.50.0, react-native@>=0.60.0, react-native@>=0.66.0, react-native@>=0.70.0, react-native@0.76.5:
+react-native@*, "react-native@^0.0.0-0 || >=0.65 <1.0", "react-native@>= 0.64.3", react-native@>=0.40.0, react-native@>=0.46, react-native@>=0.50.0, react-native@>=0.60.0, react-native@>=0.66.0, react-native@>=0.70.0, react-native@0.76.5:
   version "0.76.5"
   resolved "https://registry.npmjs.org/react-native/-/react-native-0.76.5.tgz"
   integrity sha512-op2p2kB+lqMF1D7AdX4+wvaR0OPFbvWYs+VBE7bwsb99Cn9xISrLRLAgFflZedQsa5HvnOGrULhtnmItbIKVVw==
@@ -6435,7 +6477,7 @@ react-test-renderer@18.3.1:
     react-shallow-renderer "^16.15.0"
     scheduler "^0.23.2"
 
-react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", react@^18.2.0, react@^18.3.1, "react@>= 17.0.1", "react@>= 18.2.0", react@>=16.8, react@>=16.8.0, react@>=17.0.0, react@>=18.1.0, react@18.3.1:
+react@*, "react@^16.0.0 || ^17.0.0 || ^18.0.0", "react@^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", react@^18.2.0, react@^18.3.1, "react@>= 17.0.1", "react@>= 18.2.0", react@>=15, react@>=16.8, react@>=16.8.0, react@>=17.0.0, react@>=18.1.0, react@18.3.1:
   version "18.3.1"
   resolved "https://registry.npmjs.org/react/-/react-18.3.1.tgz"
   integrity sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==
@@ -7736,3 +7778,13 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zego-express-engine-reactnative@^3.19.2:
+  version "3.22.0"
+  resolved "https://registry.npmjs.org/zego-express-engine-reactnative/-/zego-express-engine-reactnative-3.22.0.tgz"
+  integrity sha512-7jzfyVuTP/nUBfF4bLaQ80juWsIkBvW57ooBxqMEpmarcZs9hdWTNQszsYJcjWrKdhCU7iVKtuCX3vmbjT6nRQ==
+
+zego-zim-react-native@^2.20.0:
+  version "2.24.0"
+  resolved "https://registry.npmjs.org/zego-zim-react-native/-/zego-zim-react-native-2.24.0.tgz"
+  integrity sha512-xYNV9uAuut6k4j8f+PMXlW2FwpIp0sqwIZwdHi/0+Upex1Rdl4KnmTmpL/ks7QvN2KARyvK7e89zBeMFgd8ayQ==
