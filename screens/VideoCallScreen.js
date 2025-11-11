@@ -76,7 +76,7 @@ const VideoCallScreen = () => {
 
     const dialIfCaller = async () => {
       if (!isCaller) return;
-      // Send invite for UI prompt
+      // Send invite for UI prompt; actual offer may be (re)sent after accept to avoid race
       socket?.emit('call:invite', {from: userId, to: peerId});
 
       const offer = await pc.createOffer({offerToReceiveAudio: true, offerToReceiveVideo: true});
@@ -111,6 +111,17 @@ const VideoCallScreen = () => {
       cleanup();
     };
 
+    // If callee accepts after navigating, re-send offer to avoid missing the first one
+    const onAccepted = async ({to}) => {
+      try {
+        if (!isCaller) return;
+        if (to !== peerId) return;
+        await dialIfCaller();
+      } catch (e) {
+        console.log('Error after accept', e?.message || e);
+      }
+    };
+
     const setup = async () => {
       await startLocal();
       if (isCaller) await dialIfCaller();
@@ -122,12 +133,14 @@ const VideoCallScreen = () => {
     socket?.on('webrtc:answer', onAnswer);
     socket?.on('webrtc:candidate', onCandidate);
     socket?.on('call:end', onEnd);
+    socket?.on('call:accepted', onAccepted);
 
     return () => {
       socket?.off('webrtc:offer', onOffer);
       socket?.off('webrtc:answer', onAnswer);
       socket?.off('webrtc:candidate', onCandidate);
       socket?.off('call:end', onEnd);
+      socket?.off('call:accepted', onAccepted);
       try {
         pcRef.current?.close();
       } catch {}
