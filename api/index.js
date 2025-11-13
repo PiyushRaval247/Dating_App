@@ -88,11 +88,65 @@ async function ensureActivityTable() {
   }
 }
 
+// Ensure admins table exists
+const ADMINS_TABLE = 'admins';
+async function ensureAdminsTable() {
+  try {
+    await dynamoDbClient.send(new DescribeTableCommand({ TableName: ADMINS_TABLE }));
+    console.log('[DynamoDB] Table admins already exists');
+  } catch (err) {
+    if (err?.name === 'ResourceNotFoundException') {
+      console.log('[DynamoDB] Creating table admins...');
+      const params = {
+        TableName: ADMINS_TABLE,
+        AttributeDefinitions: [
+          { AttributeName: 'adminId', AttributeType: 'S' },
+        ],
+        KeySchema: [
+          { AttributeName: 'adminId', KeyType: 'HASH' },
+        ],
+        BillingMode: 'PAY_PER_REQUEST',
+      };
+      await dynamoDbClient.send(new CreateTableCommand(params));
+      console.log('[DynamoDB] Table admins created');
+    } else {
+      console.log('[DynamoDB] Describe/Create admins table error', err);
+    }
+  }
+}
+
+async function seedDefaultAdmin() {
+  try {
+    const email = 'piyushraval2474@gmail.com';
+    const adminId = email;
+    const existing = await docClient.send(new GetCommand({
+      TableName: ADMINS_TABLE,
+      Key: { adminId },
+      ProjectionExpression: 'adminId',
+    }));
+    if (existing?.Item) {
+      console.log('[Admins] Default admin already present');
+      return;
+    }
+    const passwordHash = await bcrypt.hash('@Piyush24', 10);
+    await docClient.send(new PutCommand({
+      TableName: ADMINS_TABLE,
+      Item: { adminId, email, passwordHash, createdAt: Date.now() },
+      ConditionExpression: 'attribute_not_exists(adminId)'
+    }));
+    console.log('[Admins] Default admin seeded');
+  } catch (e) {
+    console.log('[Admins] Seed default admin error', e?.message || e);
+  }
+}
+
 // Kick off ensure-table on server start only if credentials are present
 if (awsCredentials) {
   ensureActivityTable();
+  ensureAdminsTable().then(() => seedDefaultAdmin());
 } else {
   console.warn('[DynamoDB] AWS credentials not set; skipping ensureActivityTable');
+  console.warn('[DynamoDB] AWS credentials not set; skipping ensureAdminsTable');
 }
 
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -445,8 +499,8 @@ app.delete('/account/:userId', authenticateToken, async (req, res) => {
   }
 });
 
-// Authentication middleware must be declared before any route uses it
-const authenticateToken = (req, res, next) => {
+// Authentication middleware
+function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
 
   if (!authHeader) {
@@ -467,7 +521,27 @@ const authenticateToken = (req, res, next) => {
     req.user = user;
     next();
   });
-};
+}
+
+// Admin authentication middleware
+function authenticateAdmin(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) {
+    return res.status(404).json({ message: 'Token is required' });
+  }
+  const token = authHeader.split(' ')[1];
+  const secretKey = '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0';
+  jwt.verify(token, secretKey, (err, payload) => {
+    if (err) {
+      return res.status(403).json({ message: 'Invalid or expired token' });
+    }
+    if (!payload?.adminEmail) {
+      return res.status(403).json({ message: 'Admin privileges required' });
+    }
+    req.admin = { email: payload.adminEmail };
+    next();
+  });
+}
 
 // Update profile fields (partial updates)
 app.patch('/user-info', authenticateToken, async (req, res) => {
@@ -881,6 +955,10 @@ app.post('/login', async (req, res) => {
     }
 
     const user = userResult.Items[0];
+    // If account is blocked by admin, deny login
+    if (user?.accountBlocked) {
+      return res.status(403).json({ message: 'Account blocked' });
+    }
     const userId = user?.userId;
 
     const secretKey =
@@ -906,6 +984,35 @@ app.post('/login', async (req, res) => {
       return res.status(403).json({message: 'Password reset required'});
     }
     return res.status(500).json({message: 'Login failed'});
+  }
+});
+
+// Admin login: verify against admins table and issue admin token
+app.post('/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+    const adminId = email;
+    const existing = await docClient.send(new GetCommand({
+      TableName: ADMINS_TABLE,
+      Key: { adminId },
+    }));
+    const admin = existing?.Item;
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    const ok = await bcrypt.compare(password, admin.passwordHash);
+    if (!ok) {
+      return res.status(401).json({ message: 'Incorrect password' });
+    }
+    const secretKey = '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0';
+    const token = jwt.sign({ adminEmail: email }, secretKey);
+    return res.status(200).json({ token });
+  } catch (error) {
+    console.log('Admin login error', error?.name || error?.message || error);
+    return res.status(500).json({ message: 'Login failed' });
   }
 });
 
@@ -1610,6 +1717,235 @@ app.post('/report', async (req, res) => {
   }
 });
 
+// List users who have been reported (for admin panel)
+app.get('/reported-users', async (req, res) => {
+  try {
+    const scanParams = {
+      TableName: 'usercollection',
+      ProjectionExpression: 'userId, firstName, email, reports, accountBlocked'
+    };
+    const result = await docClient.send(new ScanCommand(scanParams));
+    const items = result?.Items || [];
+    const reportedUsers = items
+      .filter(u => Array.isArray(u.reports) && u.reports.length > 0)
+      .map(u => ({
+        userId: u.userId,
+        firstName: u.firstName || null,
+        email: u.email || null,
+        reportCount: Array.isArray(u.reports) ? u.reports.length : 0,
+        lastReportAt: Array.isArray(u.reports) && u.reports.length > 0 ? u.reports[u.reports.length - 1]?.timestamp || null : null,
+        accountBlocked: !!u.accountBlocked,
+      }));
+    return res.status(200).json(reportedUsers);
+  } catch (error) {
+    console.log('Reported users fetch error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin dashboard stats
+app.get('/admin/stats', authenticateAdmin, async (req, res) => {
+  try {
+    const scanParams = {
+      TableName: 'usercollection',
+      // Fetch minimal fields needed for aggregation
+      ProjectionExpression: 'userId, firstName, email, reports, accountBlocked'
+    };
+    const result = await docClient.send(new ScanCommand(scanParams));
+    const items = result?.Items || [];
+    const totalUsers = items.length;
+    const blockedUsers = items.filter(u => !!u.accountBlocked).length;
+    const activeUsers = totalUsers - blockedUsers;
+    const reportedUsers = items.filter(u => Array.isArray(u.reports) && u.reports.length > 0);
+    const reportedUsersCount = reportedUsers.length;
+    const totalReports = reportedUsers.reduce((sum, u) => sum + (Array.isArray(u.reports) ? u.reports.length : 0), 0);
+    const topReportedUsers = reportedUsers
+      .map(u => ({
+        userId: u.userId,
+        firstName: u.firstName || null,
+        email: u.email || null,
+        reportCount: Array.isArray(u.reports) ? u.reports.length : 0,
+        accountBlocked: !!u.accountBlocked,
+      }))
+      .sort((a, b) => b.reportCount - a.reportCount)
+      .slice(0, 5);
+
+    // Subscriptions summary
+    let totalSubscriptions = 0;
+    let activeSubscriptions = 0;
+    try {
+      const subs = await dynamoDbClient.send(new ScanCommand({ TableName: 'subscriptions' }));
+      const subsItems = subs?.Items || [];
+      // Using low-level client, map attributes
+      totalSubscriptions = subsItems.length;
+      activeSubscriptions = subsItems.filter(s => s?.status?.S === 'active').length;
+    } catch (e) {
+      console.log('Subscriptions scan error', e?.message || e);
+    }
+
+    // Payments summary
+    let totalPayments = 0;
+    let totalRosesPurchased = 0;
+    try {
+      const pays = await docClient.send(new ScanCommand({ TableName: 'payments' }));
+      const paysItems = pays?.Items || [];
+      totalPayments = paysItems.length;
+      totalRosesPurchased = paysItems.reduce((sum, p) => sum + Number(p?.rosesPurchased || 0), 0);
+    } catch (e) {
+      console.log('Payments scan error', e?.message || e);
+    }
+
+    return res.status(200).json({
+      totalUsers,
+      activeUsers,
+      blockedUsers,
+      reportedUsersCount,
+      totalReports,
+      topReportedUsers,
+      totalSubscriptions,
+      activeSubscriptions,
+      totalPayments,
+      totalRosesPurchased,
+    });
+  } catch (error) {
+    console.log('Admin stats error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin payments list with optional filters: userId, start, end, status
+app.get('/admin/payments', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId, start, end, status } = req.query;
+    const result = await docClient.send(new ScanCommand({ TableName: 'payments' }));
+    let items = result?.Items || [];
+    // Normalize and filter
+    items = items.map(p => ({
+      paymentId: p.paymentId,
+      userId: p.userId,
+      rosesPurchased: Number(p?.rosesPurchased || 0),
+      status: p?.status || null,
+      createdAt: p?.createdAt || null,
+    }));
+    if (userId) {
+      items = items.filter(p => p.userId === userId);
+    }
+    if (status) {
+      items = items.filter(p => (p.status || '').toLowerCase() === String(status).toLowerCase());
+    }
+    const startTs = start ? Date.parse(start) : null;
+    const endTs = end ? Date.parse(end) : null;
+    if (startTs) {
+      items = items.filter(p => p.createdAt ? Date.parse(p.createdAt) >= startTs : false);
+    }
+    if (endTs) {
+      items = items.filter(p => p.createdAt ? Date.parse(p.createdAt) <= endTs : false);
+    }
+    // Sort newest first
+    items.sort((a, b) => (Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0)));
+    const total = items.length;
+    const totalRoses = items.reduce((sum, p) => sum + (Number(p.rosesPurchased) || 0), 0);
+    return res.status(200).json({ total, totalRoses, items });
+  } catch (error) {
+    console.log('Admin payments fetch error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin subscriptions list with optional filters: userId, status, start, end
+app.get('/admin/subscriptions', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId, status, start, end } = req.query;
+    const subs = await dynamoDbClient.send(new ScanCommand({ TableName: 'subscriptions' }));
+    let items = subs?.Items || [];
+    // Normalize from low-level client attribute format
+    items = items.map(s => ({
+      subscriptionId: s?.subscriptionId?.S || s?.subscriptionId,
+      userId: s?.userId?.S || s?.userId,
+      plan: s?.plan?.S || s?.plan,
+      planName: s?.planName?.S || s?.planName,
+      price: s?.price?.S || s?.price,
+      startDate: s?.startDate?.S || s?.startDate,
+      endDate: s?.endDate?.S || s?.endDate,
+      status: s?.status?.S || s?.status,
+    }));
+    // Enrich with user name + email
+    try {
+      const userIds = Array.from(new Set(items.map(i => i.userId).filter(Boolean)));
+      if (userIds.length) {
+        const batch = await docClient.send(new BatchGetCommand({
+          RequestItems: {
+            usercollection: {
+              Keys: userIds.map(id => ({ userId: id })),
+              ProjectionExpression: 'userId, firstName, email',
+            }
+          }
+        }));
+        const users = batch?.Responses?.usercollection || [];
+        const userMap = {};
+        users.forEach(u => { userMap[u.userId] = { firstName: u.firstName || null, email: u.email || null }; });
+        items = items.map(i => ({ ...i, firstName: userMap[i.userId]?.firstName || null, email: userMap[i.userId]?.email || null }));
+      }
+    } catch (e) {
+      console.log('Subscriptions enrichment error', e?.message || e);
+    }
+    if (userId) items = items.filter(i => i.userId === userId);
+    if (status) items = items.filter(i => (i.status || '').toLowerCase() === String(status).toLowerCase());
+    const startTs = start ? Date.parse(start) : null;
+    const endTs = end ? Date.parse(end) : null;
+    if (startTs) items = items.filter(i => i.startDate ? Date.parse(i.startDate) >= startTs : false);
+    if (endTs) items = items.filter(i => i.startDate ? Date.parse(i.startDate) <= endTs : false);
+    // Sort by startDate desc
+    items.sort((a, b) => (Date.parse(b.startDate || 0) - Date.parse(a.startDate || 0)));
+    const total = items.length;
+    const active = items.filter(i => i.status === 'active').length;
+    return res.status(200).json({ total, active, items });
+  } catch (error) {
+    console.log('Admin subscriptions fetch error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: Block a user's account (prevent login)
+app.post('/admin/block-user', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET accountBlocked = :b, blockedAt = :ts',
+      ExpressionAttributeValues: { ':b': true, ':ts': Date.now() },
+    }));
+    return res.status(200).json({ message: 'Account blocked' });
+  } catch (error) {
+    console.log('Admin block-user error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin: Unblock a user's account (allow login)
+app.delete('/admin/block-user', authenticateAdmin, async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ message: 'Missing userId' });
+    }
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET accountBlocked = :b REMOVE blockedAt',
+      ExpressionAttributeValues: { ':b': false },
+    }));
+    return res.status(200).json({ message: 'Account unblocked' });
+  } catch (error) {
+    console.log('Admin unblock-user error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Mark messages as read for a conversation (peerId -> userId)
 app.post('/messages/mark-read', async (req, res) => {
   try {
@@ -1810,6 +2146,8 @@ app.post('/payment-success', async (req, res) => {
         userId: {S: userId},
         // DynamoDB low-level client requires number values as string for N
         rosesPurchased: {N: String(rosesToAdd)},
+        status: {S: 'success'},
+        createdAt: {S: new Date().toISOString()},
       },
     };
 
