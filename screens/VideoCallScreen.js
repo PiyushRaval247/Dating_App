@@ -36,6 +36,7 @@ const VideoCallScreen = () => {
   const missingCreds = !ZEGOCLOUD_APP_ID || !ZEGOCLOUD_APP_SIGN;
 
   const noPeer = !peerId || !userId;
+  const selfCall = String(userId) === String(peerId);
 
   return (
     <View style={{flex: 1}}>
@@ -49,6 +50,12 @@ const VideoCallScreen = () => {
         <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24}}>
           <Text style={{fontSize: 16, textAlign: 'center'}}>
             Missing peer or user info. Please start a call from a chat.
+          </Text>
+        </View>
+      ) : selfCall ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24}}>
+          <Text style={{fontSize: 16, textAlign: 'center'}}>
+            You can’t start a video call with yourself. Please call a different user.
           </Text>
         </View>
       ) : !permissionsOk ? (
@@ -66,6 +73,9 @@ const VideoCallScreen = () => {
           callID={String(callID)}
           config={{
             ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
+            // Ensure local media is enabled on join
+            turnOnCameraWhenJoining: true,
+            turnOnMicrophoneWhenJoining: true,
             onCallEnd: () => {
               // End-call callback from ZEGOCLOUD UI; return to previous screen
               navigation.goBack();

@@ -54,7 +54,7 @@ const truncate = (text, n = 60) => {
   return text.length > n ? text.slice(0, n) + '…' : text;
 };
 
-const ChatRoom = () => {
+  const ChatRoom = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const [message, setMessage] = useState('');
@@ -62,7 +62,6 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [savedOpeners, setSavedOpeners] = useState([]);
   const [savingOpener, setSavingOpener] = useState(false);
-  const {socket} = useSocketContext();
   const { clearMessageCount } = useNotification();
   const [isTyping, setIsTyping] = useState(false);
   const stopTypingTimerRef = useRef(null);
@@ -109,8 +108,8 @@ const ChatRoom = () => {
     }
   };
 
-  const formatTime = iso => {
-    if (!iso) return '';
+    const formatTime = iso => {
+      if (!iso) return '';
     try {
       const d = new Date(iso);
       let h = d.getHours();
@@ -122,21 +121,59 @@ const ChatRoom = () => {
       return '';
     }
   };
+  // Socket (top-level once) and calling state
+  const { socket } = useSocketContext();
+  const [calling, setCalling] = useState(false);
+  const [callPeerId, setCallPeerId] = useState(null);
+
   const handleVideoPress = React.useCallback(() => {
     if (isBlocked || blockedByPeer) return;
     const peerId = route?.params?.receiverId;
     if (!peerId) return;
+    setCalling(true);
+    setCallPeerId(peerId);
     try {
       // Emit invite so receiver gets in-app notification and optional push
-      const { socket } = useSocketContext();
       socket?.emit('call:invite', { from: userId, to: peerId });
     } catch {}
-    navigation.navigate('VideoCall', {
-      peerId,
-      name: route?.params?.name,
-      isCaller: true,
-    });
-  }, [isBlocked, blockedByPeer, route?.params?.receiverId, route?.params?.name, navigation, userId]);
+  }, [isBlocked, blockedByPeer, route?.params?.receiverId, socket, userId]);
+
+  // Listen for accept/reject and proceed
+  useEffect(() => {
+    if (!socket) return;
+    if (!calling || !callPeerId) return;
+    const onAccepted = (payload) => {
+      try {
+        const to = payload?.to;
+        if (to !== callPeerId) return;
+        setCalling(false);
+        navigation.navigate('VideoCall', {
+          peerId: callPeerId,
+          name: route?.params?.name,
+          isCaller: true,
+        });
+      } catch {}
+    };
+    const onRejected = (payload) => {
+      try {
+        const to = payload?.to;
+        if (to !== callPeerId) return;
+        setCalling(false);
+        // Optional: show feedback
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Call rejected', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Call rejected');
+        }
+      } catch {}
+    };
+    socket.on('call:accepted', onAccepted);
+    socket.on('call:rejected', onRejected);
+    return () => {
+      socket.off('call:accepted', onAccepted);
+      socket.off('call:rejected', onRejected);
+    };
+  }, [socket, calling, callPeerId, navigation, route?.params?.name]);
 
   const handleMenuPress = React.useCallback(() => {
     setShowActions(true);
@@ -960,6 +997,30 @@ const ChatRoom = () => {
               </Pressable>
             ))}
           </ScrollView>
+        </View>
+      )}
+
+      {/* Ringing overlay for caller */}
+      {calling && (
+        <View style={{ position: 'absolute', top: 80, left: 16, right: 16, zIndex: 1000 }} pointerEvents="box-none">
+          <View style={{ backgroundColor: 'white', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }}>
+            <Text style={{ fontWeight: '600', marginBottom: 8 }}>Calling...</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+              <Pressable
+                onPress={() => {
+                  try {
+                    if (callPeerId) {
+                      socket?.emit('call:end', { from: userId, to: callPeerId });
+                    }
+                  } catch {}
+                  setCalling(false);
+                }}
+                style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#ddd', borderRadius: 6 }}
+              >
+                <Text>Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
         </View>
       )}
     </KeyboardAvoidingView>

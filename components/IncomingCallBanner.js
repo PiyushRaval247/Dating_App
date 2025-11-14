@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useNotification } from '../context/NotificationContext';
 import { useSocketContext } from '../SocketContext';
 import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from '../AuthContext';
 
 const IncomingCallBanner = () => {
   const { incomingCall, setIncomingCall } = useNotification();
   const { socket } = useSocketContext();
+  const { userId } = useContext(AuthContext);
   const navigation = useNavigation();
 
   if (!incomingCall) return null;
@@ -15,7 +17,7 @@ const IncomingCallBanner = () => {
     try {
       const peerId = incomingCall?.from;
       if (!peerId) return;
-      socket?.emit('call:accept', { to: peerId });
+      socket?.emit('call:accept', { from: userId, to: peerId });
       setIncomingCall(null);
       navigation.navigate('VideoCall', { peerId, isCaller: false });
     } catch {}
@@ -24,7 +26,7 @@ const IncomingCallBanner = () => {
     try {
       const peerId = incomingCall?.from;
       if (!peerId) return;
-      socket?.emit('call:reject', { to: peerId });
+      socket?.emit('call:reject', { from: userId, to: peerId });
     } catch {}
     setIncomingCall(null);
   };
