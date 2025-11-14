@@ -25,6 +25,34 @@ import {BASE_URL} from '../urls/url';
 import {useSocketContext} from '../SocketContext';
 import { useNotification } from '../context/NotificationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { maskBadWords } from '../utils/profanity';
+// Date and text helpers
+const isSameDay = (a, b) => {
+  try {
+    const da = new Date(a);
+    const db = new Date(b);
+    return da.toDateString() === db.toDateString();
+  } catch {
+    return false;
+  }
+};
+const dayLabel = iso => {
+  try {
+    const d = new Date(iso);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return 'Today';
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return '';
+  }
+};
+const truncate = (text, n = 60) => {
+  if (!text) return '';
+  return text.length > n ? text.slice(0, n) + '…' : text;
+};
 
 const ChatRoom = () => {
   const navigation = useNavigation();
@@ -49,6 +77,10 @@ const ChatRoom = () => {
   const [showActions, setShowActions] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedByPeer, setBlockedByPeer] = useState(false);
+  const [emojiBarOpen, setEmojiBarOpen] = useState(false);
+  const [replyTo, setReplyTo] = useState(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const scrollRef = useRef(null);
 
   const showToast = (msg) => {
     if (!msg) return;
@@ -150,15 +182,18 @@ const ChatRoom = () => {
   const sendMessage = async (senderId, receiverId) => {
     try {
       if (isBlocked || blockedByPeer) return;
+      const baseSan = maskBadWords(message || '');
+      const finalMessage = replyTo ? `↪️ ${truncate(maskBadWords(replyTo?.message || ''))}\n${baseSan}` : baseSan;
       setMessage('');
+      setReplyTo(null);
 
       await axios.post(`${BASE_URL}/sendMessage`, {
         senderId,
         receiverId,
-        message,
+        message: finalMessage,
       });
 
-      socket.emit('sendMessage', {senderId, receiverId, message});
+      socket.emit('sendMessage', {senderId, receiverId, message: finalMessage});
 
       setTimeout(() => {
         fetchMessages();
@@ -235,6 +270,13 @@ const ChatRoom = () => {
       console.log('Error', error?.response?.data || error?.message || error);
     }
   };
+
+  // Auto scroll to bottom when new messages arrive
+  useEffect(() => {
+    try {
+      scrollRef.current?.scrollToEnd?.({ animated: true });
+    } catch {}
+  }, [messages?.length]);
 
   // Automatically mark messages as read when they appear in the chat
   useEffect(() => {
@@ -395,7 +437,7 @@ const ChatRoom = () => {
     <KeyboardAvoidingView
       keyboardVerticalOffset={keyboardVerticalOffset}
       behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
-      style={{flex: 1, backgroundColor: 'white'}}>
+      style={{flex: 1, backgroundColor: '#f2f2f2'}}>
       {/* Full-screen image viewer */}
       <Modal visible={!!fullImageUrl} transparent animationType="fade" onRequestClose={() => setFullImageUrl(null)}>
         <Pressable style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center'}} onPress={() => setFullImageUrl(null)}>
@@ -455,7 +497,20 @@ const ChatRoom = () => {
           </View>
         </Pressable>
       </Modal>
-      <ScrollView contentContainerStyle={{flexGrow: 1}}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={{ flexGrow: 1, paddingVertical: 10, paddingBottom: 20 }}
+        onScroll={(e) => {
+          try {
+            const y = e?.nativeEvent?.contentOffset?.y || 0;
+            const h = e?.nativeEvent?.contentSize?.height || 0;
+            const ch = e?.nativeEvent?.layoutMeasurement?.height || 0;
+            const nearBottom = y + ch >= h - 60;
+            setShowScrollBottom(!nearBottom);
+          } catch {}
+        }}
+        scrollEventThrottle={16}
+      >
         {(isBlocked || blockedByPeer) && (
           <View style={{ padding: 10, margin: 10, borderRadius: 8, backgroundColor: '#fff3cd', borderWidth: 1, borderColor: '#ffeeba' }}>
             <Text style={{ color: '#856404', fontSize: 13 }}>
@@ -465,29 +520,41 @@ const ChatRoom = () => {
         )}
         {/* Incoming video call UI is now global */}
         {messages?.map((item, index) => {
+          const prev = messages[index - 1];
+          const isNewDay = !prev || !isSameDay(prev?.timestamp, item?.timestamp);
           return (
-            <Pressable
-              style={[
-                item?.senderId == userId
-                  ? {
-                      alignSelf: 'flex-end',
-                      backgroundColor: '#5b0d63',
+            <>
+              {isNewDay && (
+                <View style={{ alignSelf: 'center', backgroundColor: '#e7f1ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: '#d6e5ff', marginTop: index === 0 ? 4 : 12 }}>
+                  <Text style={{ fontSize: 12, color: '#245ea7' }}>{dayLabel(item?.timestamp)}</Text>
+                </View>
+              )}
+              <Pressable
+                style={[
+                  item?.senderId == userId
+                    ? {
+                        alignSelf: 'flex-end',
+                      backgroundColor: '#d7f8c6',
                       padding: 10,
-                      maxWidth: '60%',
-                      borderRadius: 7,
-                      margin: 10,
-                    }
-                  : {
-                      alignSelf: 'flex-start',
-                      backgroundColor: '#e1e3e3',
+                      maxWidth: '72%',
+                      borderRadius: 10,
+                      marginHorizontal: 10,
+                      marginTop: 6,
+                      }
+                    : {
+                        alignSelf: 'flex-start',
+                      backgroundColor: 'white',
                       padding: 10,
-                      maxWidth: '60%',
-                      borderRadius: 7,
-                      margin: 10,
-                    },
-              ]}
-              key={item?.messageId || index}
-              onLongPress={() => setReactionPickerFor(item?.messageId)}
+                      maxWidth: '72%',
+                      borderRadius: 10,
+                      marginHorizontal: 10,
+                      marginTop: 6,
+                      borderWidth: 1,
+                      borderColor: '#e6e6e6',
+                      },
+                ]}
+                key={item?.messageId || index}
+                onLongPress={() => setReactionPickerFor(item?.messageId)}
             >
               {item?.type === 'audio' && item?.audioUrl ? (
                 <View>
@@ -521,23 +588,29 @@ const ChatRoom = () => {
                     fontSize: 15,
                     textAlign: 'left',
                     letterSpacing: 0.3,
-                    color: item?.senderId == userId ? 'white' : 'black',
+                    color: '#111',
                   }}>
-                  {item?.message}
+                  {maskBadWords(item?.message || '')}
                 </Text>
               )}
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 4, gap: 6 }}>
                 <Text
                   style={{
                     fontSize: 11,
-                    color: item?.senderId == userId ? '#e0d7e5' : '#666',
+                    color: '#777',
                   }}>
                   {formatTime(item?.timestamp)}
                 </Text>
                 {item?.senderId == userId ? (
-                  <Text style={{ fontSize: 11, color: '#e0d7e5' }}>
-                    {item?.readAt ? 'Read' : item?.deliveredAt ? 'Delivered' : 'Sent'}
-                  </Text>
+                  <>
+                    {item?.readAt ? (
+                      <Ionicons name="checkmark-done-outline" size={14} color="#4fc3f7" />
+                    ) : item?.deliveredAt ? (
+                      <Ionicons name="checkmark-done-outline" size={14} color="#888" />
+                    ) : (
+                      <Ionicons name="checkmark-outline" size={14} color="#888" />
+                    )}
+                  </>
                 ) : null}
               </View>
 
@@ -552,29 +625,46 @@ const ChatRoom = () => {
                 </View>
               )}
 
-              {/* Reaction picker */}
+              {/* Reaction picker + quick actions */}
               {reactionPickerFor === item?.messageId && (
-                <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                  {['👍','❤️','😂'].map((emoji) => (
+                <View style={{ gap: 8, marginTop: 8 }}>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable
-                      key={emoji}
-                      onPress={() => {
-                        setReactionPickerFor(null);
-                        const receiverId = route?.params?.receiverId;
-                        socket?.emit('messages:reaction', { messageId: item?.messageId, reaction: emoji, senderId: userId, receiverId });
-                        setLocalReactions(prev => {
-                          const list = prev[item?.messageId] || [];
-                          return { ...prev, [item?.messageId]: [...list, emoji] };
-                        });
-                      }}
-                      style={{ backgroundColor: item?.senderId == userId ? '#7b3d84' : '#cfd2d2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                      onPress={() => { setReplyTo(item); setReactionPickerFor(null); }}
+                      style={{ backgroundColor: '#f0f0f0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
                     >
-                      <Text style={{ color: item?.senderId == userId ? 'white' : 'black', fontSize: 16 }}>{emoji}</Text>
+                      <Text style={{ color: '#333' }}>Reply</Text>
                     </Pressable>
-                  ))}
+                    <Pressable
+                      onPress={() => setReactionPickerFor(null)}
+                      style={{ backgroundColor: '#f0f0f0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                    >
+                      <Text style={{ color: '#333' }}>Cancel</Text>
+                    </Pressable>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    {['👍','❤️','😂'].map((emoji) => (
+                      <Pressable
+                        key={emoji}
+                        onPress={() => {
+                          setReactionPickerFor(null);
+                          const receiverId = route?.params?.receiverId;
+                          socket?.emit('messages:reaction', { messageId: item?.messageId, reaction: emoji, senderId: userId, receiverId });
+                          setLocalReactions(prev => {
+                            const list = prev[item?.messageId] || [];
+                            return { ...prev, [item?.messageId]: [...list, emoji] };
+                          });
+                        }}
+                        style={{ backgroundColor: item?.senderId == userId ? '#7b3d84' : '#cfd2d2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                      >
+                        <Text style={{ color: item?.senderId == userId ? 'white' : 'black', fontSize: 16 }}>{emoji}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
                 </View>
               )}
             </Pressable>
+            </>
           );
         })}
       </ScrollView>
@@ -617,7 +707,7 @@ const ChatRoom = () => {
                   marginRight: 8,
                 }}
               >
-                <Text style={{fontSize: 13, color: '#333'}}>{op?.text}</Text>
+                <Text style={{fontSize: 13, color: '#333'}}>{maskBadWords(op?.text || '')}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -693,6 +783,27 @@ const ChatRoom = () => {
         </View>
       )}
 
+      {/* Reply preview */}
+      {replyTo && (
+        <View style={{ alignSelf: 'center', backgroundColor: '#fff', borderColor: '#e6e6e6', borderWidth: 1, borderRadius: 10, padding: 8, marginBottom: 6, width: '94%' }}>
+          <Text style={{ fontSize: 12, color: '#4a4a4a' }}>Replying to: {truncate(maskBadWords(replyTo?.message || ''))}</Text>
+          <Pressable onPress={() => setReplyTo(null)} style={{ position: 'absolute', right: 10, top: 6 }}>
+            <Ionicons name="close-outline" size={20} color="#666" />
+          </Pressable>
+        </View>
+      )}
+
+      {/* Emoji quick bar */}
+      {emojiBarOpen && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 8 }}>
+          {['😀','😊','😍','😘','😄','😆','😎','🙌','🎉','✨','💖','💕','🥰'].map((emo, i) => (
+            <Pressable key={i} onPress={() => setMessage(prev => `${prev}${emo}`)} style={{ backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}>
+              <Text style={{ fontSize: 18 }}>{emo}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
       <View
         style={{
           flexDirection: 'row',
@@ -704,6 +815,17 @@ const ChatRoom = () => {
           marginBottom: 30,
           gap: 12,
         }}>
+        <Pressable
+          onPress={() => setEmojiBarOpen(prev => !prev)}
+          style={{
+            backgroundColor: '#eee',
+            paddingVertical: 8,
+            borderRadius: 20,
+            paddingHorizontal: 10,
+          }}
+        >
+          <Ionicons name="happy-outline" size={20} color="#333" />
+        </Pressable>
         <Pressable
           onPress={pickImageFromGallery}
           onLongPress={() => setShowImageField(prev => !prev)}
@@ -792,6 +914,17 @@ const ChatRoom = () => {
       </View>
 
       {/* Icebreaker suggestions when chat is empty */}
+      {showScrollBottom && (
+        <Pressable
+          onPress={() => {
+            try { scrollRef.current?.scrollToEnd?.({ animated: true }); } catch {}
+          }}
+          style={{ position: 'absolute', right: 16, bottom: 100, backgroundColor: '#662d91', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 }}
+        >
+          <Ionicons name="arrow-down-outline" size={18} color="#fff" />
+        </Pressable>
+      )}
+
       {messages?.length === 0 && (
         <View style={{borderTopWidth: 1, borderTopColor: '#eee'}}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: 10, paddingVertical: 8}}>
@@ -800,8 +933,9 @@ const ChatRoom = () => {
                 key={idx}
                 onPress={async () => {
                   try {
-                    await axios.post(`${BASE_URL}/sendMessage`, { senderId: userId, receiverId: route?.params?.receiverId, message: txt });
-                    socket?.emit('sendMessage', { senderId: userId, receiverId: route?.params?.receiverId, message: txt });
+                    const sanitized = maskBadWords(txt);
+                    await axios.post(`${BASE_URL}/sendMessage`, { senderId: userId, receiverId: route?.params?.receiverId, message: sanitized });
+                    socket?.emit('sendMessage', { senderId: userId, receiverId: route?.params?.receiverId, message: sanitized });
                     setTimeout(() => { fetchMessages(); }, 100);
                   } catch (e) {
                     console.log('Quick send error', e);

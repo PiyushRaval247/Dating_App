@@ -7,6 +7,7 @@ import axios from 'axios';
 import { BASE_URL } from '../urls/url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationBadge from './NotificationBadge';
+import { maskBadWords } from '../utils/profanity';
 
 const UserChat = ({item, userId}) => {
   const [lastMessage, setLastMessage] = useState(null);
@@ -96,7 +97,7 @@ const UserChat = ({item, userId}) => {
 
         <Text style={{fontWeight: '500', fontSize: 15, marginTop: 6}}>
           {lastMessage
-            ? lastMessage?.message
+            ? maskBadWords(lastMessage?.message || '')
             : `Start Chat with ${item?.firstName}`}
         </Text>
       </View>

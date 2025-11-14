@@ -6317,7 +6317,7 @@ react-is@^18.3.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-18.3.1.tgz"
   integrity sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==
 
-react-native-encrypted-storage@*:
+react-native-encrypted-storage@*, react-native-encrypted-storage@^4.0.3:
   version "4.0.3"
   resolved "https://registry.npmjs.org/react-native-encrypted-storage/-/react-native-encrypted-storage-4.0.3.tgz"
   integrity sha512-0pJA4Aj2S1PIJEbU7pN/Qvf7JIJx3hFywx+i+bLHtgK0/6Zryf1V2xVsWcrD50dfiu3jY1eN2gesQ5osGxE7jA==
@@ -6337,7 +6337,7 @@ react-native-incall-manager@^4.2.1:
   resolved "https://registry.npmjs.org/react-native-incall-manager/-/react-native-incall-manager-4.2.1.tgz"
   integrity sha512-HTdtzQ/AswUbuNhcL0gmyZLAXo8VqBO7SIh+BwbeeM1YMXXlR+Q2MvKxhD4yanjJPeyqMfuRhryCQCJhPlsdAw==
 
-react-native-keep-awake@*:
+react-native-keep-awake@*, react-native-keep-awake@^4.0.0:
   version "4.0.0"
   resolved "https://registry.npmjs.org/react-native-keep-awake/-/react-native-keep-awake-4.0.0.tgz"
   integrity sha512-0Fotox+eLXQooeibVs3P60yASYUWjtRw9MZNmbuHt5UZQrgUrAKsE4jm7gTr4tPU1m1RkwGzcgUFpcOkh/ec7g==
@@ -7779,7 +7779,7 @@ yocto-queue@^0.1.0:
   resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zego-express-engine-reactnative@^3.19.2:
+zego-express-engine-reactnative@^3.19.2, zego-express-engine-reactnative@^3.22.0:
   version "3.22.0"
   resolved "https://registry.npmjs.org/zego-express-engine-reactnative/-/zego-express-engine-reactnative-3.22.0.tgz"
   integrity sha512-7jzfyVuTP/nUBfF4bLaQ80juWsIkBvW57ooBxqMEpmarcZs9hdWTNQszsYJcjWrKdhCU7iVKtuCX3vmbjT6nRQ==

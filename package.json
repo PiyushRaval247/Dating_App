@@ -33,9 +33,11 @@
     "lottie-react-native": "^7.1.0",
     "react": "18.3.1",
     "react-native": "0.76.5",
+    "react-native-encrypted-storage": "^4.0.3",
     "react-native-geolocation-service": "^5.3.1",
     "react-native-image-picker": "^8.2.1",
     "react-native-incall-manager": "^4.2.1",
+    "react-native-keep-awake": "^4.0.0",
     "react-native-maps": "^1.20.1",
     "react-native-modals": "^0.22.3",
     "react-native-pager-view": "^6.6.1",
@@ -46,7 +48,8 @@
     "react-native-sound": "^0.13.0",
     "react-native-tab-view": "^4.0.5",
     "react-native-webrtc": "^124.0.7",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "zego-express-engine-reactnative": "^3.22.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

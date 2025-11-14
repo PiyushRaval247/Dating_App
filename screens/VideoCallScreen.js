@@ -1,196 +1,80 @@
-import React, {useEffect, useRef, useState, useContext} from 'react';
-import {View, Text, Pressable, StyleSheet} from 'react-native';
+import React, {useContext, useMemo, useEffect, useState} from 'react';
+import {View, Text, Platform, PermissionsAndroid} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
-import {RTCPeerConnection, RTCIceCandidate, RTCSessionDescription, mediaDevices, RTCView} from 'react-native-webrtc';
-import {useSocketContext} from '../SocketContext';
 import {AuthContext} from '../AuthContext';
-
-const iceServers = [{urls: 'stun:stun.l.google.com:19302'}];
+import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
+import { ZEGOCLOUD_APP_ID, ZEGOCLOUD_APP_SIGN, buildRoomId } from '../utils/zegoConfig';
 
 const VideoCallScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const {socket} = useSocketContext();
   const {userId} = useContext(AuthContext);
   const peerId = route?.params?.peerId;
-  const isCaller = !!route?.params?.isCaller;
-  const displayName = route?.params?.name || peerId;
+  const displayName = route?.params?.name || String(peerId || 'Unknown');
 
-  const pcRef = useRef(null);
-  const localStreamRef = useRef(null);
-  const remoteStreamRef = useRef(null);
-
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-
-  const [hasRemote, setHasRemote] = useState(false);
-
-  // Attach streams to simple views: using texture-less placeholders
-  // You can switch to RTCView for rendering if configured
-
-  const cleanup = () => {
-    try {
-      socket?.emit('call:end', {from: userId, to: peerId});
-    } catch {}
-    try {
-      pcRef.current?.close();
-    } catch {}
-    try {
-      localStreamRef.current?.getTracks()?.forEach(t => t.stop());
-    } catch {}
-    navigation.goBack();
-  };
+  const callID = useMemo(() => buildRoomId(userId, peerId), [userId, peerId]);
+  const [permissionsOk, setPermissionsOk] = useState(true);
 
   useEffect(() => {
-    const pc = new RTCPeerConnection({iceServers});
-    pcRef.current = pc;
-
-    pc.onicecandidate = event => {
-      if (event.candidate) {
-        socket?.emit('webrtc:candidate', {
-          from: userId,
-          to: peerId,
-          candidate: event.candidate,
-        });
+    const ensurePermissions = async () => {
+      if (Platform.OS !== 'android') return;
+      try {
+        const cam = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+        const mic = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
+        );
+        setPermissionsOk(cam === PermissionsAndroid.RESULTS.GRANTED && mic === PermissionsAndroid.RESULTS.GRANTED);
+      } catch {
+        setPermissionsOk(false);
       }
     };
+    ensurePermissions();
+  }, []);
 
-    pc.ontrack = event => {
-      // Single remote stream expected
-      const inbound = event.streams?.[0];
-      remoteStreamRef.current = inbound;
-      setRemoteStream(inbound);
-      setHasRemote(!!inbound);
-    };
+  const missingCreds = !ZEGOCLOUD_APP_ID || !ZEGOCLOUD_APP_SIGN;
 
-    const startLocal = async () => {
-      try {
-        const stream = await mediaDevices.getUserMedia({audio: true, video: true});
-        localStreamRef.current = stream;
-        setLocalStream(stream);
-        stream.getTracks().forEach(track => pc.addTrack(track, stream));
-      } catch (e) {
-        console.log('getUserMedia error', e?.message || e);
-      }
-    };
-
-    const dialIfCaller = async () => {
-      if (!isCaller) return;
-      // Send invite for UI prompt; actual offer may be (re)sent after accept to avoid race
-      socket?.emit('call:invite', {from: userId, to: peerId});
-
-      const offer = await pc.createOffer({offerToReceiveAudio: true, offerToReceiveVideo: true});
-      await pc.setLocalDescription(offer);
-      socket?.emit('webrtc:offer', {from: userId, to: peerId, sdp: offer});
-    };
-
-    const onOffer = async ({from, sdp}) => {
-      if (from !== peerId) return;
-      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      socket?.emit('webrtc:answer', {from: userId, to: peerId, sdp: answer});
-    };
-
-    const onAnswer = async ({from, sdp}) => {
-      if (from !== peerId) return;
-      await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-    };
-
-    const onCandidate = async ({from, candidate}) => {
-      if (from !== peerId) return;
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (e) {
-        console.log('Error adding candidate', e);
-      }
-    };
-
-    const onEnd = ({from}) => {
-      if (from !== peerId) return;
-      cleanup();
-    };
-
-    // If callee accepts after navigating, re-send offer to avoid missing the first one
-    const onAccepted = async ({to}) => {
-      try {
-        if (!isCaller) return;
-        if (to !== peerId) return;
-        await dialIfCaller();
-      } catch (e) {
-        console.log('Error after accept', e?.message || e);
-      }
-    };
-
-    const setup = async () => {
-      await startLocal();
-      if (isCaller) await dialIfCaller();
-    };
-
-    setup();
-
-    socket?.on('webrtc:offer', onOffer);
-    socket?.on('webrtc:answer', onAnswer);
-    socket?.on('webrtc:candidate', onCandidate);
-    socket?.on('call:end', onEnd);
-    socket?.on('call:accepted', onAccepted);
-
-    return () => {
-      socket?.off('webrtc:offer', onOffer);
-      socket?.off('webrtc:answer', onAnswer);
-      socket?.off('webrtc:candidate', onCandidate);
-      socket?.off('call:end', onEnd);
-      socket?.off('call:accepted', onAccepted);
-      try {
-        pcRef.current?.close();
-      } catch {}
-      try {
-        localStreamRef.current?.getTracks()?.forEach(t => t.stop());
-      } catch {}
-    };
-  }, [socket, userId, peerId, isCaller, navigation]);
+  const noPeer = !peerId || !userId;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.videoArea}>
-        {remoteStream ? (
-          <RTCView
-            streamURL={remoteStream?.toURL?.()}
-            style={styles.remoteVideo}
-            objectFit="cover"
-            mirror={false}
-          />
-        ) : (
-          <Text style={styles.subLabel}>{hasRemote ? 'Connected' : 'Ringing / Connecting...'}</Text>
-        )}
-        {localStream ? (
-          <RTCView
-            streamURL={localStream?.toURL?.()}
-            style={styles.localPreview}
-            objectFit="cover"
-            mirror={true}
-          />
-        ) : null}
-        <Text style={styles.label}>Video call with {displayName}</Text>
-      </View>
-      <View style={styles.controls}>
-        <Pressable onPress={cleanup} style={styles.endBtn}>
-          <Text style={{color: 'white', fontWeight: '600'}}>End Call</Text>
-        </Pressable>
-      </View>
+    <View style={{flex: 1}}>
+      {missingCreds ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24}}>
+          <Text style={{fontSize: 16, textAlign: 'center'}}>
+            ZEGOCLOUD credentials are not set. Please update `utils/zegoConfig.js` with your `ZEGOCLOUD_APP_ID` and `ZEGOCLOUD_APP_SIGN`.
+          </Text>
+        </View>
+      ) : noPeer ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24}}>
+          <Text style={{fontSize: 16, textAlign: 'center'}}>
+            Missing peer or user info. Please start a call from a chat.
+          </Text>
+        </View>
+      ) : !permissionsOk ? (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24}}>
+          <Text style={{fontSize: 16, textAlign: 'center'}}>
+            Camera/Microphone permission is required for video calls. Please grant permissions in Android settings.
+          </Text>
+        </View>
+      ) : (
+        <ZegoUIKitPrebuiltCall
+          appID={Number(ZEGOCLOUD_APP_ID)}
+          appSign={String(ZEGOCLOUD_APP_SIGN)}
+          userID={String(userId)}
+          userName={String(displayName)}
+          callID={String(callID)}
+          config={{
+            ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
+            onCallEnd: () => {
+              // End-call callback from ZEGOCLOUD UI; return to previous screen
+              navigation.goBack();
+            },
+          }}
+        />
+      )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: 'black'},
-  videoArea: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  remoteVideo: {position: 'absolute', top: 0, left: 0, right: 0, bottom: 0},
-  localPreview: {position: 'absolute', right: 12, bottom: 80, width: 120, height: 160, borderRadius: 8, overflow: 'hidden'},
-  label: {color: 'white', fontSize: 16, fontWeight: '600', position: 'absolute', top: 12},
-  subLabel: {color: '#ddd', marginTop: 8},
-  controls: {padding: 16, alignItems: 'center'},
-  endBtn: {backgroundColor: '#e53935', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 8},
-});
 
 export default VideoCallScreen;
