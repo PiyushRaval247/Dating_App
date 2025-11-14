@@ -1746,6 +1746,41 @@ app.get('/reported-users', async (req, res) => {
 // Admin dashboard stats
 app.get('/admin/stats', authenticateAdmin, async (req, res) => {
   try {
+    // Helper: build last N days series (inclusive of today)
+    const buildDailySeries = (nDays, getDateTs, getValue) => {
+      const series = [];
+      const today = Date.now();
+      for (let i = nDays - 1; i >= 0; i--) {
+        const dayStart = new Date(today - i * 24 * 60 * 60 * 1000);
+        const dayStr = dayStart.toISOString().slice(0, 10); // YYYY-MM-DD
+        series.push({ date: dayStr, count: 0, value: 0 });
+      }
+      const indexByDate = Object.fromEntries(series.map((d, idx) => [d.date, idx]));
+      const isSameDay = (tsStrIso, dayStr) => {
+        if (!tsStrIso) return false;
+        const d = new Date(tsStrIso);
+        if (isNaN(d.getTime())) return false;
+        return d.toISOString().slice(0, 10) === dayStr;
+      };
+      // Aggregate
+      getDateTs.items.forEach((item) => {
+        const ts = getDateTs.accessor(item);
+        const val = getValue ? Number(getValue(item) || 0) : 0;
+        // Find matching day bucket
+        const dayIso = (() => {
+          const d = new Date(ts);
+          if (isNaN(d.getTime())) return null;
+          return d.toISOString().slice(0, 10);
+        })();
+        if (!dayIso) return;
+        const idx = indexByDate[dayIso];
+        if (idx === undefined) return;
+        series[idx].count += 1;
+        series[idx].value += val;
+      });
+      return series;
+    };
+
     const scanParams = {
       TableName: 'usercollection',
       // Fetch minimal fields needed for aggregation
@@ -1773,12 +1808,26 @@ app.get('/admin/stats', authenticateAdmin, async (req, res) => {
     // Subscriptions summary
     let totalSubscriptions = 0;
     let activeSubscriptions = 0;
+    let subscriptionsItems = [];
     try {
       const subs = await dynamoDbClient.send(new ScanCommand({ TableName: 'subscriptions' }));
       const subsItems = subs?.Items || [];
       // Using low-level client, map attributes
       totalSubscriptions = subsItems.length;
-      activeSubscriptions = subsItems.filter(s => s?.status?.S === 'active').length;
+      // Consider case-insensitive status and endDate validity
+      const todayTs = Date.now();
+      activeSubscriptions = subsItems.filter(s => {
+        const status = (s?.status?.S || s?.status || '').toLowerCase();
+        const endIso = s?.endDate?.S || s?.endDate || null;
+        const endTs = endIso ? Date.parse(endIso) : null;
+        const notExpired = endTs ? endTs >= todayTs : true; // treat missing endDate as active
+        return status === 'active' && notExpired;
+      }).length;
+      subscriptionsItems = subsItems.map(s => ({
+        startDate: s?.startDate?.S || s?.startDate || null,
+        status: s?.status?.S || s?.status || null,
+        endDate: s?.endDate?.S || s?.endDate || null,
+      }));
     } catch (e) {
       console.log('Subscriptions scan error', e?.message || e);
     }
@@ -1786,14 +1835,32 @@ app.get('/admin/stats', authenticateAdmin, async (req, res) => {
     // Payments summary
     let totalPayments = 0;
     let totalRosesPurchased = 0;
+    let paymentsItems = [];
     try {
       const pays = await docClient.send(new ScanCommand({ TableName: 'payments' }));
       const paysItems = pays?.Items || [];
       totalPayments = paysItems.length;
       totalRosesPurchased = paysItems.reduce((sum, p) => sum + Number(p?.rosesPurchased || 0), 0);
+      paymentsItems = paysItems.map(p => ({
+        createdAt: p?.createdAt || null,
+        rosesPurchased: Number(p?.rosesPurchased || 0),
+        status: p?.status || null,
+      }));
     } catch (e) {
       console.log('Payments scan error', e?.message || e);
     }
+
+    // Build 14-day trend series for charts
+    const paymentsSeries = buildDailySeries(
+      14,
+      { items: paymentsItems, accessor: (i) => i.createdAt },
+      (i) => i.rosesPurchased
+    );
+    const subscriptionsSeries = buildDailySeries(
+      14,
+      { items: subscriptionsItems, accessor: (i) => i.startDate },
+      () => 0
+    );
 
     return res.status(200).json({
       totalUsers,
@@ -1806,6 +1873,9 @@ app.get('/admin/stats', authenticateAdmin, async (req, res) => {
       activeSubscriptions,
       totalPayments,
       totalRosesPurchased,
+      // New: 14-day series for charts
+      paymentsSeries,
+      subscriptionsSeries,
     });
   } catch (error) {
     console.log('Admin stats error', error);
@@ -1841,6 +1911,28 @@ app.get('/admin/payments', authenticateAdmin, async (req, res) => {
     if (endTs) {
       items = items.filter(p => p.createdAt ? Date.parse(p.createdAt) <= endTs : false);
     }
+
+    // Enrich with user firstName and email for better admin visibility
+    try {
+      const userIds = Array.from(new Set(items.map(i => i.userId).filter(Boolean)));
+      if (userIds.length) {
+        const batch = await docClient.send(new BatchGetCommand({
+          RequestItems: {
+            usercollection: {
+              Keys: userIds.map(id => ({ userId: id })),
+              ProjectionExpression: 'userId, firstName, email',
+            }
+          }
+        }));
+        const users = batch?.Responses?.usercollection || [];
+        const userMap = {};
+        users.forEach(u => { userMap[u.userId] = { firstName: u.firstName || null, email: u.email || null }; });
+        items = items.map(i => ({ ...i, firstName: userMap[i.userId]?.firstName || null, email: userMap[i.userId]?.email || null }));
+      }
+    } catch (e) {
+      console.log('Payments enrichment error', e?.message || e);
+    }
+
     // Sort newest first
     items.sort((a, b) => (Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0)));
     const total = items.length;

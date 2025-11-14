@@ -37,24 +37,24 @@ export default function ReportedUsers() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Search</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Search</label>
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400"
               placeholder="Search by name, email, or userId"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Status</label>
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm bg-white"
+              className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="">All</option>
               <option value="active">Active</option>
@@ -67,29 +67,29 @@ export default function ReportedUsers() {
                 // Just force re-render; filters are applied client-side below
                 setItems([...items])
               }}
-              className="w-full rounded-md bg-indigo-600 text-white px-4 py-2 text-sm font-medium hover:bg-indigo-700"
+              className="w-full rounded-md bg-gradient-to-r from-indigo-600 to-fuchsia-600 text-white px-4 py-2 text-sm font-medium shadow-sm hover:opacity-90"
             >Apply</button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg">
       {message && (
-        <div className="px-4 py-2 bg-green-50 text-green-700 text-sm border-b border-green-200">{message}</div>
+        <div className="px-4 py-2 bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300 text-sm border-b border-green-200 dark:border-green-900">{message}</div>
       )}
       <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+        <thead className="bg-gray-50 dark:bg-gray-800">
           <tr>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reports</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Report</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Email</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reports</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Report</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
           {items
             .filter(u => {
               const q = query.trim().toLowerCase()
@@ -107,15 +107,15 @@ export default function ReportedUsers() {
             .sort((a,b) => (b.reportCount - a.reportCount))
             .map((u) => (
             <tr key={u.userId}>
-              <td className="px-4 py-2 text-sm text-gray-900">{u.firstName || '—'}</td>
-              <td className="px-4 py-2 text-sm text-gray-700">{u.email || '—'}</td>
-              <td className="px-4 py-2 text-sm text-gray-700">{u.reportCount ?? 0}</td>
-              <td className="px-4 py-2 text-sm text-gray-500">{u.lastReportAt ? new Date(u.lastReportAt).toLocaleString() : '—'}</td>
+              <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{u.firstName || '—'}</td>
+              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{u.email || '—'}</td>
+              <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{u.reportCount ?? 0}</td>
+              <td className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400">{u.lastReportAt ? new Date(u.lastReportAt).toLocaleString() : '—'}</td>
               <td className="px-4 py-2 text-sm">
                 {u.accountBlocked ? (
-                  <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">Blocked</span>
+                  <span className="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-300">Blocked</span>
                 ) : (
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Active</span>
+                  <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">Active</span>
                 )}
               </td>
               <td className="px-4 py-2 text-sm">
@@ -168,7 +168,7 @@ export default function ReportedUsers() {
           ))}
           {items.length === 0 && (
             <tr>
-              <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan="6">No reported users found</td>
+              <td className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400" colSpan="6">No reported users found</td>
             </tr>
           )}
         </tbody>

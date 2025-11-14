@@ -38,36 +38,36 @@ export default function Login({ onLogin }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="rounded-md bg-indigo-50 p-3 text-sm text-indigo-700 border border-indigo-200">
+      <div className="rounded-md bg-indigo-50 dark:bg-indigo-900/30 p-3 text-sm text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
         Admin default: piyushraval2474@gmail.com / @Piyush24
       </div>
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">{error}</div>
+        <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-3 text-sm text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">{error}</div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Email</label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           placeholder="admin@example.com"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Password</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
         <div className="relative">
           <input
             type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-400 px-3 py-2 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="••••••••"
           />
           <button
             type="button"
             onClick={() => setShowPassword(s => !s)}
-            className="absolute inset-y-0 right-0 mt-1 mr-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-900"
+            className="absolute inset-y-0 right-0 mt-1 mr-1 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             title={showPassword ? 'Hide password' : 'Show password'}
           >{showPassword ? 'Hide' : 'Show'}</button>

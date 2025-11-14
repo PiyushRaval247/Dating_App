@@ -5,3 +5,44 @@
 html, body, #root {
   height: 100%;
 }
+
+/* Normalize WebKit autofill background/text for light & dark themes */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  /* Light mode background */
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+  -webkit-text-fill-color: #111827; /* gray-900 */
+  caret-color: #111827;
+}
+
+input:-webkit-autofill:hover,
+textarea:-webkit-autofill:hover,
+select:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+}
+
+.dark input:-webkit-autofill,
+.dark textarea:-webkit-autofill,
+.dark select:-webkit-autofill {
+  /* Dark mode background */
+  -webkit-box-shadow: 0 0 0px 1000px #1F2937 inset; /* gray-800 */
+  box-shadow: 0 0 0px 1000px #1F2937 inset;
+  -webkit-text-fill-color: #E5E7EB; /* gray-200 */
+  caret-color: #E5E7EB;
+}
+
+.dark input:-webkit-autofill:hover,
+.dark textarea:-webkit-autofill:hover,
+.dark select:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark textarea:-webkit-autofill:focus,
+.dark select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #1F2937 inset;
+  box-shadow: 0 0 0px 1000px #1F2937 inset;
+}
