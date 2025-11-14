@@ -126,12 +126,17 @@ const ChatRoom = () => {
     if (isBlocked || blockedByPeer) return;
     const peerId = route?.params?.receiverId;
     if (!peerId) return;
+    try {
+      // Emit invite so receiver gets in-app notification and optional push
+      const { socket } = useSocketContext();
+      socket?.emit('call:invite', { from: userId, to: peerId });
+    } catch {}
     navigation.navigate('VideoCall', {
       peerId,
       name: route?.params?.name,
       isCaller: true,
     });
-  }, [isBlocked, blockedByPeer, route?.params?.receiverId, route?.params?.name, navigation]);
+  }, [isBlocked, blockedByPeer, route?.params?.receiverId, route?.params?.name, navigation, userId]);
 
   const handleMenuPress = React.useCallback(() => {
     setShowActions(true);
