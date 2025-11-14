@@ -8,6 +8,8 @@ import {
   ScrollView,
   Platform,
   Pressable,
+  Animated,
+  Easing,
 } from 'react-native';
 import React, {useState,useContext} from 'react';
 import {useNavigation} from '@react-navigation/native';
@@ -31,6 +33,96 @@ const LoginScreen = () => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [generalError, setGeneralError] = useState('');
+
+  // Animations
+  const headerPulse = React.useRef(new Animated.Value(1)).current;
+  const ringScale = React.useRef(new Animated.Value(1)).current;
+  const ringOpacity = React.useRef(new Animated.Value(0.6)).current;
+  const bubble1 = React.useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const bubble2 = React.useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const bubble3 = React.useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const cardTranslate = React.useRef(new Animated.Value(20)).current;
+  const cardOpacity = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    // Pulse animation for the heart icon
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(headerPulse, {
+          toValue: 1.08,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(headerPulse, {
+          toValue: 1,
+          duration: 1200,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Gentle ripple halo behind the heart
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(ringScale, {
+            toValue: 1.6,
+            duration: 2000,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.timing(ringOpacity, {
+            toValue: 0,
+            duration: 2000,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(ringScale, {
+            toValue: 1,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.timing(ringOpacity, {
+            toValue: 0.6,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    ).start();
+
+    // Subtle background bubble drift animations
+    const drift = (valXY, dx, dy, duration) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(valXY, { toValue: { x: dx, y: dy }, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(valXY, { toValue: { x: 0, y: 0 }, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        ])
+      );
+    drift(bubble1, 12, -10, 5000).start();
+    drift(bubble2, -16, 14, 6500).start();
+    drift(bubble3, 8, 8, 7000).start();
+
+    // Card fade-up on mount
+    Animated.parallel([
+      Animated.timing(cardTranslate, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(cardOpacity, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [headerPulse, cardTranslate, cardOpacity]);
 
   const createAccount = () => {
     setOption('Create account');
@@ -96,31 +188,26 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: colors.bg}}>
-      <View style={{height: 200, backgroundColor: colors.primary, width: '100%'}}>
-        <View
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginTop: 25,
-          }}>
-          <Image
-            style={{width: 150, height: 80, resizeMode: 'contain'}}
-            source={{
-              uri: 'https://cdn-icons-png.flaticon.com/128/4207/4207268.png',
-            }}
-          />
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.primary}}>
+      {/* Full-screen decorative background */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <Animated.View style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: colors.primaryAlt, opacity: 0.25, transform: [{ translateX: bubble1.x }, { translateY: bubble1.y }] }} />
+        <Animated.View style={{ position: 'absolute', bottom: -60, left: -60, width: 220, height: 220, borderRadius: 110, backgroundColor: '#ffffff20', opacity: 0.22, transform: [{ translateX: bubble2.x }, { translateY: bubble2.y }] }} />
+        <Animated.View style={{ position: 'absolute', top: 260, right: -80, width: 160, height: 160, borderRadius: 80, backgroundColor: colors.primaryAlt, opacity: 0.18, transform: [{ translateX: bubble3.x }, { translateY: bubble3.y }] }} />
+      </View>
+
+      {/* Header */}
+      <View style={{height: 220, width: '100%'}}>
+        <View style={{justifyContent: 'center', alignItems: 'center', marginTop: 24}}>
+          <View style={{ position: 'relative' }}>
+            <Animated.View style={{ position: 'absolute', width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: '#ffffff40', transform: [{ scale: ringScale }], opacity: ringOpacity }} />
+            <Animated.View style={{ width: 68, height: 68, borderRadius: 34, backgroundColor: '#ffffff20', alignItems: 'center', justifyContent: 'center', transform: [{ scale: headerPulse }] }}>
+              <Ionicons name="heart" size={34} color="#fff" />
+            </Animated.View>
+          </View>
+          <Text style={{ marginTop: 12, textAlign: 'center', fontSize: 24, fontWeight: '700', color: 'white' }}>SouleMate</Text>
+          <Text style={{ marginTop: 4, textAlign: 'center', fontSize: 13, color: '#F0E6F5' }}>Find meaningful connections</Text>
         </View>
-        <Text
-          style={{
-            marginTop: 20,
-            textAlign: 'center',
-            fontSize: 24,
-            fontFamily: 'GeezaPro-bold',
-            color: 'white',
-          }}>
-        SouleMate
-        </Text>
       </View>
 
       <KeyboardAvoidingView
@@ -129,121 +216,91 @@ const LoginScreen = () => {
         style={{flex: 1}}
       >
         <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">
-        <View style={{alignItems: 'center'}}>
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: 'bold',
-              marginTop: 25,
-              color: colors.primary,
-            }}>
-            Designed to be deleted
-          </Text>
-        </View>
+        {/* Removed segmented control; single login mode */}
 
-        {option == 'Sign In' && (
-          <View
-            style={{
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginTop: 20,
-            }}>
-            <Image
-              style={{width: 150, height: 80, resizeMode: 'contain'}}
-              source={{
-                uri: 'https://cdn-icons-png.flaticon.com/128/6809/6809493.png',
-              }}
-            />
-          </View>
-        )}
-
-        <View style={{marginHorizontal: spacing.lg, marginTop: spacing.lg}}>
-          {option == 'Sign In' ? (
-            <>
-              <View>
-                <View style={{marginTop: spacing.md}}>
-                  <TextInputField
-                    label="Email"
-                    value={word}
-                    onChangeText={setWord}
-                    placeholder="you@example.com"
-                    keyboardType="email-address"
-                    icon="mail-outline"
-                    error={emailError}
-                  />
-                </View>
-
-                <View style={{marginTop: spacing.md}}>
-                  <TextInputField
-                    label="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
-                    icon="lock-closed-outline"
-                    secure
-                    error={passwordError}
-                  />
-                </View>
-
-                <View
-                  style={{
-                    marginTop: spacing.sm,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                  <Text style={{color: '#606060'}}>Keep me logged in</Text>
-                  <Pressable onPress={() => console.log('Forgot Password')}>
-                    <Text style={{color: colors.primary}}>Forgot Password</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </>
-          ) : (
-            <View>
-              <LottieView
-                source={require('../assets/login.json')}
-                style={{
-                  height: 180,
-                  width: 300,
-                  alignSelf: 'center',
-                  marginTop: 40,
-                  justifyContent: 'center',
-                }}
-                autoPlay
-                loop={true}
-                speed={0.7}
+        <View style={{marginHorizontal: spacing.lg, marginTop: spacing.md}}>
+          {/* Transparent container over purple background */}
+          <Animated.View style={{ backgroundColor: 'transparent', borderRadius: radii.lg, padding: spacing.md, borderWidth: 0, transform: [{ translateY: cardTranslate }], opacity: cardOpacity }}>
+          {/* Always show login form */}
+          <View>
+            <View style={{marginTop: spacing.sm}}>
+              <TextInputField
+                label="Email"
+                value={word}
+                onChangeText={setWord}
+                placeholder="you@example.com"
+                keyboardType="email-address"
+                icon="mail-outline"
+                error={emailError}
+                variant="dark"
               />
             </View>
-          )}
 
-          <View style={{marginTop: 40}} />
+            <View style={{marginTop: spacing.sm}}>
+              <TextInputField
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter your password"
+                icon="lock-closed-outline"
+                secure
+                error={passwordError}
+                variant="dark"
+              />
+            </View>
+
+            <View style={{ marginTop: spacing.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ width: 18, height: 18, borderRadius: 9, backgroundColor: '#ffffff80', marginRight: 8 }} />
+                <Text style={{color: '#F0E6F5'}}>Keep me logged in</Text>
+              </View>
+              <Pressable onPress={() => console.log('Forgot Password')}>
+                <Text style={{color: '#F0E6F5'}}>Forgot Password</Text>
+              </Pressable>
+          </View>
+          </View>
+
+          <View style={{marginTop: spacing.md}}>
+            <PrimaryButton
+              title={'Sign In'}
+              onPress={handleLogin}
+              iconName={'log-in-outline'}
+              style={{ backgroundColor: colors.primaryAlt }}
+            />
+          </View>
+
+          {/* Create Account secondary button below main */}
+          <View style={{marginTop: spacing.md}}>
+            <PrimaryButton
+              title={'Create Account'}
+              onPress={createAccount}
+              iconName={'person-add-outline'}
+              variant={'outline'}
+            />
+          </View>
 
           {!!generalError && (
             <View style={{marginHorizontal: 20, marginTop: 10, padding: 10, backgroundColor: '#fdecea', borderColor: '#f5c6cb', borderWidth: 1, borderRadius: 8}}>
               <Text style={{color: '#d32f2f'}}>{generalError}</Text>
             </View>
           )}
-
-          <View style={{width: 300, alignSelf: 'center'}}>
-            <PrimaryButton
-              title="Create Account"
-              onPress={createAccount}
-              style={{
-                backgroundColor: option == 'Create account' ? colors.primary : '#EFE8F4',
-                marginBottom: spacing.sm,
-              }}
-              textStyle={{ color: option == 'Create account' ? 'white' : '#1A1A1A' }}
-            />
-            <PrimaryButton
-              title="Sign In"
-              onPress={handleLogin}
-              style={{
-                backgroundColor: option == 'Sign In' ? colors.primary : '#EFE8F4',
-              }}
-              textStyle={{ color: option == 'Sign In' ? 'white' : '#1A1A1A' }}
-            />
+          {/* Social auth placeholders */}
+          <View style={{ alignItems: 'center', marginTop: spacing.lg }}>
+            <Text style={{ color: colors.textMuted, fontSize: 12 }}>or continue with</Text>
+            <View style={{ flexDirection: 'row', marginTop: spacing.sm }}>
+              <Pressable onPress={() => console.log('Google')} style={{ backgroundColor: '#F5F5F5', borderRadius: radii.md, paddingVertical: 10, paddingHorizontal: 16, borderWidth: 1, borderColor: colors.border, marginRight: 12 }}>
+                <Ionicons name="logo-google" size={18} color="#EA4335" />
+              </Pressable>
+              <Pressable onPress={() => console.log('Apple')} style={{ backgroundColor: '#000', borderRadius: radii.md, paddingVertical: 10, paddingHorizontal: 16 }}>
+                <Ionicons name="logo-apple" size={18} color="#fff" />
+              </Pressable>
+            </View>
           </View>
+          </Animated.View>
+        </View>
+        {/* Footer */}
+        <View style={{ alignItems: 'center', marginTop: spacing.lg }}>
+          <Text style={{ color: '#F0E6F5', fontSize: 12 }}>By continuing you agree to our Terms and Privacy Policy</Text>
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
