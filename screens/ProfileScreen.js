@@ -369,7 +369,7 @@ const ProfileScreen = () => {
           <MaterialDesignIcons name="rocket-launch-outline" size={22} color="white" />
         </View>
         <View style={{flex: 1}}>
-          <Text style={{fontSize: 16, fontWeight: '600'}}>Boost</Text>
+          <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>Boost</Text>
           <Text style={{color: '#282828', marginTop: 4}}>
             Get seen by more people for a limited time.
           </Text>
@@ -411,7 +411,7 @@ const ProfileScreen = () => {
           <MaterialDesignIcons name="fire" size={22} color="white" />
         </View>
         <View style={{flex: 1}}>
-          <Text style={{fontSize: 16, fontWeight: '600'}}>Keep your streak</Text>
+          <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>Keep your streak</Text>
           <Text style={{color: '#282828', marginTop: 4}}>
             Engage today to build momentum. Send a like or a message.
           </Text>
@@ -451,7 +451,7 @@ const ProfileScreen = () => {
           <Ionicons name="rose-outline" size={22} color="white" />
         </View>
         <Pressable onPress={() => setModalVisible(!modalVisible)}>
-          <Text style={{fontSize: 15, fontWeight: '600'}}>Roses</Text>
+          <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>Roses</Text>
           <Text style={{color: '#282828', marginTop: 3}}>
             2x as likely to lead to a date
           </Text>
@@ -498,7 +498,7 @@ const ProfileScreen = () => {
           </View>
 
           <View>
-            <Text style={{fontSize: 15, fontWeight: '600'}}>
+            <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>
               Selfie Verification
             </Text>
             <Text style={{color: '#282828', marginTop: 3}}>
@@ -530,7 +530,7 @@ const ProfileScreen = () => {
             <Feather name="eye-off" size={22} color="black" />
           </View>
           <View>
-            <Text style={{fontSize: 15, fontWeight: '600'}}>Hidden words</Text>
+            <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>Hidden words</Text>
             <Text style={{color: '#282828', marginTop: 3}}>
               Hide likes with offensive words
             </Text>
@@ -561,14 +561,14 @@ const ProfileScreen = () => {
             <Feather name="lock" size={22} color="black" />
           </View>
           <View>
-            <Text style={{fontSize: 15, fontWeight: '600'}}>Block List</Text>
+            <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>Block List</Text>
             <Text style={{color: '#282828', marginTop: 3}}>
               Block People you know
             </Text>
           </View>
         </View>
 
-        <Text style={{fontSize: 20, fontWeight: '500'}}>
+        <Text style={{fontSize: 20, fontWeight: '500', color: colors.text}}>
           Explore safety resources
         </Text>
         <View
@@ -591,7 +591,7 @@ const ProfileScreen = () => {
               flex: 1,
             }}>
             <MaterialDesignIcons name="phone-outline" size={22} color="black" />
-            <Text style={{fontSize: 17, fontWeight: '500'}}>
+            <Text style={{fontSize: 17, fontWeight: '500', color: colors.text}}>
               Crisis Hotlines
             </Text>
           </View>
@@ -609,7 +609,7 @@ const ProfileScreen = () => {
               flex: 1,
             }}>
             <MaterialDesignIcons name="help-box" size={22} color="black" />
-            <Text>Help Center</Text>
+            <Text style={{color: colors.text}}>Help Center</Text>
           </View>
         </View>
 
@@ -631,7 +631,7 @@ const ProfileScreen = () => {
               uri: 'https://images.hinge.co/6e7d61055e6f7783f84a1e41bc85aa3807f9ddba-1200x1094.jpg?w=1200&q=75',
             }}
           />
-          <Text style={{textAlign: 'center', fontSize: 19, fontWeight: 'bold'}}>
+          <Text style={{textAlign: 'center', fontSize: 19, fontWeight: 'bold', color: colors.text}}>
             Safe Dating Advice
           </Text>
 
@@ -752,7 +752,7 @@ const ProfileScreen = () => {
               gap: 6,
             }}>
             <Ionicons name="share-social-outline" size={20} color="#111" />
-            <Text style={{fontWeight: '600'}}>Share App</Text>
+            <Text style={{fontWeight: '600', color: colors.text}}>Share App</Text>
           </Pressable>
           <Pressable
             onPress={() => {
@@ -771,7 +771,7 @@ const ProfileScreen = () => {
               gap: 6,
             }}>
             <Ionicons name="mail-outline" size={20} color="#111" />
-            <Text style={{fontWeight: '600'}}>Contact Support</Text>
+            <Text style={{fontWeight: '600', color: colors.text}}>Contact Support</Text>
           </Pressable>
           <Pressable
             onPress={async () => {
@@ -795,7 +795,7 @@ const ProfileScreen = () => {
               gap: 6,
             }}>
             <Ionicons name="star-outline" size={20} color="#111" />
-          <Text style={{fontWeight: '600'}}>Rate App</Text>
+          <Text style={{fontWeight: '600', color: colors.text}}>Rate App</Text>
         </Pressable>
       </View>
 
@@ -811,7 +811,7 @@ const ProfileScreen = () => {
         }}>
         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
           <Ionicons name="trophy-outline" size={20} color="#111" />
-          <Text style={{fontSize: 16, fontWeight: '600'}}>Achievements</Text>
+          <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>Achievements</Text>
         </View>
         <ScrollView
           horizontal
@@ -830,7 +830,7 @@ const ProfileScreen = () => {
               backgroundColor: '#fafafa',
             }}>
             <Ionicons name="images-outline" size={16} color="#800080" />
-            <Text style={{fontWeight: '600'}}>Photos Added</Text>
+            <Text style={{fontWeight: '600', color: colors.text}}>Photos Added</Text>
           </View>
           <View
             style={{
@@ -845,7 +845,7 @@ const ProfileScreen = () => {
               backgroundColor: '#fafafa',
             }}>
             <Ionicons name="chatbubble-ellipses-outline" size={16} color="#0a7064" />
-            <Text style={{fontWeight: '600'}}>First Conversation</Text>
+            <Text style={{fontWeight: '600', color: colors.text}}>First Conversation</Text>
           </View>
           <View
             style={{
@@ -860,7 +860,7 @@ const ProfileScreen = () => {
               backgroundColor: '#fafafa',
             }}>
             <Ionicons name="rose-outline" size={16} color="#d4abde" />
-            <Text style={{fontWeight: '600'}}>Rose Sent</Text>
+            <Text style={{fontWeight: '600', color: colors.text}}>Rose Sent</Text>
           </View>
         </ScrollView>
       </View>
@@ -889,7 +889,7 @@ const ProfileScreen = () => {
             <MaterialDesignIcons name="help" size={22} color="black" />
           </View>
           <View>
-            <Text style={{fontSize: 15, fontWeight: '600'}}>Help Center</Text>
+            <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>Help Center</Text>
             <Text style={{color: '#282828', marginTop: 3}}>
               Safety, Security and more
             </Text>
@@ -923,7 +923,7 @@ const ProfileScreen = () => {
             />
           </View>
           <View>
-            <Text style={{fontSize: 15, fontWeight: '600'}}>What works</Text>
+            <Text style={{fontSize: 15, fontWeight: '600', color: colors.text}}>What works</Text>
             <Text style={{color: '#282828', marginTop: 3}}>
               Check out our expert dating tips
             </Text>
@@ -950,7 +950,7 @@ const ProfileScreen = () => {
             }}
           />
 
-          <Text style={{textAlign: 'center', fontSize: 19, fontWeight: 'bold'}}>
+          <Text style={{textAlign: 'center', fontSize: 19, fontWeight: 'bold', color: colors.text}}>
             Try a fresh photo
           </Text>
 
@@ -972,8 +972,8 @@ const ProfileScreen = () => {
             justifyContent: 'space-between',
           }}>
           <View>
-            <Text style={{fontSize: 26, fontFamily: 'Helvetica-Bold'}}>
-  SOULEMATE
+            <Text style={{fontSize: 26, fontWeight: '700', color: colors.text}}>
+              SOULEMATE
             </Text>
           </View>
 
@@ -1022,7 +1022,7 @@ const ProfileScreen = () => {
             })()}
           </Pressable>
 
-          <Text style={{marginTop: 10, fontSize: 24, fontWeight: '500'}}>
+          <Text style={{marginTop: 10, fontSize: 24, fontWeight: '500', color: colors.text}}>
             {(() => {
               const name = userInfo?.firstName || '';
               // dateOfBirth may be stored as DD/MM/YYYY or ISO

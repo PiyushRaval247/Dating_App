@@ -64,7 +64,7 @@ const LookingFor = () => {
           style={{
             fontSize: 25,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginTop: 15,
           }}>
           What's your dating intention?

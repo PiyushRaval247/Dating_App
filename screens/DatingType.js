@@ -73,7 +73,7 @@ const DatingType = () => {
           style={{
             fontSize: 25,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginTop: 15,
           }}>
           Who do you want to date?

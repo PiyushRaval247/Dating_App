@@ -95,7 +95,7 @@ const WorkPlace = () => {
         style={{
           fontSize: 25,
           fontWeight: 'bold',
-          fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
           marginTop: 15,
         }}>
         Where do you work?
@@ -112,7 +112,7 @@ const WorkPlace = () => {
           borderBottomColor: 'black',
           borderBottomWidth: 1,
           paddingBottom: 10,
-          fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
           fontSize: workPlace ? 22 : 22,
           color: '#000',
         }}

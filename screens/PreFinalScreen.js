@@ -137,7 +137,7 @@ const PreFinalScreen = () => {
           style={{
             fontSize: 32,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginLeft: 20,
           }}>
           All set to register.
@@ -147,7 +147,7 @@ const PreFinalScreen = () => {
           style={{
             fontSize: 32,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginLeft: 20,
             marginTop: 10,
           }}>

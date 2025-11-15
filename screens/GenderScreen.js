@@ -65,7 +65,7 @@ const GenderScreen = () => {
           style={{
             fontSize: 25,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginTop: 15,
           }}>
           Which gender describes you the best

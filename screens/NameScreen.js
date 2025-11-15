@@ -75,7 +75,7 @@ const NameScreen = () => {
             style={{
               fontSize: 25,
               fontWeight: 'bold',
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             }}>
             What's your name?
           </Text>
@@ -92,7 +92,7 @@ const NameScreen = () => {
               borderBottomColor: 'black',
               borderBottomWidth: 1,
               paddingBottom: 10,
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: firstName ? 22 : 22,
               color: '#000',
             }}
@@ -107,7 +107,7 @@ const NameScreen = () => {
               borderBottomColor: 'black',
               borderBottomWidth: 1,
               paddingBottom: 10,
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: firstName ? 22 : 22,
               color: '#000',
             }}

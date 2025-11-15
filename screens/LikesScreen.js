@@ -197,7 +197,7 @@ const LikesScreen = () => {
             style={{
               fontSize: 23,
               fontWeight: 'bold',
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               marginTop: 15,
             }}>
             Likes You
@@ -303,7 +303,7 @@ const LikesScreen = () => {
               style={{
                 fontSize: 20,
                 fontWeight: 'bold',
-                fontFamily: 'GeezaPro-bold',
+  fontWeight: '700',
                 marginTop: 20,
               }}>
               Up Next

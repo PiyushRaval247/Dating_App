@@ -28,6 +28,14 @@ import StackNavigator from './navigation/StackNavigator';
 import {AuthProvider} from './AuthContext';
 import {SocketContextProvider} from './SocketContext';
 import { ModalPortal } from 'react-native-modals';
+import { colors } from './utils/theme';
+
+// Global default text color using theme
+Text.defaultProps = Text.defaultProps || {};
+Text.defaultProps.style = {
+  ...(Text.defaultProps.style || {}),
+  color: colors.text,
+};
 
 function Section({children, title}) {
   const isDarkMode = useColorScheme() === 'dark';

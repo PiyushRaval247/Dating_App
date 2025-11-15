@@ -258,7 +258,7 @@ const BasicInfo = () => {
           style={{
             fontSize: 32,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginLeft: 20,
             opacity: titleOpacity,
             transform: [{translateY: titleTranslateY}],
@@ -270,7 +270,7 @@ const BasicInfo = () => {
           style={{
             fontSize: 32,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginLeft: 20,
             marginTop: 10,
             opacity: titleOpacity,

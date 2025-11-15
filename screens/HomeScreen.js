@@ -21,6 +21,7 @@ import Entypo from '@react-native-vector-icons/entypo';
 import LottieView from 'lottie-react-native';
  import ImageCarousel from '../components/ImageCarousel';
  import { getAgeFromDob } from '../utils/dateUtils';
+ import { colors } from '../utils/theme';
 
 const HomeScreen = () => {
   const navigation = useNavigation();
@@ -384,7 +385,7 @@ const HomeScreen = () => {
                       alignItems: 'center',
                       gap: 10,
                     }}>
-                    <Text style={{fontSize: 22, fontWeight: 'bold'}}>
+                    <Text style={{fontSize: 22, fontWeight: 'bold', color: colors.text}}>
                       {currentProfile?.firstName}
                     </Text>
                     <View
@@ -434,7 +435,7 @@ const HomeScreen = () => {
                           justifyContent: 'space-between',
                         }}>
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                          <Text style={{fontSize: 20, fontWeight: '700'}}>
+                          <Text style={{fontSize: 20, fontWeight: '700', color: colors.text}}>
                             {(() => {
                               const name = currentProfile?.firstName || '';
                               const age = getAgeFromDob(currentProfile?.dateOfBirth);
@@ -545,7 +546,7 @@ const HomeScreen = () => {
                             fontSize: 24,
                             fontWeight: 'bold',
                             marginTop: 20,
-                            fontFamily: 'Carlito',
+  fontWeight: '400',
                             lineHeight: 30,
                           }}>
                           {prompt.answer}
@@ -576,7 +577,7 @@ const HomeScreen = () => {
                             fontSize: 24,
                             fontWeight: 'bold',
                             marginTop: 20,
-                            fontFamily: 'Carlito',
+  fontWeight: '400',
                             lineHeight: 30,
                           }}>
                           {prompt.answer}
@@ -609,7 +610,7 @@ const HomeScreen = () => {
                             fontSize: 24,
                             fontWeight: 'bold',
                             marginTop: 20,
-                            fontFamily: 'Carlito',
+  fontWeight: '400',
                             lineHeight: 30,
                           }}>
                           {prompt.answer}

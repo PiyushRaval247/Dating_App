@@ -213,7 +213,7 @@ const WritePrompt = () => {
               placeholder="Enter your answer"
               value={answer}
               onChangeText={text => setAnswer(text)}
-              style={{fontFamily: 'Helvetica', fontSize: answer ? 17 : 17, color:'#000'}}
+        style={{fontSize: answer ? 17 : 17, color:'#000'}}
               placeholderTextColor={'#BEBEBE'}
             />
           </View>

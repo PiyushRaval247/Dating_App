@@ -8,6 +8,7 @@ import { BASE_URL } from '../urls/url';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NotificationBadge from './NotificationBadge';
 import { maskBadWords } from '../utils/profanity';
+import { colors } from '../utils/theme';
 
 const UserChat = ({item, userId}) => {
   const [lastMessage, setLastMessage] = useState(null);
@@ -88,14 +89,14 @@ const UserChat = ({item, userId}) => {
       <View>
         <Text
           style={{
-            fontWeight: '500',
+            fontWeight: '600',
             fontSize: 16,
-            fontFamily: 'GeezaPro-Bold',
+            color: colors.text,
           }}>
           {item?.firstName}
         </Text>
 
-        <Text style={{fontWeight: '500', fontSize: 15, marginTop: 6}}>
+        <Text style={{fontWeight: '500', fontSize: 15, marginTop: 6, color: colors.text}}>
           {lastMessage
             ? maskBadWords(lastMessage?.message || '')
             : `Start Chat with ${item?.firstName}`}

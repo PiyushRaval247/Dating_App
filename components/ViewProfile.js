@@ -12,6 +12,8 @@ import Feather from '@react-native-vector-icons/feather';
 import Entypo from '@react-native-vector-icons/entypo';
 import ImageCarousel from './ImageCarousel';
 import { getAgeFromDob } from '../utils/dateUtils';
+import { colors } from '../utils/theme';
+import {AuthContext} from '../AuthContext';
 
 const ViewProfile = ({userInfo}) => {
   const {userInfo: currentUserInfo} = useContext(AuthContext);
@@ -31,7 +33,7 @@ const ViewProfile = ({userInfo}) => {
               }}>
               <View
                 style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                <Text style={{fontSize: 22, fontWeight: 'bold'}}>
+                <Text style={{fontSize: 22, fontWeight: 'bold', color: colors.text}}>
                   {(() => {
                     const name = userInfo?.firstName || '';
                     const age = getAgeFromDob(userInfo?.dateOfBirth);
@@ -74,7 +76,7 @@ const ViewProfile = ({userInfo}) => {
                       height: 150,
                       justifyContent: 'center',
                     }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
+                    <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
                       {prompt.question}
                     </Text>
                     <Text
@@ -82,8 +84,9 @@ const ViewProfile = ({userInfo}) => {
                         fontSize: 24,
                         fontWeight: 'bold',
                         marginTop: 20,
-                        fontFamily: 'Carlito',
+  fontWeight: '400',
                         lineHeight: 30,
+                        color: colors.text,
                       }}>
                       {prompt.answer}
                     </Text>
@@ -253,7 +256,7 @@ const ViewProfile = ({userInfo}) => {
                         fontSize: 24,
                         fontWeight: 'bold',
                         marginTop: 20,
-                        fontFamily: 'Carlito',
+  fontWeight: '400',
                         lineHeight: 30,
                       }}>
                       {prompt.answer}
@@ -285,7 +288,7 @@ const ViewProfile = ({userInfo}) => {
                         fontSize: 24,
                         fontWeight: 'bold',
                         marginTop: 20,
-                        fontFamily: 'Carlito',
+  fontWeight: '400',
                         lineHeight: 30,
                       }}>
                       {prompt.answer}
@@ -307,4 +310,3 @@ const ViewProfile = ({userInfo}) => {
 export default ViewProfile;
 
 const styles = StyleSheet.create({});
-import {AuthContext} from '../AuthContext';

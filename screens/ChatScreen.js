@@ -14,6 +14,7 @@ import {BASE_URL} from '../urls/url';
 import LottieView from 'lottie-react-native';
 import UserChat from '../components/UserChat';
 import { useFocusEffect } from '@react-navigation/native';
+import { colors } from '../utils/theme';
 
 const ChatScreen = () => {
   const [matches, setMatches] = useState([]);
@@ -129,7 +130,7 @@ const ChatScreen = () => {
           {matches?.length > 0 ? (
             <>
               <Text
-                style={{fontSize: 22, fontWeight: 'bold', marginVertical: 12}}>
+                style={{fontSize: 22, fontWeight: 'bold', marginVertical: 12, color: colors.text}}>
                 Matches
               </Text>
 
@@ -153,6 +154,7 @@ const ChatScreen = () => {
                     fontSize: 22,
                     fontWeight: 'bold',
                     textAlign: 'center',
+                    color: colors.text,
                   }}>
                   No Matches right now
                 </Text>

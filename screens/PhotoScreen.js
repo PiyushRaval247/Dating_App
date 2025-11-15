@@ -440,7 +440,7 @@ const PhotoScreen = () => {
             style={{
               fontSize: 25,
               fontWeight: 'bold',
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               marginTop: 15,
             }}>
             Pick your photos and videos

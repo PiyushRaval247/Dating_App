@@ -105,7 +105,7 @@ const PasswordScreen = () => {
           style={{
             fontSize: 25,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginTop: 15,
           }}>
           Please choose a password
@@ -130,7 +130,7 @@ const PasswordScreen = () => {
             secureTextEntry={!showPassword}
             placeholderTextColor={'#BEBEBE'}
             style={{
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: 22,
               color: '#000',
               paddingRight: 40,

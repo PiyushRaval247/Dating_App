@@ -98,7 +98,7 @@ const DateOfBirthScreen = () => {
           style={{
             fontSize: 25,
             fontWeight: 'bold',
-            fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
             marginTop: 15,
           }}>
           What's your date of birth?
@@ -125,7 +125,7 @@ const DateOfBirthScreen = () => {
               padding: 10,
               width: 60,
 
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: day ? 22 : 22,
               color: '#000',
             }}
@@ -145,7 +145,7 @@ const DateOfBirthScreen = () => {
               borderColor: 'black',
               padding: 10,
               width: 60,
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: month ? 22 : 22,
               color: '#000',
             }}
@@ -165,7 +165,7 @@ const DateOfBirthScreen = () => {
               borderColor: 'black',
               padding: 10,
               width: 80,
-              fontFamily: 'GeezaPro-Bold',
+  fontWeight: '700',
               fontSize: year ? 22 : 22,
               color: '#000',
             }}
