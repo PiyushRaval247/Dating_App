@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Pressable, Image, SafeAreaView } from 'react-native';
+import { View, Text, Pressable, Image, SafeAreaView, Modal } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { colors } from '../utils/theme';
 import { useNotification } from '../context/NotificationContext';
@@ -69,37 +69,75 @@ const IncomingCallBanner = () => {
 
   console.log('IncomingCallBanner visible:', !!incomingCall, 'callerInfo:', !!callerInfo);
   return (
-    <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10000 }} pointerEvents="box-none">
-      <View style={{ marginTop: 6, marginHorizontal: 10, backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, elevation: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: '#eee', marginRight: 10 }}>
-            {(() => {
-              const images = Array.isArray(callerInfo?.imageUrls)
-                ? callerInfo.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
-                : [];
-              const avatar = images[0] || null;
-              if (avatar) return <Image source={{ uri: avatar }} style={{ width: 44, height: 44 }} />;
-              return <Ionicons name="person-circle-outline" size={44} color="#999" />;
-            })()}
+    <>
+      {/* Top banner (non-blocking) */}
+      <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10000 }} pointerEvents="box-none">
+        <View style={{ marginTop: 6, marginHorizontal: 10, backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, elevation: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: '#eee', marginRight: 10 }}>
+              {(() => {
+                const images = Array.isArray(callerInfo?.imageUrls)
+                  ? callerInfo.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
+                  : [];
+                const avatar = images[0] || null;
+                if (avatar) return <Image source={{ uri: avatar }} style={{ width: 44, height: 44 }} />;
+                return <Ionicons name="person-circle-outline" size={44} color="#999" />;
+              })()}
+            </View>
+            <View style={{ flex: 1, minHeight: 44, justifyContent: 'center' }}>
+              <Text style={{ fontWeight: '700', color: colors.text }}>{callerInfo?.firstName || 'Incoming call'}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Ionicons name="videocam-outline" size={18} color={colors.text} />
+                <Text style={{ marginLeft: 6, color: colors.textMuted }}>Incoming video call</Text>
+              </View>
+            </View>
           </View>
-          <View style={{ flex: 1, minHeight: 44, justifyContent: 'center' }}>
-            <Text style={{ fontWeight: '700', color: colors.text }}>{callerInfo?.firstName || 'Incoming call'}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-              <Ionicons name="videocam-outline" size={18} color={colors.text} />
-              <Text style={{ marginLeft: 6, color: colors.textMuted }}>Incoming video call</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 10 }}>
+            <Pressable onPress={reject} style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#ddd', borderRadius: 8 }}>
+              <Text style={{ color: colors.text }}>Reject</Text>
+            </Pressable>
+            <Pressable onPress={accept} style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#25D366', borderRadius: 8 }}>
+              <Text style={{ color: 'white' }}>Accept</Text>
+            </Pressable>
+          </View>
+        </View>
+      </SafeAreaView>
+
+      {/* Full-screen modal fallback to ensure visibility */}
+      <Modal visible={!!incomingCall} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: '86%', backgroundColor: 'white', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#ddd' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ width: 52, height: 52, borderRadius: 26, overflow: 'hidden', backgroundColor: '#eee', marginRight: 12 }}>
+                {(() => {
+                  const images = Array.isArray(callerInfo?.imageUrls)
+                    ? callerInfo.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
+                    : [];
+                  const avatar = images[0] || null;
+                  if (avatar) return <Image source={{ uri: avatar }} style={{ width: 52, height: 52 }} />;
+                  return <Ionicons name="person-circle-outline" size={52} color="#999" />;
+                })()}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontWeight: '700', fontSize: 16, color: colors.text }}>{callerInfo?.firstName || 'Incoming call'}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+                  <Ionicons name="videocam-outline" size={18} color={colors.text} />
+                  <Text style={{ marginLeft: 6, color: colors.textMuted }}>Incoming video call</Text>
+                </View>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
+              <Pressable onPress={reject} style={{ paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#ddd', borderRadius: 10 }}>
+                <Text style={{ color: colors.text }}>Reject</Text>
+              </Pressable>
+              <Pressable onPress={accept} style={{ paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#25D366', borderRadius: 10 }}>
+                <Text style={{ color: 'white' }}>Accept</Text>
+              </Pressable>
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 10 }}>
-          <Pressable onPress={reject} style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#ddd', borderRadius: 8 }}>
-            <Text style={{ color: colors.text }}>Reject</Text>
-          </Pressable>
-          <Pressable onPress={accept} style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#25D366', borderRadius: 8 }}>
-            <Text style={{ color: 'white' }}>Accept</Text>
-          </Pressable>
-        </View>
-      </View>
-    </SafeAreaView>
+      </Modal>
+    </>
   );
 };
 
