@@ -4,7 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import { colors } from '../utils/theme';
 import { useNotification } from '../context/NotificationContext';
 import { useSocketContext } from '../SocketContext';
-import { useNavigation } from '@react-navigation/native';
+import { navigationRef } from '../navigation/RootNavigation';
 import { AuthContext } from '../AuthContext';
 import axios from 'axios';
 import { BASE_URL } from '../urls/url';
@@ -14,7 +14,6 @@ const IncomingCallBanner = () => {
   const { incomingCall, setIncomingCall } = useNotification();
   const { socket } = useSocketContext();
   const { userId } = useContext(AuthContext);
-  const navigation = useNavigation();
   const [callerInfo, setCallerInfo] = useState(null);
 
   useEffect(() => {
@@ -45,7 +44,17 @@ const IncomingCallBanner = () => {
         ? callerInfo.imageUrls.filter(u => typeof u === 'string' && u.trim() !== '')
         : [];
       const avatar = images[0] || null;
-      navigation.navigate('VideoCall', { peerId, isCaller: false, name: callerInfo?.firstName || String(peerId), image: avatar });
+      if (navigationRef?.isReady?.()) {
+        navigationRef.navigate('VideoCall', { peerId, isCaller: false, name: callerInfo?.firstName || String(peerId), image: avatar });
+      } else {
+        setTimeout(() => {
+          try {
+            if (navigationRef?.isReady?.()) {
+              navigationRef.navigate('VideoCall', { peerId, isCaller: false, name: callerInfo?.firstName || String(peerId), image: avatar });
+            }
+          } catch {}
+        }, 200);
+      }
     } catch {}
   };
   const reject = () => {
