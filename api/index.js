@@ -1309,17 +1309,19 @@ io.on('connection', socket => {
     })();
   });
 
+  // Accept/Reject should notify the original caller (userId = `to`)
   socket.on('call:accept', ({from, to}) => {
-    const callerSocketId = userSocketMap[String(from)];
+    const callerSocketId = userSocketMap[String(to)];
     if (callerSocketId) {
-      io.to(callerSocketId).emit('call:accepted', {to});
+      // Send both ids so client can match on `from` (callee)
+      io.to(callerSocketId).emit('call:accepted', { from, to });
     }
   });
 
   socket.on('call:reject', ({from, to}) => {
-    const callerSocketId = userSocketMap[String(from)];
+    const callerSocketId = userSocketMap[String(to)];
     if (callerSocketId) {
-      io.to(callerSocketId).emit('call:rejected', {to});
+      io.to(callerSocketId).emit('call:rejected', { from, to });
     }
   });
 

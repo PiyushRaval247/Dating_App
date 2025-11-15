@@ -46,15 +46,15 @@ const VideoCallScreen = () => {
     if (!socket || !isCaller || !deferredStart || canStart !== false) return;
     const onAccepted = (payload) => {
       try {
-        const to = payload?.to; // server uses 'to' as callee id
-        if (String(to) !== String(peerId)) return;
+        const from = payload?.from; // server sends callee id as 'from'
+        if (String(from) !== String(peerId)) return;
         setCanStart(true);
       } catch {}
     };
     const onRejected = (payload) => {
       try {
-        const to = payload?.to;
-        if (String(to) !== String(peerId)) return;
+        const from = payload?.from;
+        if (String(from) !== String(peerId)) return;
         // Return back if rejected
         navigation.goBack();
       } catch {}
@@ -66,6 +66,20 @@ const VideoCallScreen = () => {
       socket.off('call:rejected', onRejected);
     };
   }, [socket, isCaller, deferredStart, canStart, peerId, navigation]);
+
+  // End call when remote sends call:end (both sides react)
+  useEffect(() => {
+    if (!socket) return;
+    const onEnded = (payload) => {
+      try {
+        navigation.goBack();
+      } catch {}
+    };
+    socket.on('call:end', onEnded);
+    return () => {
+      socket.off('call:end', onEnded);
+    };
+  }, [socket, navigation]);
 
   const missingCreds = !ZEGOCLOUD_APP_ID || !ZEGOCLOUD_APP_SIGN;
 
@@ -111,7 +125,10 @@ const VideoCallScreen = () => {
             turnOnCameraWhenJoining: true,
             turnOnMicrophoneWhenJoining: true,
             onCallEnd: () => {
-              // End-call callback from ZEGOCLOUD UI; return to previous screen
+              // End-call callback from ZEGOCLOUD UI; notify peer and return
+              try {
+                socket?.emit('call:end', { from: userId, to: peerId });
+              } catch {}
               navigation.goBack();
             },
           }}
