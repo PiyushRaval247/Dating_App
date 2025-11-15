@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, Pressable, Image } from 'react-native';
+import { View, Text, Pressable, Image, SafeAreaView } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import { colors } from '../utils/theme';
 import { useNotification } from '../context/NotificationContext';
@@ -67,9 +67,10 @@ const IncomingCallBanner = () => {
     setIncomingCall(null);
   };
 
+  console.log('IncomingCallBanner visible:', !!incomingCall, 'callerInfo:', !!callerInfo);
   return (
-    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, paddingTop: 40, paddingHorizontal: 10 }}>
-      <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }}>
+    <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10000 }} pointerEvents="box-none">
+      <View style={{ marginTop: 6, marginHorizontal: 10, backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, elevation: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: '#eee', marginRight: 10 }}>
             {(() => {
@@ -98,7 +99,7 @@ const IncomingCallBanner = () => {
           </Pressable>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
