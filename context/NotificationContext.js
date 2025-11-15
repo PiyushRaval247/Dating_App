@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform, ToastAndroid, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BASE_URL } from '../urls/url';
@@ -122,9 +123,18 @@ export const NotificationProvider = ({ children }) => {
     const onIncoming = (payload) => {
       const from = payload?.from;
       if (!from) return;
+      console.log('Socket event: call:incoming from', from);
       setIncomingCall({ from });
       // Play ringtone to make incoming call obvious
       try { InCallManager.startRingtone('default'); } catch (e) {}
+      // Lightweight visible cue even if banner layering fails
+      try {
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Incoming video call', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Incoming video call');
+        }
+      } catch {}
     };
     const onEnd = () => {
       setIncomingCall(null);
