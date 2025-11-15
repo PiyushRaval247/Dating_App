@@ -67,6 +67,8 @@ const SendLikeScreen = () => {
       });
       console.log('response', response);
       if (response.status == 200) {
+        // Non-blocking check-in to increment streak on engagement
+        checkIn(route?.params?.userId);
         navigation.goBack();
       }
     } catch (error) {
@@ -145,6 +147,8 @@ const SendLikeScreen = () => {
 
       if (response.status == 200) {
         console.log('Rose sent successfully', response.data);
+        // Non-blocking check-in to increment streak on engagement
+        checkIn(route?.params?.userId);
         navigation.goBack();
       }
     } catch (error) {
@@ -153,6 +157,19 @@ const SendLikeScreen = () => {
       } else {
         console.log('Error', error);
       }
+    }
+  };
+  const checkIn = async (uid) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!uid) return;
+      await axios.post(
+        `${BASE_URL}/activity/check-in`,
+        { userId: uid },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    } catch (e) {
+      console.log('Check-in error (non-blocking):', e?.response?.data || e?.message);
     }
   };
   return (

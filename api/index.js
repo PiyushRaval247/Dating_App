@@ -1234,7 +1234,8 @@ const io = new Server(server, {
 });
 
 io.on('connection', socket => {
-  const userId = socket.handshake.query.userId;
+  const userIdRaw = socket.handshake.query.userId;
+  const userId = userIdRaw !== undefined ? String(userIdRaw) : undefined;
 
   if (userId !== undefined) {
     userSocketMap[userId] = socket.id;
@@ -1245,14 +1246,14 @@ io.on('connection', socket => {
 
   socket.on('disconnect', () => {
     console.log('User disconnected', socket.id);
-    delete userSocketMap[userId];
     if (userId !== undefined) {
+      delete userSocketMap[userId];
       userPresence[userId] = { online: false, lastSeen: new Date().toISOString() };
     }
   });
 
   socket.on('sendMessage', ({senderId, receiverId, message}) => {
-    const receiverSocketId = userSocketMap[receiverId];
+    const receiverSocketId = userSocketMap[String(receiverId)];
 
     console.log('receiver ID', receiverId);
 
@@ -1266,14 +1267,14 @@ io.on('connection', socket => {
 
   // Typing indicator events (ephemeral, no DB changes)
   socket.on('typing', ({senderId, receiverId}) => {
-    const receiverSocketId = userSocketMap[receiverId];
+    const receiverSocketId = userSocketMap[String(receiverId)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('typing', {senderId});
     }
   });
 
   socket.on('stopTyping', ({senderId, receiverId}) => {
-    const receiverSocketId = userSocketMap[receiverId];
+    const receiverSocketId = userSocketMap[String(receiverId)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('stopTyping', {senderId});
     }
@@ -1281,7 +1282,7 @@ io.on('connection', socket => {
 
   // Video call signaling events
   socket.on('call:invite', ({from, to}) => {
-    const receiverSocketId = userSocketMap[to];
+    const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('call:incoming', {from});
     }
@@ -1291,7 +1292,7 @@ io.on('connection', socket => {
         const resp = await docClient.send(
           new GetCommand({
             TableName: 'usercollection',
-            Key: {userId: to},
+            Key: {userId: String(to)},
             ProjectionExpression: 'deviceToken',
           }),
         );
@@ -1309,42 +1310,42 @@ io.on('connection', socket => {
   });
 
   socket.on('call:accept', ({from, to}) => {
-    const callerSocketId = userSocketMap[from];
+    const callerSocketId = userSocketMap[String(from)];
     if (callerSocketId) {
       io.to(callerSocketId).emit('call:accepted', {to});
     }
   });
 
   socket.on('call:reject', ({from, to}) => {
-    const callerSocketId = userSocketMap[from];
+    const callerSocketId = userSocketMap[String(from)];
     if (callerSocketId) {
       io.to(callerSocketId).emit('call:rejected', {to});
     }
   });
 
   socket.on('webrtc:offer', ({from, to, sdp}) => {
-    const receiverSocketId = userSocketMap[to];
+    const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('webrtc:offer', {from, sdp});
     }
   });
 
   socket.on('webrtc:answer', ({from, to, sdp}) => {
-    const receiverSocketId = userSocketMap[to];
+    const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('webrtc:answer', {from, sdp});
     }
   });
 
   socket.on('webrtc:candidate', ({from, to, candidate}) => {
-    const receiverSocketId = userSocketMap[to];
+    const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('webrtc:candidate', {from, candidate});
     }
   });
 
   socket.on('call:end', ({from, to}) => {
-    const receiverSocketId = userSocketMap[to];
+    const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
       io.to(receiverSocketId).emit('call:end', {from});
     }

@@ -26,6 +26,7 @@ import {useSocketContext} from '../SocketContext';
 import { useNotification } from '../context/NotificationContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { maskBadWords } from '../utils/profanity';
+import { colors } from '../utils/theme';
 // Date and text helpers
 const isSameDay = (a, b) => {
   try {
@@ -76,7 +77,7 @@ const truncate = (text, n = 60) => {
   const [showActions, setShowActions] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockedByPeer, setBlockedByPeer] = useState(false);
-  const [emojiBarOpen, setEmojiBarOpen] = useState(false);
+  // removed emoji quick bar
   const [replyTo, setReplyTo] = useState(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const scrollRef = useRef(null);
@@ -123,57 +124,26 @@ const truncate = (text, n = 60) => {
   };
   // Socket (top-level once) and calling state
   const { socket } = useSocketContext();
-  const [calling, setCalling] = useState(false);
-  const [callPeerId, setCallPeerId] = useState(null);
 
   const handleVideoPress = React.useCallback(() => {
     if (isBlocked || blockedByPeer) return;
     const peerId = route?.params?.receiverId;
     if (!peerId) return;
-    setCalling(true);
-    setCallPeerId(peerId);
     try {
       // Emit invite so receiver gets in-app notification and optional push
       socket?.emit('call:invite', { from: userId, to: peerId });
     } catch {}
-  }, [isBlocked, blockedByPeer, route?.params?.receiverId, socket, userId]);
+    // Navigate immediately to VC screen, but defer Zego start until accepted
+    navigation.navigate('VideoCall', {
+      peerId,
+      name: route?.params?.name,
+      image: route?.params?.image || null,
+      isCaller: true,
+      deferredStart: true,
+    });
+  }, [isBlocked, blockedByPeer, route?.params?.receiverId, route?.params?.name, socket, userId, navigation]);
 
-  // Listen for accept/reject and proceed
-  useEffect(() => {
-    if (!socket) return;
-    if (!calling || !callPeerId) return;
-    const onAccepted = (payload) => {
-      try {
-        const to = payload?.to;
-        if (to !== callPeerId) return;
-        setCalling(false);
-        navigation.navigate('VideoCall', {
-          peerId: callPeerId,
-          name: route?.params?.name,
-          isCaller: true,
-        });
-      } catch {}
-    };
-    const onRejected = (payload) => {
-      try {
-        const to = payload?.to;
-        if (to !== callPeerId) return;
-        setCalling(false);
-        // Optional: show feedback
-        if (Platform.OS === 'android') {
-          ToastAndroid.show('Call rejected', ToastAndroid.SHORT);
-        } else {
-          Alert.alert('Call rejected');
-        }
-      } catch {}
-    };
-    socket.on('call:accepted', onAccepted);
-    socket.on('call:rejected', onRejected);
-    return () => {
-      socket.off('call:accepted', onAccepted);
-      socket.off('call:rejected', onRejected);
-    };
-  }, [socket, calling, callPeerId, navigation, route?.params?.name]);
+  // Caller accept/reject handled in VideoCallScreen now
 
   const handleMenuPress = React.useCallback(() => {
     setShowActions(true);
@@ -187,9 +157,9 @@ const truncate = (text, n = 60) => {
           onPress={() => navigation.goBack()}
           style={{flexDirection: 'row', alignItems: 'center', gap: 14}}
           hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}>
-          <Ionicons name="arrow-back" size={24} color="black" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
           <View>
-            <Text style={{fontSize: 16, fontWeight: 'bold'}}>
+            <Text style={{fontSize: 16, fontWeight: 'bold', color: colors.text}}>
               {route?.params?.name}
             </Text>
             <Text style={{fontSize: 12, color: presence?.online ? '#2e8b57' : '#666'}}>
@@ -207,7 +177,7 @@ const truncate = (text, n = 60) => {
             style={{width: 48, height: 48, alignItems: 'center', justifyContent: 'center'}}
             hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
           >
-            <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? '#aaa' : 'black'} />
+            <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? '#aaa' : colors.text} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleMenuPress}
@@ -215,7 +185,7 @@ const truncate = (text, n = 60) => {
             style={{width: 48, height: 48, alignItems: 'center', justifyContent: 'center'}}
             hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
           >
-            <Ionicons name="ellipsis-vertical" size={24} color="black" />
+            <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
       ),
@@ -473,12 +443,12 @@ const truncate = (text, n = 60) => {
   // Incoming call prompts are handled globally; no local listener here
 
   // Accept/Reject handled by global banner
-  const keyboardVerticalOffset = Platform.OS == 'ios' ? 65 : 0;
+  const keyboardVerticalOffset = Platform.OS === 'ios' ? 80 : 24;
   console.log('Messages', messages);
   return (
     <KeyboardAvoidingView
       keyboardVerticalOffset={keyboardVerticalOffset}
-      behavior={Platform.OS == 'ios' ? 'padding' : 'height'}
+      behavior={'padding'}
       style={{flex: 1, backgroundColor: '#f2f2f2'}}>
       {/* Full-screen image viewer */}
       <Modal visible={!!fullImageUrl} transparent animationType="fade" onRequestClose={() => setFullImageUrl(null)}>
@@ -542,6 +512,7 @@ const truncate = (text, n = 60) => {
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={{ flexGrow: 1, paddingVertical: 10, paddingBottom: 20 }}
+        keyboardShouldPersistTaps="handled"
         onScroll={(e) => {
           try {
             const y = e?.nativeEvent?.contentOffset?.y || 0;
@@ -835,16 +806,7 @@ const truncate = (text, n = 60) => {
         </View>
       )}
 
-      {/* Emoji quick bar */}
-      {emojiBarOpen && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 10, paddingVertical: 8 }}>
-          {['😀','😊','😍','😘','😄','😆','😎','🙌','🎉','✨','💖','💕','🥰'].map((emo, i) => (
-            <Pressable key={i} onPress={() => setMessage(prev => `${prev}${emo}`)} style={{ backgroundColor: '#fff', borderColor: '#eee', borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6, marginRight: 8 }}>
-              <Text style={{ fontSize: 18 }}>{emo}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
+      {/* removed emoji quick bar */}
 
       <View
         style={{
@@ -854,20 +816,10 @@ const truncate = (text, n = 60) => {
           paddingVertical: 10,
           borderTopWidth: 1,
           borderTopColor: '#dddddd',
-          marginBottom: 30,
+          marginBottom: 0,
           gap: 12,
         }}>
-        <Pressable
-          onPress={() => setEmojiBarOpen(prev => !prev)}
-          style={{
-            backgroundColor: '#eee',
-            paddingVertical: 8,
-            borderRadius: 20,
-            paddingHorizontal: 10,
-          }}
-        >
-          <Ionicons name="happy-outline" size={20} color="#333" />
-        </Pressable>
+        {/* removed emoji toggle */}
         <Pressable
           onPress={pickImageFromGallery}
           onLongPress={() => setShowImageField(prev => !prev)}
@@ -902,7 +854,7 @@ const truncate = (text, n = 60) => {
               }
             }, 1200);
           }}
-          placeholderTextColor="gray"
+          placeholderTextColor={colors.textMuted}
           placeholder={isBlocked || blockedByPeer ? 'Conversation blocked' : 'Type your message...'}
           editable={!isBlocked && !blockedByPeer}
           style={{
@@ -913,6 +865,8 @@ const truncate = (text, n = 60) => {
             paddingHorizontal: 10,
             height: 40,
             fontSize: 15,
+            color: colors.text,
+            backgroundColor: 'white',
           }}
         />
         <Pressable
@@ -1000,29 +954,7 @@ const truncate = (text, n = 60) => {
         </View>
       )}
 
-      {/* Ringing overlay for caller */}
-      {calling && (
-        <View style={{ position: 'absolute', top: 80, left: 16, right: 16, zIndex: 1000 }} pointerEvents="box-none">
-          <View style={{ backgroundColor: 'white', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }}>
-            <Text style={{ fontWeight: '600', marginBottom: 8 }}>Calling...</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-              <Pressable
-                onPress={() => {
-                  try {
-                    if (callPeerId) {
-                      socket?.emit('call:end', { from: userId, to: callPeerId });
-                    }
-                  } catch {}
-                  setCalling(false);
-                }}
-                style={{ paddingVertical: 8, paddingHorizontal: 12, backgroundColor: '#ddd', borderRadius: 6 }}
-              >
-                <Text>Cancel</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      )}
+      {/* Ringing overlay moved to VideoCallScreen; ChatRoom no longer manages calling state */}
     </KeyboardAvoidingView>
   );
 };

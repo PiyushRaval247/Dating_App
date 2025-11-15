@@ -16,6 +16,7 @@ import axios from 'axios';
 import {BASE_URL, RAZORPAY_KEY_ID} from '../urls/url';
 import {useNavigation} from '@react-navigation/native';
 import { AuthContext } from '../AuthContext';
+import { colors } from '../utils/theme';
 
 const SouleMatePlus = () => {
   const plans = [
@@ -152,15 +153,23 @@ const SouleMatePlus = () => {
             }}>
             <View
               style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <Text
-                style={{
-                  fontSize: 30,
-                  color: 'white',
-                  fontWeight: 'bold',
-                  width: 200,
-                }}>
-                See everyone who likes you
-              </Text>
+              <View style={{
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 8,
+              }}>
+                <Text
+                  style={{
+                    fontSize: 30,
+                    color: 'white',
+                    fontWeight: 'bold',
+                    width: 220,
+                    textAlign: 'center',
+                  }}>
+                  See everyone who likes you
+                </Text>
+              </View>
             </View>
           </ImageBackground>
 
@@ -213,6 +222,7 @@ const SouleMatePlus = () => {
                         fontWeight: '600',
                         marginTop: 8,
                         letterSpacing: 0.6,
+                        color: colors.text,
                       }}>
                       {item?.price}
                     </Text>
@@ -241,6 +251,7 @@ const SouleMatePlus = () => {
                   fontWeight: '600',
                   marginTop: 8,
                   letterSpacing: 0.6,
+                  color: colors.text,
                 }}>
                 Send unlimited likes*
               </Text>
@@ -264,6 +275,7 @@ const SouleMatePlus = () => {
                   fontWeight: '600',
                   marginTop: 8,
                   letterSpacing: 0.6,
+                  color: colors.text,
                 }}>
                 See everyone who likes you
               </Text>
@@ -287,6 +299,7 @@ const SouleMatePlus = () => {
                   fontWeight: '600',
                   marginTop: 8,
                   letterSpacing: 0.6,
+                  color: colors.text,
                 }}>
                 Set more dating preferences
               </Text>
@@ -310,6 +323,7 @@ const SouleMatePlus = () => {
                   fontWeight: '600',
                   marginTop: 8,
                   letterSpacing: 0.6,
+                  color: colors.text,
                 }}>
                 Sort all incoming likes
               </Text>
@@ -333,6 +347,7 @@ const SouleMatePlus = () => {
                   fontWeight: '600',
                   marginTop: 8,
                   letterSpacing: 0.6,
+                  color: colors.text,
                 }}>
                 Browse by who's new or nearby
               </Text>

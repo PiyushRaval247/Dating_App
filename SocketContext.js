@@ -14,8 +14,15 @@ export const SocketContextProvider = ({children}) => {
   const {token, userId} = useContext(AuthContext);
 
   useEffect(() => {
-    if (token) {
+    // Only connect when we have both a token and a valid userId
+    if (token && userId) {
       const s = io(BASE_URL, {
+        // Improve reliability on mobile networks
+        transports: ['websocket'],
+        forceNew: true,
+        reconnection: true,
+        reconnectionAttempts: 10,
+        timeout: 20000,
         query: {
           userId: userId,
         },

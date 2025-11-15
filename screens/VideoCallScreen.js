@@ -1,9 +1,12 @@
 import React, {useContext, useMemo, useEffect, useState} from 'react';
-import {View, Text, Platform, PermissionsAndroid} from 'react-native';
+import {View, Text, Platform, PermissionsAndroid, TouchableOpacity, Image} from 'react-native';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {AuthContext} from '../AuthContext';
 import { ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn';
 import { ZEGOCLOUD_APP_ID, ZEGOCLOUD_APP_SIGN, buildRoomId } from '../utils/zegoConfig';
+import { useSocketContext } from '../SocketContext';
+import Ionicons from '@react-native-vector-icons/ionicons';
+import { colors } from '../utils/theme';
 
 const VideoCallScreen = () => {
   const navigation = useNavigation();
@@ -11,9 +14,14 @@ const VideoCallScreen = () => {
   const {userId} = useContext(AuthContext);
   const peerId = route?.params?.peerId;
   const displayName = route?.params?.name || String(peerId || 'Unknown');
+  const avatar = route?.params?.image || null;
+  const isCaller = !!route?.params?.isCaller;
+  const deferredStart = !!route?.params?.deferredStart;
+  const { socket } = useSocketContext();
 
   const callID = useMemo(() => buildRoomId(userId, peerId), [userId, peerId]);
   const [permissionsOk, setPermissionsOk] = useState(true);
+  const [canStart, setCanStart] = useState(!(isCaller && deferredStart));
 
   useEffect(() => {
     const ensurePermissions = async () => {
@@ -32,6 +40,32 @@ const VideoCallScreen = () => {
     };
     ensurePermissions();
   }, []);
+
+  // Caller waits for accept before starting ZEGOCLOUD UI
+  useEffect(() => {
+    if (!socket || !isCaller || !deferredStart || canStart !== false) return;
+    const onAccepted = (payload) => {
+      try {
+        const to = payload?.to; // server uses 'to' as callee id
+        if (String(to) !== String(peerId)) return;
+        setCanStart(true);
+      } catch {}
+    };
+    const onRejected = (payload) => {
+      try {
+        const to = payload?.to;
+        if (String(to) !== String(peerId)) return;
+        // Return back if rejected
+        navigation.goBack();
+      } catch {}
+    };
+    socket.on('call:accepted', onAccepted);
+    socket.on('call:rejected', onRejected);
+    return () => {
+      socket.off('call:accepted', onAccepted);
+      socket.off('call:rejected', onRejected);
+    };
+  }, [socket, isCaller, deferredStart, canStart, peerId, navigation]);
 
   const missingCreds = !ZEGOCLOUD_APP_ID || !ZEGOCLOUD_APP_SIGN;
 
@@ -64,7 +98,7 @@ const VideoCallScreen = () => {
             Camera/Microphone permission is required for video calls. Please grant permissions in Android settings.
           </Text>
         </View>
-      ) : (
+      ) : canStart ? (
         <ZegoUIKitPrebuiltCall
           appID={Number(ZEGOCLOUD_APP_ID)}
           appSign={String(ZEGOCLOUD_APP_SIGN)}
@@ -82,6 +116,30 @@ const VideoCallScreen = () => {
             },
           }}
         />
+      ) : (
+        <View style={{flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, backgroundColor: '#0f1115'}}>
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={{ width: 120, height: 120, borderRadius: 60, marginBottom: 18, backgroundColor: '#222' }} />
+          ) : (
+            <Ionicons name="person-circle-outline" size={120} color="#888" style={{ marginBottom: 18 }} />
+          )}
+          <Ionicons name="videocam" size={28} color="#eee" />
+          <Text style={{marginTop: 10, fontSize: 20, color: '#fff', fontWeight: '600'}}>{displayName}</Text>
+          <Text style={{marginTop: 6, fontSize: 14, color: '#aaa'}}>Calling… Waiting for acceptance</Text>
+          {isCaller ? (
+            <TouchableOpacity
+              onPress={() => {
+                try {
+                  socket?.emit('call:end', { from: userId, to: peerId });
+                } catch {}
+                navigation.goBack();
+              }}
+              style={{ position: 'absolute', bottom: 40, width: 66, height: 66, borderRadius: 33, backgroundColor: '#e53935', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          ) : null}
+        </View>
       )}
     </View>
   );

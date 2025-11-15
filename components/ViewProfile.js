@@ -65,36 +65,7 @@ const ViewProfile = ({userInfo}) => {
               </View>
             </View>
 
-            <View style={{marginVertical: 15}}>
-              {userInfo?.prompts?.slice(0, 1).map((prompt, index) => (
-                <React.Fragment key={prompt?.id ?? String(index)}>
-                  <View
-                    style={{
-                      backgroundColor: 'white',
-                      padding: 12,
-                      borderRadius: 10,
-                      height: 150,
-                      justifyContent: 'center',
-                    }}>
-                    <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
-                      {prompt.question}
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 24,
-                        fontWeight: 'bold',
-                        marginTop: 20,
-  fontWeight: '400',
-                        lineHeight: 30,
-                        color: colors.text,
-                      }}>
-                      {prompt.answer}
-                    </Text>
-                  </View>
-                  {/* removed like overlay to keep profile purely informational */}
-                </React.Fragment>
-              ))}
-            </View>
+            
 
             <View
               style={{
@@ -112,6 +83,12 @@ const ViewProfile = ({userInfo}) => {
                     alignItems: 'center',
                     gap: 10,
                     marginRight: 20,
+                    backgroundColor: '#F7F7F7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 16,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
                   }}>
                   {/* <MaterialCommunityIcons
                     name="cake-variant-outline"
@@ -121,7 +98,7 @@ const ViewProfile = ({userInfo}) => {
                   {(() => {
                     const age = getAgeFromDob(userInfo?.dateOfBirth);
                     return (
-                      <Text style={{fontSize: 15}}>
+                      <Text style={{fontSize: 15, color: colors.text}}>
                         {age != null ? `Age: ${age}` : (userInfo?.dateOfBirth || 'Age not set')}
                       </Text>
                     );
@@ -134,9 +111,15 @@ const ViewProfile = ({userInfo}) => {
                     alignItems: 'center',
                     gap: 10,
                     marginRight: 20,
+                    backgroundColor: '#F7F7F7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 16,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
                   }}>
                   <Ionicons name="person-outline" size={22} color="black" />
-                  <Text style={{fontSize: 15}}>{userInfo?.gender}</Text>
+                  <Text style={{fontSize: 15, color: colors.text}}>{userInfo?.gender}</Text>
                 </View>
 
                 <View
@@ -145,9 +128,15 @@ const ViewProfile = ({userInfo}) => {
                     alignItems: 'center',
                     gap: 10,
                     marginRight: 20,
+                    backgroundColor: '#F7F7F7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 16,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
                   }}>
                   <Ionicons name="magnet-outline" size={22} color="black" />
-                  <Text style={{fontSize: 15}}>{userInfo?.type}</Text>
+                  <Text style={{fontSize: 15, color: colors.text}}>{userInfo?.type}</Text>
                 </View>
 
                 <View
@@ -155,9 +144,15 @@ const ViewProfile = ({userInfo}) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 10,
+                    backgroundColor: '#F7F7F7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 16,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
                   }}>
                   {/* <Octicons name="home" size={22} color="black" /> */}
-                  <Text style={{fontSize: 15}}>{userInfo?.hometown}</Text>
+                  <Text style={{fontSize: 15, color: colors.text}}>{userInfo?.hometown}</Text>
                 </View>
               </ScrollView>
 
@@ -173,7 +168,7 @@ const ViewProfile = ({userInfo}) => {
                   marginTop: 20,
                 }}>
                 <Ionicons name="bag-outline" size={20} color="black" />
-                <Text>{userInfo?.jobTitle}</Text>
+                <Text style={{color: colors.text}}>{userInfo?.jobTitle}</Text>
               </View>
 
               <View
@@ -187,7 +182,7 @@ const ViewProfile = ({userInfo}) => {
                   paddingBottom: 10,
                 }}>
                 <Ionicons name="locate-outline" size={20} color="black" />
-                <Text>{userInfo?.workPlace}</Text>
+                <Text style={{color: colors.text}}>{userInfo?.workPlace}</Text>
               </View>
 
               <View
@@ -201,7 +196,7 @@ const ViewProfile = ({userInfo}) => {
                   paddingBottom: 10,
                 }}>
                 <Ionicons name="book-outline" size={22} color="black" />
-                <Text>Hindu</Text>
+                <Text style={{color: colors.text}}>Hindu</Text>
               </View>
 
               <View
@@ -215,7 +210,7 @@ const ViewProfile = ({userInfo}) => {
                   paddingBottom: 10,
                 }}>
                 <Ionicons name="home-outline" size={20} color="black" />
-                <Text>{userInfo?.location}</Text>
+                <Text style={{color: colors.text}}>{userInfo?.location}</Text>
               </View>
               <View
                 style={{
@@ -228,13 +223,49 @@ const ViewProfile = ({userInfo}) => {
                   paddingBottom: 10,
                 }}>
                 <Ionicons name="search-outline" size={20} color="black" />
-                <Text>{userInfo?.lookingFor}</Text>
+                <Text style={{color: colors.text}}>{userInfo?.lookingFor}</Text>
               </View>
 
               
             </View>
 
             <View>{null}</View>
+
+            {/* Move first prompt below the main info section */}
+            <View style={{marginVertical: 15}}>
+              {userInfo?.prompts?.slice(0, 1).map((prompt, index) => (
+                <React.Fragment key={prompt?.id ?? String(index)}>
+                  <View
+                    style={{
+                      backgroundColor: 'white',
+                      padding: 12,
+                      borderRadius: 10,
+                      height: 150,
+                      justifyContent: 'center',
+                      borderColor: '#E0E0E0',
+                      borderWidth: 1,
+                    }}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                      <Ionicons name="chatbubble-ellipses-outline" size={18} color="#8e33b5" />
+                      <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
+                        {prompt.question}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 24,
+                        fontWeight: '600',
+                        marginTop: 20,
+                        lineHeight: 30,
+                        color: colors.text,
+                      }}>
+                      {prompt.answer}
+                    </Text>
+                  </View>
+                  {/* removed like overlay to keep profile purely informational */}
+                </React.Fragment>
+              ))}
+            </View>
 
             <View style={{marginVertical: 15}}>
               {userInfo?.prompts?.slice(1, 2).map(prompt => (
@@ -247,17 +278,22 @@ const ViewProfile = ({userInfo}) => {
                       borderRadius: 10,
                       height: 150,
                       justifyContent: 'center',
-                    }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
-                      {prompt.question}
-                    </Text>
+                      borderColor: '#E0E0E0',
+                      borderWidth: 1,
+                  }}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                      <Ionicons name="chatbubble-ellipses-outline" size={18} color="#8e33b5" />
+                      <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
+                        {prompt.question}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         fontSize: 24,
-                        fontWeight: 'bold',
+                        fontWeight: '600',
                         marginTop: 20,
-  fontWeight: '400',
                         lineHeight: 30,
+                        color: colors.text,
                       }}>
                       {prompt.answer}
                     </Text>
@@ -279,17 +315,22 @@ const ViewProfile = ({userInfo}) => {
                       borderRadius: 10,
                       height: 150,
                       justifyContent: 'center',
-                    }}>
-                    <Text style={{fontSize: 15, fontWeight: '500'}}>
-                      {prompt.question}
-                    </Text>
+                      borderColor: '#E0E0E0',
+                      borderWidth: 1,
+                  }}>
+                    <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
+                      <Ionicons name="chatbubble-ellipses-outline" size={18} color="#8e33b5" />
+                      <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
+                        {prompt.question}
+                      </Text>
+                    </View>
                     <Text
                       style={{
                         fontSize: 24,
-                        fontWeight: 'bold',
+                        fontWeight: '600',
                         marginTop: 20,
-  fontWeight: '400',
                         lineHeight: 30,
+                        color: colors.text,
                       }}>
                       {prompt.answer}
                     </Text>

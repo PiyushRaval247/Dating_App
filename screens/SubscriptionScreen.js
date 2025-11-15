@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View, ScrollView, SafeAreaView} from 'react-native';
+import {StyleSheet, Text, View, ScrollView, SafeAreaView, Dimensions} from 'react-native';
 import React, {useState} from 'react';
 import { useRoute } from '@react-navigation/native';
 import {TabBar, TabView} from 'react-native-tab-view';
@@ -33,7 +33,7 @@ const SubscriptionScreen = () => {
           navigationState={{index, routes}}
           renderScene={renderScene}
           onIndexChange={setIndex}
-          initialLayout={{width: '100%'}}
+          initialLayout={{width: Dimensions.get('window').width}}
           renderTabBar={props => (
             <TabBar
               {...props}

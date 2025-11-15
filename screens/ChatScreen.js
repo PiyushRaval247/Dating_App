@@ -13,10 +13,11 @@ import axios from 'axios';
 import {BASE_URL} from '../urls/url';
 import LottieView from 'lottie-react-native';
 import UserChat from '../components/UserChat';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { colors } from '../utils/theme';
 
 const ChatScreen = () => {
+  const navigation = useNavigation();
   const [matches, setMatches] = useState([]);
   const {userId, setUserId} = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(true);
@@ -173,6 +174,7 @@ const ChatScreen = () => {
               <View style={{marginTop: 50}} />
 
               <Pressable
+                onPress={() => navigation.navigate('Subscription', { tab: 'soulemateX' })}
                 style={{
                   padding: 12,
                   borderRadius: 22,
@@ -191,6 +193,7 @@ const ChatScreen = () => {
               </Pressable>
 
               <Pressable
+                onPress={() => navigation.navigate('Subscription', { tab: 'soulemateX' })}
                 style={{
                   padding: 12,
                   borderRadius: 22,

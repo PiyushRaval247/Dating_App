@@ -412,9 +412,25 @@ const ProfileScreen = () => {
         </View>
         <View style={{flex: 1}}>
           <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>Keep your streak</Text>
-          <Text style={{color: '#282828', marginTop: 4}}>
+          <Text style={{color: colors.text, marginTop: 4}}>
             Engage today to build momentum. Send a like or a message.
           </Text>
+          {Boolean(userInfo?.streakCount) && (
+            <View style={{
+              marginTop: 8,
+              alignSelf: 'flex-start',
+              backgroundColor: '#ffe8cc',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 16,
+              borderColor: '#ffd39b',
+              borderWidth: 1,
+            }}>
+              <Text style={{color: colors.text, fontWeight: '600'}}>
+                {userInfo?.streakCount} day{userInfo?.streakCount > 1 ? 's' : ''} streak
+              </Text>
+            </View>
+          )}
         </View>
         <Pressable
           onPress={handleCheckIn}
@@ -1154,11 +1170,11 @@ const ProfileScreen = () => {
         <ModalContent style={{width: '100%', height: 'auto'}}>
           <View>
             <Text
-              style={{fontSize: 26, fontWeight: 'bold', textAlign: 'center'}}>
+              style={{fontSize: 26, fontWeight: 'bold', textAlign: 'center', color: colors.text}}>
               Catch their eye by sending a rose
             </Text>
             <Text
-              style={{marginTop: 8, textAlign: 'center', fontSize: 14, color: '#800080', fontWeight: '600'}}>
+              style={{marginTop: 8, textAlign: 'center', fontSize: 14, color: colors.text, fontWeight: '600'}}>
               You currently have {userInfo?.roses ?? 5} roses
             </Text>
             <Text
@@ -1166,7 +1182,7 @@ const ProfileScreen = () => {
                 marginTop: 16,
                 textAlign: 'center',
                 fontSize: 15,
-                color: '#181818',
+                color: colors.text,
                 lineHeight: 22,
               }}>
               Roses are always seen first and are twice as likely to lead to a
@@ -1201,7 +1217,7 @@ const ProfileScreen = () => {
                     }}
                   />
 
-                  <Text style={{fontSize: 15, fontWeight: '500'}}>
+                  <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
                     ₹ {item?.price}
                   </Text>
 

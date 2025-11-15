@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BASE_URL } from '../urls/url';
 import { AuthContext } from '../AuthContext';
 import { useSocketContext } from '../SocketContext';
+import InCallManager from 'react-native-incall-manager';
 
 const NotificationContext = createContext();
 
@@ -122,9 +123,12 @@ export const NotificationProvider = ({ children }) => {
       const from = payload?.from;
       if (!from) return;
       setIncomingCall({ from });
+      // Play ringtone to make incoming call obvious
+      try { InCallManager.startRingtone('default'); } catch (e) {}
     };
     const onEnd = () => {
       setIncomingCall(null);
+      try { InCallManager.stopRingtone(); } catch (e) {}
     };
     socket.on('call:incoming', onIncoming);
     socket.on('call:end', onEnd);
@@ -133,6 +137,13 @@ export const NotificationProvider = ({ children }) => {
       socket.off('call:end', onEnd);
     };
   }, [socket]);
+
+  // Stop ringtone if banner is dismissed
+  useEffect(() => {
+    if (!incomingCall) {
+      try { InCallManager.stopRingtone(); } catch (e) {}
+    }
+  }, [incomingCall]);
 
   const value = {
     messageCount,
