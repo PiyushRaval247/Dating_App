@@ -59,7 +59,7 @@ const IncomingCallBanner = () => {
   };
 
   return (
-    <View style={{ position: 'absolute', top: 70, left: 10, right: 10, zIndex: 1000 }} pointerEvents="box-none">
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1000, paddingTop: 40, paddingHorizontal: 10 }}>
       <View style={{ backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: '#eee', marginRight: 10 }}>

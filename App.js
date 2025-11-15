@@ -28,6 +28,8 @@ import StackNavigator from './navigation/StackNavigator';
 import {AuthProvider} from './AuthContext';
 import {SocketContextProvider} from './SocketContext';
 import { ModalPortal } from 'react-native-modals';
+import { NotificationProvider } from './context/NotificationContext';
+import IncomingCallBanner from './components/IncomingCallBanner';
 import { colors } from './utils/theme';
 
 // Global default text color using theme
@@ -73,7 +75,11 @@ function App() {
   return (
     <AuthProvider>
       <SocketContextProvider>
-        <StackNavigator />
+        <NotificationProvider>
+          {/* Global incoming call UI overlay */}
+          <IncomingCallBanner />
+          <StackNavigator />
+        </NotificationProvider>
         <ModalPortal/>
       </SocketContextProvider>
     </AuthProvider>

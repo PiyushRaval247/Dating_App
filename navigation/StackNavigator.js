@@ -39,8 +39,7 @@ import SubscriptionScreen from '../screens/SubscriptionScreen';
 import ProfileDetailScreen from '../screens/ProfileDetailScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import NotificationBadge from '../components/NotificationBadge';
-import { NotificationProvider, useNotification } from '../context/NotificationContext';
-import IncomingCallBanner from '../components/IncomingCallBanner';
+import { useNotification } from '../context/NotificationContext';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import BlockedUsersScreen from '../screens/BlockedUsersScreen';
 import SettingsScreen from '../screens/SettingsScreen';
@@ -290,8 +289,6 @@ const StackNavigator = () => {
   };
   function MainStack() {
     return (
-      <NotificationProvider>
-        <IncomingCallBanner />
         <Stack.Navigator>
           <Stack.Screen
             name="Main"
@@ -407,7 +404,6 @@ const StackNavigator = () => {
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
-      </NotificationProvider>
     );
   }
   return (
