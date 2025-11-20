@@ -2643,6 +2643,7 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
     const authUserId = req.user?.userId;
     const userId = req.query?.userId || authUserId;
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
+    if (!awsCredentials) return res.json({ logs: [] });
     const q = await docClient.send(new QueryCommand({
       TableName: CALL_LOGS_TABLE,
       KeyConditionExpression: 'userId = :u',
@@ -2657,7 +2658,7 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
     res.json({ logs: items });
   } catch (e) {
     console.log('[call_logs] fetch error', e?.message || e);
-    res.status(500).json({ message: 'Failed to fetch call logs' });
+    res.status(200).json({ logs: [] });
   }
 });
 // Load environment variables from .env (for local dev). Hosts like Render use dashboard envs.

@@ -82,7 +82,13 @@ const CallHistoryScreen = () => {
           setUserMap({});
         }
       } catch (e) {
-        setError(e?.response?.data?.message || e?.message || 'Failed to load call history');
+        const status = e?.response?.status;
+        const message = e?.response?.data?.message || e?.message || '';
+        if (status === 502 || String(message).includes('502')) {
+          setError('Service unavailable. Please try again in a minute.');
+        } else {
+          setError(message || 'Failed to load call history');
+        }
       } finally {
         setLoading(false);
       }
