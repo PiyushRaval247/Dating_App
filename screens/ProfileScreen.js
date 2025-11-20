@@ -39,6 +39,7 @@ const ProfileScreen = () => {
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [expiresIn, setExpiresIn] = useState('');
   // Settings now opens as a full screen; remove modal state
   const getProfileCompleteness = () => {
     const info = userInfo || {};
@@ -415,6 +416,9 @@ const ProfileScreen = () => {
           <Text style={{color: colors.text, marginTop: 4}}>
             Engage today to build momentum. Send a like or a message.
           </Text>
+          {expiresIn ? (
+            <Text style={{color: colors.textMuted, marginTop: 4, fontSize: 12}}>Resets in {expiresIn}</Text>
+          ) : null}
           {Boolean(userInfo?.streakCount) && (
             <View style={{
               marginTop: 8,
@@ -429,6 +433,20 @@ const ProfileScreen = () => {
               <Text style={{color: colors.text, fontWeight: '600'}}>
                 {userInfo?.streakCount} day{userInfo?.streakCount > 1 ? 's' : ''} streak
               </Text>
+            </View>
+          )}
+          {Boolean(userInfo?.bestStreak) && (
+            <View style={{
+              marginTop: 6,
+              alignSelf: 'flex-start',
+              backgroundColor: '#f2f2f2',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 16,
+              borderColor: '#e6e6e6',
+              borderWidth: 1,
+            }}>
+              <Text style={{color: colors.text}}>Best {userInfo?.bestStreak} days</Text>
             </View>
           )}
         </View>
@@ -1249,3 +1267,17 @@ const ProfileScreen = () => {
 export default ProfileScreen;
 
 const styles = StyleSheet.create({});
+  useEffect(() => {
+    const updateExpires = () => {
+      const now = new Date();
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
+      const diff = Math.max(0, end.getTime() - now.getTime());
+      const h = Math.floor(diff / (1000 * 60 * 60));
+      const m = Math.floor((diff - h * 3600000) / 60000);
+      setExpiresIn(`${h}h ${m}m`);
+    };
+    updateExpires();
+    const id = setInterval(updateExpires, 60000);
+    return () => clearInterval(id);
+  }, []);

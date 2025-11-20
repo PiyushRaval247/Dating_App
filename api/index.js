@@ -460,7 +460,7 @@ app.get('/user-info', async (req, res) => {
       await docClient.send(new UpdateCommand({
         TableName: 'usercollection',
         Key: {userId},
-        UpdateExpression: 'SET streakCount = if_not_exists(streakCount, :default), lastActiveAt = if_not_exists(lastActiveAt, :now)',
+        UpdateExpression: 'SET streakCount = if_not_exists(streakCount, :default), lastActiveAt = if_not_exists(lastActiveAt, :now), bestStreak = if_not_exists(bestStreak, :default)',
         ExpressionAttributeValues: {
           ':default': 0,
           ':now': new Date().toISOString(),
@@ -468,10 +468,12 @@ app.get('/user-info', async (req, res) => {
       }));
       cleanedUser.streakCount = 0;
       cleanedUser.lastActiveAt = new Date().toISOString();
+      cleanedUser.bestStreak = 0;
     } catch (streakErr) {
       console.log('Error initializing streak fields', streakErr);
       cleanedUser.streakCount = 0;
       cleanedUser.lastActiveAt = new Date().toISOString();
+      cleanedUser.bestStreak = 0;
     }
   }
 
@@ -541,8 +543,7 @@ function authenticateToken(req, res, next) {
   const token = authHeader.split(' ')[1];
   console.log('recieived token', token);
 
-  const secretKey =
-    '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0'; // Use a better key management
+  const secretKey = process.env.JWT_SECRET || 'insecure_dev_secret';
 
   jwt.verify(token, secretKey, (err, user) => {
     if (err) {
@@ -561,7 +562,7 @@ function authenticateAdmin(req, res, next) {
     return res.status(404).json({ message: 'Token is required' });
   }
   const token = authHeader.split(' ')[1];
-  const secretKey = '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0';
+  const secretKey = process.env.JWT_SECRET || 'insecure_dev_secret';
   jwt.verify(token, secretKey, (err, payload) => {
     if (err) {
       return res.status(403).json({ message: 'Invalid or expired token' });
@@ -879,10 +880,11 @@ app.post('/like-profile', authenticateToken, async (req, res) => {
         docClient.send(new UpdateCommand(addMatchForUser2))
       ]);
       
-      console.log('Automatic match created successfully!');
+      try { await updateStreakForUser(userId); } catch {}
       return res.status(200).json({message: 'Profile liked and match created!', matched: true});
     }
 
+    try { await updateStreakForUser(userId); } catch {}
     res.status(200).json({message: 'Profile Likes succesfully!', matched: false});
   } catch (error) {
     console.log('Error liking', error);
@@ -992,8 +994,7 @@ app.post('/login', async (req, res) => {
     }
     const userId = user?.userId;
 
-    const secretKey =
-      '582e6b12ec6da3125121e9be07d00f63495ace020ec9079c30abeebd329986c5c35548b068ddb4b187391a5490c880137c1528c76ce2feacc5ad781a742e2de0'; // Use a better key management
+    const secretKey = process.env.JWT_SECRET || 'insecure_dev_secret';
 
     const token = jwt.sign({userId: userId, email: email}, secretKey);
 
@@ -1264,8 +1265,25 @@ const io = new Server(server, {
   },
 });
 
-// Active calls keyed by "caller->callee"
 const activeCalls = new Map();
+const inMemoryCallLogs = new Map();
+function pushLog(uid, log) {
+  const list = inMemoryCallLogs.get(uid) || [];
+  list.push(log);
+  list.sort((a, b) => String(b.createdAt || b.startTime || '').localeCompare(String(a.createdAt || a.startTime || '')));
+  inMemoryCallLogs.set(uid, list);
+}
+function upsertLog(uid, callId, patch) {
+  const list = inMemoryCallLogs.get(uid) || [];
+  const idx = list.findIndex(it => String(it.callId) === String(callId));
+  if (idx >= 0) {
+    list[idx] = { ...(list[idx] || {}), ...patch };
+  } else {
+    list.push({ callId, ...patch });
+  }
+  list.sort((a, b) => String(b.createdAt || b.startTime || '').localeCompare(String(a.createdAt || a.startTime || '')));
+  inMemoryCallLogs.set(uid, list);
+}
 
 io.on('connection', socket => {
   const userIdRaw = socket.handshake.query.userId;
@@ -1363,8 +1381,13 @@ io.on('connection', socket => {
             createdAt: nowIso,
           },
         }));
+        pushLog(String(from), { callId: String(callId), direction: 'outgoing', peerId: String(to), status: 'ringing', startTime: null, endTime: null, durationSec: 0, kind: 'video', createdAt: nowIso });
+        pushLog(String(to), { callId: String(callId), direction: 'incoming', peerId: String(from), status: 'ringing', startTime: null, endTime: null, durationSec: 0, kind: 'video', createdAt: nowIso });
       } catch (e) {
         console.log('[call_logs] invite log error', e?.message || e);
+        const nowIso = dayjs().toISOString();
+        pushLog(String(from), { callId: String(callId), direction: 'outgoing', peerId: String(to), status: 'ringing', startTime: null, endTime: null, durationSec: 0, kind: 'video', createdAt: nowIso });
+        pushLog(String(to), { callId: String(callId), direction: 'incoming', peerId: String(from), status: 'ringing', startTime: null, endTime: null, durationSec: 0, kind: 'video', createdAt: nowIso });
       }
     })();
   });
@@ -1404,6 +1427,7 @@ io.on('connection', socket => {
             createdAt: startIso,
           },
         }));
+        upsertLog(String(to), String(callId), { direction: 'outgoing', peerId: String(from), status: 'in_progress', startTime: startIso, endTime: null, durationSec: 0, kind: 'video', createdAt: startIso });
         // Callee perspective
         await docClient.send(new PutCommand({
           TableName: CALL_LOGS_TABLE,
@@ -1420,8 +1444,15 @@ io.on('connection', socket => {
             createdAt: startIso,
           },
         }));
+        upsertLog(String(from), String(callId), { direction: 'incoming', peerId: String(to), status: 'in_progress', startTime: startIso, endTime: null, durationSec: 0, kind: 'video', createdAt: startIso });
       } catch (e) {
         console.log('[call_logs] accept log error', e?.message || e);
+        const key = `${to}->${from}`;
+        const rec = activeCalls.get(key);
+        const callId = rec?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+        const startIso = dayjs().toISOString();
+        upsertLog(String(to), String(callId), { direction: 'outgoing', peerId: String(from), status: 'in_progress', startTime: startIso, endTime: null, durationSec: 0, kind: 'video', createdAt: startIso });
+        upsertLog(String(from), String(callId), { direction: 'incoming', peerId: String(to), status: 'in_progress', startTime: startIso, endTime: null, durationSec: 0, kind: 'video', createdAt: startIso });
       }
     })();
   });
@@ -1457,6 +1488,7 @@ io.on('connection', socket => {
             createdAt: startIso || nowIso,
           },
         }));
+        upsertLog(String(to), String(callId), { direction: 'outgoing', peerId: String(from), status: 'declined', startTime: startIso, endTime: nowIso, durationSec: 0, kind: 'video', createdAt: startIso || nowIso });
         // Callee
         await docClient.send(new PutCommand({
           TableName: CALL_LOGS_TABLE,
@@ -1473,9 +1505,16 @@ io.on('connection', socket => {
             createdAt: startIso || nowIso,
           },
         }));
+        upsertLog(String(from), String(callId), { direction: 'incoming', peerId: String(to), status: 'declined', startTime: startIso, endTime: nowIso, durationSec: 0, kind: 'video', createdAt: startIso || nowIso });
         activeCalls.delete(`${to}->${from}`);
       } catch (e) {
         console.log('[call_logs] reject log error', e?.message || e);
+        const nowIso = dayjs().toISOString();
+        const active = activeCalls.get(`${to}->${from}`);
+        const startIso = active?.startTime || null;
+        const callId = active?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+        upsertLog(String(to), String(callId), { direction: 'outgoing', peerId: String(from), status: 'declined', startTime: startIso, endTime: nowIso, durationSec: 0, kind: 'video', createdAt: startIso || nowIso });
+        upsertLog(String(from), String(callId), { direction: 'incoming', peerId: String(to), status: 'declined', startTime: startIso, endTime: nowIso, durationSec: 0, kind: 'video', createdAt: startIso || nowIso });
       }
     })();
   });
@@ -1534,6 +1573,7 @@ io.on('connection', socket => {
             createdAt: startIso || endIso,
           },
         }));
+        upsertLog(String(from), String(callId), { direction: 'outgoing', peerId: String(to), status, startTime: startIso, endTime: endIso, durationSec: dur, kind: 'video', createdAt: startIso || endIso });
         // Counterparty perspective
         await docClient.send(new PutCommand({
           TableName: CALL_LOGS_TABLE,
@@ -1550,10 +1590,19 @@ io.on('connection', socket => {
             createdAt: startIso || endIso,
           },
         }));
+        upsertLog(String(to), String(callId), { direction: 'incoming', peerId: String(from), status: startIso ? 'completed' : 'missed', startTime: startIso, endTime: endIso, durationSec: dur, kind: 'video', createdAt: startIso || endIso });
         activeCalls.delete(`${from}->${to}`);
         activeCalls.delete(`${to}->${from}`);
       } catch (e) {
         console.log('[call_logs] end log error', e?.message || e);
+        const rec = activeCalls.get(`${from}->${to}`) || activeCalls.get(`${to}->${from}`);
+        const startIso = rec?.startTime || null;
+        const callId = rec?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${from}-${to}`);
+        const endIso = dayjs().toISOString();
+        const dur = startIso ? Math.max(0, dayjs(endIso).diff(dayjs(startIso), 'second')) : 0;
+        const status = startIso ? 'completed' : 'no_answer';
+        upsertLog(String(from), String(callId), { direction: 'outgoing', peerId: String(to), status, startTime: startIso, endTime: endIso, durationSec: dur, kind: 'video', createdAt: startIso || endIso });
+        upsertLog(String(to), String(callId), { direction: 'incoming', peerId: String(from), status: startIso ? 'completed' : 'missed', startTime: startIso, endTime: endIso, durationSec: dur, kind: 'video', createdAt: startIso || endIso });
       }
     })();
   });
@@ -1704,10 +1753,11 @@ app.post('/sendMessage', async (req, res) => {
           {type: 'message', from: senderId},
         );
       }
-    } catch (e) {
-      console.log('Error sending message push', e?.response?.data || e?.message || e);
-    }
+  } catch (e) {
+    console.log('Error sending message push', e?.response?.data || e?.message || e);
+  }
 
+    try { await updateStreakForUser(senderId); } catch {}
     res.status(201).json({message: 'Message sent successfully!'});
   } catch (error) {
     console.log('Error', error);
@@ -2643,7 +2693,10 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
     const authUserId = req.user?.userId;
     const userId = req.query?.userId || authUserId;
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
-    if (!awsCredentials) return res.json({ logs: [] });
+    if (!awsCredentials) {
+      const items = inMemoryCallLogs.get(String(userId)) || [];
+      return res.json({ logs: items });
+    }
     const q = await docClient.send(new QueryCommand({
       TableName: CALL_LOGS_TABLE,
       KeyConditionExpression: 'userId = :u',
@@ -2663,3 +2716,61 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
 });
 // Load environment variables from .env (for local dev). Hosts like Render use dashboard envs.
 dotenv.config();
+async function updateStreakForUser(userId) {
+  try {
+    const nowIso = new Date().toISOString();
+    const today = dayjs().format('YYYY-MM-DD');
+    const yesterday = dayjs().subtract(1, 'day').format('YYYY-MM-DD');
+    const u = await docClient.send(new GetCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      ProjectionExpression: 'streakCount, lastActiveAt, bestStreak',
+    }));
+    const currentStreak = Number(u?.Item?.streakCount || 0);
+    const bestStreak = Number(u?.Item?.bestStreak || 0);
+    let newStreak = currentStreak || 0;
+    if (awsCredentials) {
+      const latestQuery = new QueryCommand({
+        TableName: ACTIVITY_TABLE,
+        KeyConditionExpression: 'userId = :uid',
+        ExpressionAttributeValues: { ':uid': { S: userId } },
+        ScanIndexForward: false,
+        Limit: 1,
+      });
+      const latestResult = await dynamoDbClient.send(latestQuery);
+      const latestItem = latestResult.Items?.[0] || null;
+      const latestDate = latestItem?.activityDate?.S || null;
+      try {
+        await dynamoDbClient.send(new PutItemCommand({
+          TableName: ACTIVITY_TABLE,
+          Item: { userId: { S: userId }, activityDate: { S: today } },
+          ConditionExpression: 'attribute_not_exists(activityDate)',
+        }));
+        if (latestDate === yesterday) newStreak = currentStreak + 1; else newStreak = currentStreak > 0 ? currentStreak : 1;
+      } catch (putErr) {
+        if (putErr?.name === 'ConditionalCheckFailedException') newStreak = currentStreak;
+        else throw putErr;
+      }
+    } else {
+      const last = u?.Item?.lastActiveAt ? dayjs(u.Item.lastActiveAt) : null;
+      const isToday = last ? last.format('YYYY-MM-DD') === today : false;
+      const isYesterday = last ? last.format('YYYY-MM-DD') === yesterday : false;
+      if (isToday) newStreak = currentStreak; else if (isYesterday) newStreak = currentStreak + 1; else newStreak = 1;
+    }
+    const newBest = newStreak > bestStreak ? newStreak : bestStreak;
+    await docClient.send(new UpdateCommand({
+      TableName: 'usercollection',
+      Key: { userId },
+      UpdateExpression: 'SET streakCount = :c, lastActiveAt = :now, bestStreak = if_not_exists(bestStreak, :b)',
+      ExpressionAttributeValues: { ':c': newStreak, ':now': nowIso, ':b': newBest },
+    }));
+    if (newBest !== bestStreak) {
+      await docClient.send(new UpdateCommand({
+        TableName: 'usercollection',
+        Key: { userId },
+        UpdateExpression: 'SET bestStreak = :bs',
+        ExpressionAttributeValues: { ':bs': newBest },
+      }));
+    }
+  } catch {}
+}

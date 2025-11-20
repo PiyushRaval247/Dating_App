@@ -86,6 +86,10 @@ const CallHistoryScreen = () => {
         const message = e?.response?.data?.message || e?.message || '';
         if (status === 502 || String(message).includes('502')) {
           setError('Service unavailable. Please try again in a minute.');
+        } else if (status === 403) {
+          setError('Session expired or invalid. Please log in again.');
+        } else if (status === 404 && message.includes('Token is required')) {
+          setError('Please log in to view call history.');
         } else {
           setError(message || 'Failed to load call history');
         }
