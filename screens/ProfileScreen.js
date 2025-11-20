@@ -39,7 +39,6 @@ const ProfileScreen = () => {
   const [plan, setPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [expiresIn, setExpiresIn] = useState('');
   // Settings now opens as a full screen; remove modal state
   const getProfileCompleteness = () => {
     const info = userInfo || {};
@@ -144,11 +143,38 @@ const ProfileScreen = () => {
       } else {
         Alert.alert('Check-in complete', `Streak: ${streakCount || 'updated'}`);
       }
+      // Refresh activity dates
+      try {
+        const authToken2 = token || (await AsyncStorage.getItem('token'));
+        const respDates = await axios.get(`${BASE_URL}/activity/dates`, {
+          params: { userId },
+          headers: { Authorization: `Bearer ${authToken2}` },
+        });
+        setActivityDates(Array.isArray(respDates?.data?.dates) ? respDates.data.dates : []);
+      } catch {}
     } catch (error) {
       console.log('Check-in error', error?.response?.data || error?.message);
       Alert.alert('Error', 'Could not complete check-in');
     }
   };
+
+  const [activityDates, setActivityDates] = useState([]);
+  useEffect(() => {
+    const loadDates = async () => {
+      try {
+        if (!userId) return;
+        const authToken = token || (await AsyncStorage.getItem('token'));
+        const resp = await axios.get(`${BASE_URL}/activity/dates`, {
+          params: { userId },
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        setActivityDates(Array.isArray(resp?.data?.dates) ? resp.data.dates : []);
+      } catch (e) {
+        console.log('Load activity dates error', e?.response?.data || e?.message);
+      }
+    };
+    loadDates();
+  }, [userId]);
 
   const openSettings = () => {
     navigation.navigate('Settings');
@@ -393,8 +419,8 @@ const ProfileScreen = () => {
           marginVertical: 12,
           padding: 12,
           borderRadius: 8,
-          backgroundColor: 'white',
-          borderColor: '#E0E0E0',
+          backgroundColor: colors.card,
+          borderColor: colors.border,
           borderWidth: 1,
           flexDirection: 'row',
           alignItems: 'center',
@@ -405,7 +431,7 @@ const ProfileScreen = () => {
             height: 44,
             width: 44,
             borderRadius: 22,
-            backgroundColor: '#ff8c00',
+            backgroundColor: colors.primary,
             justifyContent: 'center',
             alignItems: 'center',
           }}>
@@ -416,39 +442,51 @@ const ProfileScreen = () => {
           <Text style={{color: colors.text, marginTop: 4}}>
             Engage today to build momentum. Send a like or a message.
           </Text>
-          {expiresIn ? (
-            <Text style={{color: colors.textMuted, marginTop: 4, fontSize: 12}}>Resets in {expiresIn}</Text>
-          ) : null}
-          {Boolean(userInfo?.streakCount) && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
             <View style={{
-              marginTop: 8,
               alignSelf: 'flex-start',
-              backgroundColor: '#ffe8cc',
+              backgroundColor: colors.card,
               paddingHorizontal: 10,
               paddingVertical: 6,
               borderRadius: 16,
-              borderColor: '#ffd39b',
               borderWidth: 1,
+              borderColor: colors.border,
             }}>
               <Text style={{color: colors.text, fontWeight: '600'}}>
-                {userInfo?.streakCount} day{userInfo?.streakCount > 1 ? 's' : ''} streak
+                Total streak: {userInfo?.streakCount || 0} day{(userInfo?.streakCount || 0) > 1 ? 's' : ''}
               </Text>
             </View>
-          )}
-          {Boolean(userInfo?.bestStreak) && (
-            <View style={{
-              marginTop: 6,
-              alignSelf: 'flex-start',
-              backgroundColor: '#f2f2f2',
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 16,
-              borderColor: '#e6e6e6',
-              borderWidth: 1,
-            }}>
-              <Text style={{color: colors.text}}>Best {userInfo?.bestStreak} days</Text>
-            </View>
-          )}
+          </View>
+          {/* Streak calendar: last 14 days */}
+          <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+            {(() => {
+              const days = [];
+              const now = Date.now();
+              for (let i = 13; i >= 0; i--) {
+                const d = new Date(now - i * 24 * 60 * 60 * 1000);
+                const iso = d.toISOString().slice(0, 10);
+                const day = d.getDate();
+                const checked = activityDates.includes(iso);
+                days.push({ iso, day, checked });
+              }
+              return days.map(d => (
+                <View key={d.iso} style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: d.checked ? colors.primary : colors.card,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}>
+                  <Text style={{ fontSize: 12, color: d.checked ? 'white' : colors.text }}>
+                    {String(d.day)}
+                  </Text>
+                </View>
+              ));
+            })()}
+          </View>
         </View>
         <Pressable
           onPress={handleCheckIn}
@@ -456,7 +494,7 @@ const ProfileScreen = () => {
             paddingHorizontal: 12,
             paddingVertical: 8,
             borderRadius: 20,
-            backgroundColor: '#ff8c00',
+            backgroundColor: colors.primary,
           }}>
           <Text style={{color: 'white', fontWeight: '600'}}>Let’s Go</Text>
         </Pressable>
@@ -1267,17 +1305,3 @@ const ProfileScreen = () => {
 export default ProfileScreen;
 
 const styles = StyleSheet.create({});
-  useEffect(() => {
-    const updateExpires = () => {
-      const now = new Date();
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
-      const diff = Math.max(0, end.getTime() - now.getTime());
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff - h * 3600000) / 60000);
-      setExpiresIn(`${h}h ${m}m`);
-    };
-    updateExpires();
-    const id = setInterval(updateExpires, 60000);
-    return () => clearInterval(id);
-  }, []);

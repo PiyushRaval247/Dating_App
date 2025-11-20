@@ -81,6 +81,7 @@ const truncate = (text, n = 60) => {
   const [replyTo, setReplyTo] = useState(null);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
   const scrollRef = useRef(null);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const showToast = (msg) => {
     if (!msg) return;
@@ -153,20 +154,34 @@ const truncate = (text, n = 60) => {
     return navigation.setOptions({
       headerTitle: '',
       headerLeft: () => (
-        <Pressable
-          onPress={() => navigation.goBack()}
-          style={{flexDirection: 'row', alignItems: 'center', gap: 14}}
-          hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        <View style={{flexDirection: 'row', alignItems: 'center', gap: 14}}>
+          <Pressable
+            onPress={() => navigation.goBack()}
+            hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
+            style={{width: 36, height: 36, alignItems: 'center', justifyContent: 'center'}}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </Pressable>
+          {(() => {
+            const avatar = route?.params?.image;
+            if (avatar) {
+              return (
+                <Pressable onPress={() => setShowAvatarModal(true)} style={{ width: 36, height: 36, borderRadius: 18, overflow: 'hidden' }}>
+                  <Image source={{ uri: avatar }} style={{ width: 36, height: 36 }} />
+                </Pressable>
+              );
+            }
+            return <Ionicons name="person-circle-outline" size={32} color={colors.text} />;
+          })()}
           <View>
             <Text style={{fontSize: 16, fontWeight: 'bold', color: colors.text}}>
               {route?.params?.name}
             </Text>
-            <Text style={{fontSize: 12, color: presence?.online ? '#2e8b57' : '#666'}}>
+            <Text style={{fontSize: 12, color: presence?.online ? colors.success : colors.textMuted}}>
               {presence?.online ? 'Online' : (presence?.lastSeen ? `Last seen ${formatTime(presence.lastSeen)}` : '')}
             </Text>
           </View>
-        </Pressable>
+        </View>
       ),
       headerRight: () => (
         <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
@@ -177,7 +192,7 @@ const truncate = (text, n = 60) => {
             style={{width: 48, height: 48, alignItems: 'center', justifyContent: 'center'}}
             hitSlop={{top: 16, bottom: 16, left: 16, right: 16}}
           >
-            <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? '#aaa' : colors.text} />
+            <Ionicons name="videocam-outline" size={26} color={(isBlocked || blockedByPeer) ? colors.textMuted : colors.text} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleMenuPress}
@@ -268,11 +283,52 @@ const truncate = (text, n = 60) => {
         params: {senderId, receiverId},
       });
 
-      setMessages(prev => dedupeMessages([...(Array.isArray(response?.data) ? response.data : []), ...(Array.isArray(prev) ? prev : [])]));
+      const baseList = Array.isArray(response?.data) ? response.data : [];
+      let callLogs = [];
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const resp = await axios.get(`${BASE_URL}/call-logs`, {
+          params: { userId: senderId },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const items = Array.isArray(resp?.data?.logs) ? resp.data.logs : [];
+        const filtered = items.filter(i => String(i?.peerId) === String(receiverId));
+        callLogs = filtered.map(log => {
+          const endOrStart = log?.endTime || log?.startTime || log?.createdAt;
+          const dur = Number(log?.durationSec || 0);
+          const min = Math.floor(dur / 60);
+          const sec = dur % 60;
+          const status = String(log?.status || '').toLowerCase();
+          let text = 'Video call';
+          if (status === 'completed') {
+            text = dur > 0 ? `Video call • Completed (${min}m ${sec}s)` : 'Video call • Completed';
+          } else if (status === 'missed') {
+            text = 'Missed video call';
+          } else if (status === 'declined') {
+            text = 'Declined video call';
+          } else if (status === 'in_progress') {
+            text = 'Video call • In progress';
+          } else {
+            text = `Video call • ${status || 'Unknown'}`;
+          }
+          const outgoing = String(log?.direction || '') === 'outgoing';
+          return {
+            messageId: `call-${log?.callId || endOrStart}-${outgoing ? 'out' : 'in'}`,
+            senderId: outgoing ? senderId : receiverId,
+            receiverId: outgoing ? receiverId : senderId,
+            message: text,
+            timestamp: endOrStart,
+            isCallLog: true,
+            kind: log?.kind || 'video',
+          };
+        });
+      } catch {}
+      const merged = dedupeMessages([...(baseList || []), ...(callLogs || [])]);
+      setMessages(merged);
 
       // Mark conversation as seen with latest timestamp
-      const last = response.data?.[response.data.length - 1]?.timestamp;
-      const seenTime = last || new Date().toISOString();
+      const lastTs = merged?.[merged.length - 1]?.timestamp;
+      const seenTime = lastTs || new Date().toISOString();
       const key = `lastSeen:${senderId}:${receiverId}`;
       await AsyncStorage.setItem(key, seenTime);
     } catch (error) {
@@ -422,12 +478,27 @@ const truncate = (text, n = 60) => {
       if (!asset?.base64) return;
       setIsUploadingImage(true);
       const receiverId = route?.params?.receiverId;
+      const extGuess = (() => {
+        const fn = String(asset.fileName || '').toLowerCase();
+        if (fn.endsWith('.png')) return 'png';
+        if (fn.endsWith('.webp')) return 'webp';
+        if (fn.endsWith('.jpeg')) return 'jpeg';
+        if (fn.endsWith('.jpg')) return 'jpg';
+        const ct = String(asset.type || '').toLowerCase();
+        if (ct.includes('png')) return 'png';
+        if (ct.includes('webp')) return 'webp';
+        if (ct.includes('jpeg')) return 'jpeg';
+        if (ct.includes('jpg')) return 'jpg';
+        return 'jpg';
+      })();
       const uploadResp = await axios.post(`${BASE_URL}/upload-image`, {
-        base64: asset.base64,
-        fileName: asset.fileName || `image_${Date.now()}.jpg`,
-        contentType: asset.type || 'image/jpeg',
+        imageBase64: asset.base64,
+        ext: extGuess,
       });
-      const imageUrl = uploadResp?.data?.url;
+      let imageUrl = uploadResp?.data?.url;
+      if (imageUrl && !/^https?:\/\//i.test(String(imageUrl))) {
+        imageUrl = `${BASE_URL}${imageUrl}`;
+      }
       if (!imageUrl) return;
       const payload = { senderId: userId, receiverId, message: '', type: 'image', imageUrl };
       await axios.post(`${BASE_URL}/sendMessage`, payload);
@@ -449,7 +520,7 @@ const truncate = (text, n = 60) => {
     <KeyboardAvoidingView
       keyboardVerticalOffset={keyboardVerticalOffset}
       behavior={'padding'}
-      style={{flex: 1, backgroundColor: '#f2f2f2'}}>
+      style={{flex: 1, backgroundColor: colors.bg}}>
       {/* Full-screen image viewer */}
       <Modal visible={!!fullImageUrl} transparent animationType="fade" onRequestClose={() => setFullImageUrl(null)}>
         <Pressable style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center'}} onPress={() => setFullImageUrl(null)}>
@@ -457,6 +528,19 @@ const truncate = (text, n = 60) => {
             <Image source={{ uri: fullImageUrl }} style={{ width: '90%', height: '70%', resizeMode: 'contain' }} />
           ) : null}
         </Pressable>
+      </Modal>
+
+      <Modal visible={showAvatarModal} transparent animationType="fade" onRequestClose={() => setShowAvatarModal(false)}>
+        <View style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', alignItems: 'center'}}>
+          <View style={{ position: 'absolute', top: 40, right: 20 }}>
+            <Pressable onPress={() => setShowAvatarModal(false)} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="close" size={24} color="#fff" />
+            </Pressable>
+          </View>
+          {route?.params?.image ? (
+            <Image source={{ uri: route?.params?.image }} style={{ width: '88%', height: '62%', resizeMode: 'cover', borderRadius: 12, backgroundColor: colors.card }} />
+          ) : null}
+        </View>
       </Modal>
 
       {/* Report & Block actions */}
@@ -482,9 +566,9 @@ const truncate = (text, n = 60) => {
               }}
               style={{ paddingVertical: 12 }}
             >
-              <Text style={{ color: '#b00020', fontSize: 15 }}>Block User</Text>
+              <Text style={{ color: colors.danger, fontSize: 15 }}>Block User</Text>
             </Pressable>
-            <View style={{ height: 1, backgroundColor: '#eee' }} />
+            <View style={{ height: 1, backgroundColor: colors.border }} />
             <Pressable
               onPress={async () => {
                 try {
@@ -500,11 +584,11 @@ const truncate = (text, n = 60) => {
               }}
               style={{ paddingVertical: 12 }}
             >
-              <Text style={{ color: '#662d91', fontSize: 15 }}>Report User</Text>
+              <Text style={{ color: colors.primary, fontSize: 15 }}>Report User</Text>
             </Pressable>
-            <View style={{ height: 1, backgroundColor: '#eee' }} />
+            <View style={{ height: 1, backgroundColor: colors.border }} />
             <Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 12 }}>
-              <Text style={{ color: '#333', fontSize: 15 }}>Cancel</Text>
+              <Text style={{ color: colors.text, fontSize: 15 }}>Cancel</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -525,8 +609,8 @@ const truncate = (text, n = 60) => {
         scrollEventThrottle={16}
       >
         {(isBlocked || blockedByPeer) && (
-          <View style={{ padding: 10, margin: 10, borderRadius: 8, backgroundColor: '#fff3cd', borderWidth: 1, borderColor: '#ffeeba' }}>
-            <Text style={{ color: '#856404', fontSize: 13 }}>
+          <View style={{ padding: 10, margin: 10, borderRadius: 8, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }}>
+            <Text style={{ color: colors.text, fontSize: 13 }}>
               {isBlocked ? 'You blocked this user. You will not receive or send messages.' : 'This user has blocked you. You cannot send messages.'}
             </Text>
           </View>
@@ -538,8 +622,8 @@ const truncate = (text, n = 60) => {
           return (
             <>
               {isNewDay && (
-                <View style={{ alignSelf: 'center', backgroundColor: '#e7f1ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: '#d6e5ff', marginTop: index === 0 ? 4 : 12 }}>
-                  <Text style={{ fontSize: 12, color: '#245ea7' }}>{dayLabel(item?.timestamp)}</Text>
+                <View style={{ alignSelf: 'center', backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, borderWidth: 1, borderColor: colors.border, marginTop: index === 0 ? 4 : 12 }}>
+                  <Text style={{ fontSize: 12, color: colors.textMuted }}>{dayLabel(item?.timestamp)}</Text>
                 </View>
               )}
               <Pressable
@@ -547,52 +631,57 @@ const truncate = (text, n = 60) => {
                   item?.senderId == userId
                     ? {
                         alignSelf: 'flex-end',
-                      backgroundColor: '#d7f8c6',
+                      backgroundColor: colors.primary,
                       padding: 10,
                       maxWidth: '72%',
-                      borderRadius: 10,
+                      borderRadius: 12,
                       marginHorizontal: 10,
                       marginTop: 6,
                       }
                     : {
                         alignSelf: 'flex-start',
-                      backgroundColor: 'white',
+                      backgroundColor: colors.card,
                       padding: 10,
                       maxWidth: '72%',
-                      borderRadius: 10,
+                      borderRadius: 12,
                       marginHorizontal: 10,
                       marginTop: 6,
                       borderWidth: 1,
-                      borderColor: '#e6e6e6',
+                      borderColor: colors.border,
                       },
                 ]}
                 key={item?.messageId || index}
                 onLongPress={() => setReactionPickerFor(item?.messageId)}
             >
-              {item?.type === 'audio' && item?.audioUrl ? (
+              {item?.isCallLog ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="videocam-outline" size={18} color={item?.senderId == userId ? colors.success : colors.text} />
+                  <Text style={{ fontSize: 15, color: colors.text }}>{item?.message}</Text>
+                </View>
+              ) : item?.type === 'audio' && item?.audioUrl ? (
                 <View>
                   <Text
                     style={{
                       fontSize: 15,
                       textAlign: 'left',
                       letterSpacing: 0.3,
-                      color: item?.senderId == userId ? 'white' : 'black',
+                      color: item?.senderId == userId ? 'white' : colors.text,
                       marginBottom: 6,
                     }}>
                     Voice message
                   </Text>
                   <Pressable
                     onPress={() => Linking.openURL(item.audioUrl)}
-                    style={{backgroundColor: item?.senderId == userId ? '#7b3d84' : '#cfd2d2', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6}}
+                    style={{backgroundColor: item?.senderId == userId ? colors.primary : colors.card, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 6, borderWidth: item?.senderId == userId ? 0 : 1, borderColor: item?.senderId == userId ? undefined : colors.border}}
                   >
-                    <Text style={{color: item?.senderId == userId ? 'white' : 'black'}}>Play</Text>
+                    <Text style={{color: item?.senderId == userId ? 'white' : colors.text}}>Play</Text>
                   </Pressable>
                 </View>
               ) : item?.type === 'image' && item?.imageUrl ? (
                 <Pressable onPress={() => setFullImageUrl(item.imageUrl)}>
                   <Image
                     source={{ uri: item.imageUrl }}
-                    style={{ width: 180, height: 220, borderRadius: 8, backgroundColor: '#ddd' }}
+                    style={{ width: 180, height: 220, borderRadius: 8, backgroundColor: colors.border }}
                   />
                 </Pressable>
               ) : (
@@ -601,7 +690,7 @@ const truncate = (text, n = 60) => {
                     fontSize: 15,
                     textAlign: 'left',
                     letterSpacing: 0.3,
-                    color: '#111',
+                    color: item?.senderId == userId ? 'white' : colors.text,
                   }}>
                   {maskBadWords(item?.message || '')}
                 </Text>
@@ -610,18 +699,18 @@ const truncate = (text, n = 60) => {
                 <Text
                   style={{
                     fontSize: 11,
-                    color: '#777',
+                    color:' #F5f5f5',
                   }}>
                   {formatTime(item?.timestamp)}
                 </Text>
                 {item?.senderId == userId ? (
                   <>
                     {item?.readAt ? (
-                      <Ionicons name="checkmark-done-outline" size={14} color="#4fc3f7" />
+                      <Ionicons name="checkmark-done-outline" size={14} color={colors.primaryAlt} />
                     ) : item?.deliveredAt ? (
-                      <Ionicons name="checkmark-done-outline" size={14} color="#888" />
+                      <Ionicons name="checkmark-done-outline" size={14} color={colors.textMuted} />
                     ) : (
-                      <Ionicons name="checkmark-outline" size={14} color="#888" />
+                      <Ionicons name="checkmark-outline" size={14} color={colors.textMuted} />
                     )}
                   </>
                 ) : null}
@@ -631,8 +720,8 @@ const truncate = (text, n = 60) => {
               {Array.isArray(localReactions[item?.messageId]) && localReactions[item?.messageId].length > 0 && (
                 <View style={{ flexDirection: 'row', marginTop: 6, gap: 6 }}>
                   {Object.entries(localReactions[item?.messageId].reduce((acc, r) => { acc[r] = (acc[r] || 0) + 1; return acc; }, {})).map(([emoji, count], idx) => (
-                    <View key={idx} style={{ backgroundColor: item?.senderId == userId ? '#7b3d84' : '#cfd2d2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 }}>
-                      <Text style={{ color: item?.senderId == userId ? 'white' : 'black' }}>{emoji} {count}</Text>
+                    <View key={idx} style={{ backgroundColor: item?.senderId == userId ? colors.primary : colors.card, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: item?.senderId == userId ? 0 : 1, borderColor: item?.senderId == userId ? undefined : colors.border }}>
+                      <Text style={{ color: item?.senderId == userId ? 'white' : colors.text }}>{emoji} {count}</Text>
                     </View>
                   ))}
                 </View>
@@ -644,15 +733,15 @@ const truncate = (text, n = 60) => {
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <Pressable
                       onPress={() => { setReplyTo(item); setReactionPickerFor(null); }}
-                      style={{ backgroundColor: '#f0f0f0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                      style={{ backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}
                     >
-                      <Text style={{ color: '#333' }}>Reply</Text>
+                      <Text style={{ color: colors.text }}>Reply</Text>
                     </Pressable>
                     <Pressable
                       onPress={() => setReactionPickerFor(null)}
-                      style={{ backgroundColor: '#f0f0f0', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                      style={{ backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}
                     >
-                      <Text style={{ color: '#333' }}>Cancel</Text>
+                      <Text style={{ color: colors.text }}>Cancel</Text>
                     </Pressable>
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -668,9 +757,9 @@ const truncate = (text, n = 60) => {
                             return { ...prev, [item?.messageId]: [...list, emoji] };
                           });
                         }}
-                        style={{ backgroundColor: item?.senderId == userId ? '#7b3d84' : '#cfd2d2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16 }}
+                        style={{ backgroundColor: item?.senderId == userId ? colors.primary : colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: item?.senderId == userId ? 0 : 1, borderColor: item?.senderId == userId ? undefined : colors.border }}
                       >
-                        <Text style={{ color: item?.senderId == userId ? 'white' : 'black', fontSize: 16 }}>{emoji}</Text>
+                        <Text style={{ color: item?.senderId == userId ? 'white' : colors.text, fontSize: 16 }}>{emoji}</Text>
                       </Pressable>
                     ))}
                   </View>
@@ -685,14 +774,14 @@ const truncate = (text, n = 60) => {
       {/* Typing indicator */}
       {isTyping && (
         <View style={{paddingHorizontal: 10, paddingBottom: 6}}>
-          <Text style={{fontSize: 12, color: '#666'}}>Typing…</Text>
+          <Text style={{fontSize: 12, color: colors.textMuted}}>Typing…</Text>
         </View>
       )}
 
       {/* Saved openers (user-managed) */}
       {savedOpeners?.length > 0 && (
-        <View style={{borderTopWidth: 1, borderTopColor: '#eee'}}>
-          <Text style={{fontSize: 12, color: '#666', paddingHorizontal: 10, paddingTop: 8}}>Your saved openers</Text>
+        <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
+          <Text style={{fontSize: 12, color: colors.textMuted, paddingHorizontal: 10, paddingTop: 8}}>Your saved openers</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: 10, paddingVertical: 8}}>
             {savedOpeners.map(op => (
               <Pressable
@@ -715,12 +804,12 @@ const truncate = (text, n = 60) => {
                   paddingVertical: 7,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: '#ddd',
-                  backgroundColor: '#f7f7f7',
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
                   marginRight: 8,
                 }}
               >
-                <Text style={{fontSize: 13, color: '#333'}}>{maskBadWords(op?.text || '')}</Text>
+                <Text style={{fontSize: 13, color: colors.text}}>{maskBadWords(op?.text || '')}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -729,7 +818,7 @@ const truncate = (text, n = 60) => {
 
       {/* Quick replies (always available; fills input without sending) */}
       {messages?.length > 0 && (
-        <View style={{borderTopWidth: 1, borderTopColor: '#f0f0f0'}}>
+        <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -750,12 +839,12 @@ const truncate = (text, n = 60) => {
                   paddingVertical: 7,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: '#ddd',
-                  backgroundColor: '#fafafa',
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
                   marginRight: 8,
                 }}
               >
-                <Text style={{fontSize: 13, color: '#333'}}>{txt}</Text>
+                <Text style={{fontSize: 13, color: colors.text}}>{txt}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -771,7 +860,7 @@ const truncate = (text, n = 60) => {
               onChangeText={setImageUrlInput}
               placeholder="Paste image URL (https://...)"
               placeholderTextColor="gray"
-              style={{ flex: 1, borderColor: '#dddddd', borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, height: 40, fontSize: 15 }}
+              style={{ flex: 1, borderColor: colors.border, borderWidth: 1, borderRadius: 20, paddingHorizontal: 10, height: 40, fontSize: 15, backgroundColor: colors.card, color: colors.text }}
             />
             <Pressable
               onPress={async () => {
@@ -788,7 +877,7 @@ const truncate = (text, n = 60) => {
                   console.log('Send image error', e?.response?.data || e?.message);
                 }
               }}
-              style={{ backgroundColor: '#662d91', paddingVertical: 8, borderRadius: 20, paddingHorizontal: 12 }}
+              style={{ backgroundColor: colors.primary, paddingVertical: 8, borderRadius: 20, paddingHorizontal: 12 }}
             >
               <Text style={{ color: 'white' }}>Send Image</Text>
             </Pressable>
@@ -798,10 +887,10 @@ const truncate = (text, n = 60) => {
 
       {/* Reply preview */}
       {replyTo && (
-        <View style={{ alignSelf: 'center', backgroundColor: '#fff', borderColor: '#e6e6e6', borderWidth: 1, borderRadius: 10, padding: 8, marginBottom: 6, width: '94%' }}>
-          <Text style={{ fontSize: 12, color: '#4a4a4a' }}>Replying to: {truncate(maskBadWords(replyTo?.message || ''))}</Text>
+        <View style={{ alignSelf: 'center', backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 10, padding: 8, marginBottom: 6, width: '94%' }}>
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>Replying to: {truncate(maskBadWords(replyTo?.message || ''))}</Text>
           <Pressable onPress={() => setReplyTo(null)} style={{ position: 'absolute', right: 10, top: 6 }}>
-            <Ionicons name="close-outline" size={20} color="#666" />
+            <Ionicons name="close-outline" size={20} color={colors.textMuted} />
           </Pressable>
         </View>
       )}
@@ -815,7 +904,7 @@ const truncate = (text, n = 60) => {
           paddingHorizontal: 10,
           paddingVertical: 10,
           borderTopWidth: 1,
-          borderTopColor: '#dddddd',
+          borderTopColor: colors.border,
           marginBottom: 0,
           gap: 12,
         }}>
@@ -824,15 +913,17 @@ const truncate = (text, n = 60) => {
           onPress={pickImageFromGallery}
           onLongPress={() => setShowImageField(prev => !prev)}
           style={{
-            backgroundColor: '#eee',
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
             paddingVertical: 8,
             borderRadius: 20,
             paddingHorizontal: 10,
           }}
         >
-          <Ionicons name="image-outline" size={20} color="#333" />
+          <Ionicons name="image-outline" size={20} color={colors.text} />
           {isUploadingImage ? (
-            <Text style={{ fontSize: 10, color: '#666', marginLeft: 6 }}>Uploading…</Text>
+            <Text style={{ fontSize: 10, color: colors.textMuted, marginLeft: 6 }}>Uploading…</Text>
           ) : null}
         </Pressable>
         <TextInput
@@ -859,14 +950,14 @@ const truncate = (text, n = 60) => {
           editable={!isBlocked && !blockedByPeer}
           style={{
             flex: 1,
-            borderColor: '#dddddd',
+            borderColor: colors.border,
             borderWidth: 1,
             borderRadius: 20,
             paddingHorizontal: 10,
             height: 40,
             fontSize: 15,
             color: colors.text,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}
         />
         <Pressable
@@ -886,13 +977,15 @@ const truncate = (text, n = 60) => {
             }
           }}
           style={{
-            backgroundColor: '#eee',
+            backgroundColor: colors.card,
+            borderWidth: 1,
+            borderColor: colors.border,
             paddingVertical: 8,
             borderRadius: 20,
             paddingHorizontal: 12,
           }}
         >
-          <Text style={{textAlign: 'center', color: '#333'}}>{savingOpener ? 'Saving…' : 'Save'}</Text>
+          <Text style={{textAlign: 'center', color: colors.text}}>{savingOpener ? 'Saving…' : 'Save'}</Text>
         </Pressable>
         <Pressable
           onPress={() => {
@@ -900,7 +993,7 @@ const truncate = (text, n = 60) => {
             sendMessage(userId, route?.params?.receiverId);
           }}
           style={{
-            backgroundColor: '#662d91',
+            backgroundColor: colors.primary,
             paddingVertical: 8,
             borderRadius: 20,
             paddingHorizontal: 12,
@@ -915,14 +1008,14 @@ const truncate = (text, n = 60) => {
           onPress={() => {
             try { scrollRef.current?.scrollToEnd?.({ animated: true }); } catch {}
           }}
-          style={{ position: 'absolute', right: 16, bottom: 100, backgroundColor: '#662d91', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 }}
+          style={{ position: 'absolute', right: 16, bottom: 100, backgroundColor: colors.primary, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 8, shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 3 }}
         >
           <Ionicons name="arrow-down-outline" size={18} color="#fff" />
         </Pressable>
       )}
 
       {messages?.length === 0 && (
-        <View style={{borderTopWidth: 1, borderTopColor: '#eee'}}>
+        <View style={{borderTopWidth: 1, borderTopColor: colors.border}}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingHorizontal: 10, paddingVertical: 8}}>
             {['What’s your go-to weekend plan?','Coffee or tea person?','Best trip you’ve ever taken?','What’s a hobby you love?','Your favorite comfort food?'].map((txt, idx) => (
               <Pressable
@@ -942,12 +1035,12 @@ const truncate = (text, n = 60) => {
                   paddingVertical: 7,
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: '#ddd',
-                  backgroundColor: '#fafafa',
+                  borderColor: colors.border,
+                  backgroundColor: colors.card,
                   marginRight: 8,
                 }}
               >
-                <Text style={{fontSize: 13, color: '#333'}}>{txt}</Text>
+                <Text style={{fontSize: 13, color: colors.text}}>{txt}</Text>
               </Pressable>
             ))}
           </ScrollView>

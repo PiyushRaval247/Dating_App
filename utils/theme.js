@@ -5,6 +5,7 @@ export const colors = {
   card: '#FFFFFF',
   text: '#1A1A1A',
   textMuted: '#606060',
+  textSubtle: '#9CA3AF',
   border: '#E5E7EB',
   success: '#16a34a',
   danger: '#dc2626',
