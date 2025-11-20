@@ -132,6 +132,8 @@ const SettingsScreen = () => {
         <SectionLabel>Account</SectionLabel>
         <Row icon="person-circle-outline" label="Edit Profile" onPress={() => navigation.navigate('EditProfile')} />
         <Separator />
+        <Row icon="call-outline" label="Call History" onPress={() => navigation.navigate('CallHistory')} />
+        <Separator />
         <Row icon="notifications-outline" label="Notifications" onPress={() => Alert.alert('Notifications', 'Coming soon')} />
         <Separator />
         <Row icon="shield-checkmark-outline" label="Privacy" onPress={() => navigation.navigate('Privacy')} />

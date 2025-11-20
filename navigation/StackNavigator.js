@@ -47,6 +47,7 @@ import PrivacyScreen from '../screens/PrivacyScreen';
 import FAQScreen from '../screens/FAQScreen';
 import AboutUsScreen from '../screens/AboutUsScreen';
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import CallHistoryScreen from '../screens/CallHistoryScreen';
 
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
@@ -401,6 +402,11 @@ const StackNavigator = () => {
           <Stack.Screen
             name="PrivacyPolicy"
             component={PrivacyPolicyScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CallHistory"
+            component={CallHistoryScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

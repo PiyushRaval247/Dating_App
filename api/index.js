@@ -115,6 +115,35 @@ async function ensureAdminsTable() {
   }
 }
 
+// Ensure call logs table exists
+const CALL_LOGS_TABLE = 'call_logs';
+async function ensureCallLogsTable() {
+  try {
+    await dynamoDbClient.send(new DescribeTableCommand({ TableName: CALL_LOGS_TABLE }));
+    console.log('[DynamoDB] Table call_logs already exists');
+  } catch (err) {
+    if (err?.name === 'ResourceNotFoundException') {
+      console.log('[DynamoDB] Creating table call_logs...');
+      const params = {
+        TableName: CALL_LOGS_TABLE,
+        AttributeDefinitions: [
+          { AttributeName: 'userId', AttributeType: 'S' },
+          { AttributeName: 'callId', AttributeType: 'S' },
+        ],
+        KeySchema: [
+          { AttributeName: 'userId', KeyType: 'HASH' },
+          { AttributeName: 'callId', KeyType: 'RANGE' },
+        ],
+        BillingMode: 'PAY_PER_REQUEST',
+      };
+      await dynamoDbClient.send(new CreateTableCommand(params));
+      console.log('[DynamoDB] Table call_logs created');
+    } else {
+      console.log('[DynamoDB] Describe/Create call_logs table error', err);
+    }
+  }
+}
+
 async function seedDefaultAdmin() {
   try {
     const email = 'piyushraval2474@gmail.com';
@@ -144,9 +173,11 @@ async function seedDefaultAdmin() {
 if (awsCredentials) {
   ensureActivityTable();
   ensureAdminsTable().then(() => seedDefaultAdmin());
+  ensureCallLogsTable();
 } else {
   console.warn('[DynamoDB] AWS credentials not set; skipping ensureActivityTable');
   console.warn('[DynamoDB] AWS credentials not set; skipping ensureAdminsTable');
+  console.warn('[DynamoDB] AWS credentials not set; skipping ensureCallLogsTable');
 }
 
 const cognitoClient = new CognitoIdentityProviderClient({
@@ -1233,6 +1264,9 @@ const io = new Server(server, {
   },
 });
 
+// Active calls keyed by "caller->callee"
+const activeCalls = new Map();
+
 io.on('connection', socket => {
   const userIdRaw = socket.handshake.query.userId;
   const userId = userIdRaw !== undefined ? String(userIdRaw) : undefined;
@@ -1282,9 +1316,11 @@ io.on('connection', socket => {
 
   // Video call signaling events
   socket.on('call:invite', ({from, to}) => {
+    const callId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${from}-${to}`;
+    activeCalls.set(`${from}->${to}`, { callId, from, to, startTime: null });
     const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit('call:incoming', {from});
+      io.to(receiverSocketId).emit('call:incoming', {from, callId});
     }
     // Push notification for incoming call (if device token exists)
     (async () => {
@@ -1307,6 +1343,30 @@ io.on('connection', socket => {
         console.log('Error sending call push', e?.response?.data || e?.message || e);
       }
     })();
+
+    // Create initial outgoing log for caller (ringing)
+    (async () => {
+      try {
+        const nowIso = dayjs().toISOString();
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(from),
+            callId: String(callId),
+            direction: 'outgoing',
+            peerId: String(to),
+            status: 'ringing',
+            startTime: null,
+            endTime: null,
+            durationSec: 0,
+            kind: 'video',
+            createdAt: nowIso,
+          },
+        }));
+      } catch (e) {
+        console.log('[call_logs] invite log error', e?.message || e);
+      }
+    })();
   });
 
   // Accept/Reject should notify the original caller (userId = `to`)
@@ -1314,15 +1374,110 @@ io.on('connection', socket => {
     const callerSocketId = userSocketMap[String(to)];
     if (callerSocketId) {
       // Send both ids so client can match on `from` (callee)
-      io.to(callerSocketId).emit('call:accepted', { from, to });
+      const active = activeCalls.get(`${to}->${from}`) || activeCalls.get(`${to}->${from}`);
+      const callId = active?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+      io.to(callerSocketId).emit('call:accepted', { from, to, callId });
     }
+
+    // Mark logs for both sides as in_progress and set startTime
+    (async () => {
+      try {
+        const key = `${to}->${from}`; // invite was from caller `to` to callee `from`
+        const rec = activeCalls.get(key);
+        const callId = rec?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+        const startIso = dayjs().toISOString();
+        activeCalls.set(key, { ...(rec || { from: to, to: from }), callId, startTime: startIso });
+
+        // Caller perspective
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(to),
+            callId: String(callId),
+            direction: 'outgoing',
+            peerId: String(from),
+            status: 'in_progress',
+            startTime: startIso,
+            endTime: null,
+            durationSec: 0,
+            kind: 'video',
+            createdAt: startIso,
+          },
+        }));
+        // Callee perspective
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(from),
+            callId: String(callId),
+            direction: 'incoming',
+            peerId: String(to),
+            status: 'in_progress',
+            startTime: startIso,
+            endTime: null,
+            durationSec: 0,
+            kind: 'video',
+            createdAt: startIso,
+          },
+        }));
+      } catch (e) {
+        console.log('[call_logs] accept log error', e?.message || e);
+      }
+    })();
   });
 
   socket.on('call:reject', ({from, to}) => {
     const callerSocketId = userSocketMap[String(to)];
     if (callerSocketId) {
-      io.to(callerSocketId).emit('call:rejected', { from, to });
+      const active = activeCalls.get(`${to}->${from}`);
+      const callId = active?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+      io.to(callerSocketId).emit('call:rejected', { from, to, callId });
     }
+
+    // Record declined for both perspectives
+    (async () => {
+      try {
+        const nowIso = dayjs().toISOString();
+        const active = activeCalls.get(`${to}->${from}`);
+        const startIso = active?.startTime || null;
+        const callId = active?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${to}-${from}`);
+        // Caller
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(to),
+            callId: String(callId),
+            direction: 'outgoing',
+            peerId: String(from),
+            status: 'declined',
+            startTime: startIso,
+            endTime: nowIso,
+            durationSec: 0,
+            kind: 'video',
+            createdAt: startIso || nowIso,
+          },
+        }));
+        // Callee
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(from),
+            callId: String(callId),
+            direction: 'incoming',
+            peerId: String(to),
+            status: 'declined',
+            startTime: startIso,
+            endTime: nowIso,
+            durationSec: 0,
+            kind: 'video',
+            createdAt: startIso || nowIso,
+          },
+        }));
+        activeCalls.delete(`${to}->${from}`);
+      } catch (e) {
+        console.log('[call_logs] reject log error', e?.message || e);
+      }
+    })();
   });
 
   socket.on('webrtc:offer', ({from, to, sdp}) => {
@@ -1349,8 +1504,58 @@ io.on('connection', socket => {
   socket.on('call:end', ({from, to}) => {
     const receiverSocketId = userSocketMap[String(to)];
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit('call:end', {from});
+      const active = activeCalls.get(`${from}->${to}`) || activeCalls.get(`${to}->${from}`);
+      const callId = active?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${from}-${to}`);
+      io.to(receiverSocketId).emit('call:end', {from, callId});
     }
+
+    // Complete or cancel logs
+    (async () => {
+      try {
+        const rec = activeCalls.get(`${from}->${to}`) || activeCalls.get(`${to}->${from}`);
+        const startIso = rec?.startTime || null;
+        const callId = rec?.callId || (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${from}-${to}`);
+        const endIso = dayjs().toISOString();
+        const dur = startIso ? Math.max(0, dayjs(endIso).diff(dayjs(startIso), 'second')) : 0;
+        const status = startIso ? 'completed' : 'no_answer';
+        // For emitter perspective
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(from),
+            callId: String(callId),
+            direction: 'outgoing',
+            peerId: String(to),
+            status,
+            startTime: startIso,
+            endTime: endIso,
+            durationSec: dur,
+            kind: 'video',
+            createdAt: startIso || endIso,
+          },
+        }));
+        // Counterparty perspective
+        await docClient.send(new PutCommand({
+          TableName: CALL_LOGS_TABLE,
+          Item: {
+            userId: String(to),
+            callId: String(callId),
+            direction: 'incoming',
+            peerId: String(from),
+            status: startIso ? 'completed' : 'missed',
+            startTime: startIso,
+            endTime: endIso,
+            durationSec: dur,
+            kind: 'video',
+            createdAt: startIso || endIso,
+          },
+        }));
+        activeCalls.delete(`${from}->${to}`);
+        activeCalls.delete(`${to}->${from}`);
+      } catch (e) {
+        console.log('[call_logs] end log error', e?.message || e);
+      }
+    })();
   });
 
   // Message reactions (ephemeral, relayed via socket)
@@ -2429,6 +2634,30 @@ app.delete('/openers/:openerId', authenticateToken, async (req, res) => {
   } catch (error) {
     console.log('Error deleting opener', error);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Call logs: fetch user call history
+app.get('/call-logs', authenticateToken, async (req, res) => {
+  try {
+    const authUserId = req.user?.userId;
+    const userId = req.query?.userId || authUserId;
+    if (!userId) return res.status(400).json({ message: 'Missing userId' });
+    const q = await docClient.send(new QueryCommand({
+      TableName: CALL_LOGS_TABLE,
+      KeyConditionExpression: 'userId = :u',
+      ExpressionAttributeValues: { ':u': String(userId) },
+    }));
+    const items = q?.Items || [];
+    items.sort((a, b) => {
+      const ta = a?.startTime || a?.createdAt || '';
+      const tb = b?.startTime || b?.createdAt || '';
+      return String(tb).localeCompare(String(ta));
+    });
+    res.json({ logs: items });
+  } catch (e) {
+    console.log('[call_logs] fetch error', e?.message || e);
+    res.status(500).json({ message: 'Failed to fetch call logs' });
   }
 });
 // Load environment variables from .env (for local dev). Hosts like Render use dashboard envs.
