@@ -1825,6 +1825,42 @@ app.get('/messages', async (req, res) => {
   }
 });
 
+// Delete a message by its messageId (only sender may delete)
+app.delete('/messages/:messageId', authenticateToken, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    if (!messageId) return res.status(400).json({ message: 'Missing messageId' });
+
+    // Fetch message to verify sender and receiver
+    const getResp = await docClient.send(new GetCommand({ TableName: 'messages', Key: { messageId } }));
+    const item = getResp?.Item;
+    if (!item) return res.status(404).json({ message: 'Message not found' });
+
+    // Only allow the original sender to delete their message
+    if (!req.user || req.user.userId !== item.senderId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
+    }
+
+    await docClient.send(new DeleteCommand({ TableName: 'messages', Key: { messageId } }));
+
+    // Notify via socket to both parties so clients can remove the message
+    const payload = { messageId, senderId: item.senderId, receiverId: item.receiverId };
+    try {
+      const receiverSocketId = userSocketMap[String(item.receiverId)];
+      const senderSocketId = userSocketMap[String(item.senderId)];
+      if (receiverSocketId) io.to(receiverSocketId).emit('messages:deleted', payload);
+      if (senderSocketId) io.to(senderSocketId).emit('messages:deleted', payload);
+    } catch (e) {
+      console.log('Socket emit delete error', e?.message || e);
+    }
+
+    return res.status(200).json({ message: 'Message deleted' });
+  } catch (error) {
+    console.log('Delete message error', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Block a user (adds to blockedUsers of the actor). Emits socket to both.
 app.post('/block', async (req, res) => {
   try {
