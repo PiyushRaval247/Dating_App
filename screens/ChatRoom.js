@@ -236,6 +236,34 @@ const truncate = (text, n = 60) => {
       console.log('Error', error?.response?.data || error?.message || error);
     }
   };
+
+  const handleDeleteMessage = async (msg) => {
+    if (!msg?.messageId) return;
+    Alert.alert('Delete message', 'Delete this message?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const token = await AsyncStorage.getItem('token');
+            // Best-effort backend delete - backend may accept path param or body
+            await axios.delete(`${BASE_URL}/messages/${msg.messageId}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              params: { userId },
+            });
+            // Emit socket event so other client(s) remove the message
+            socket?.emit('messages:deleted', { messageId: msg.messageId, senderId: msg.senderId, receiverId: route?.params?.receiverId });
+            // Optimistic UI update
+            setMessages(prev => (Array.isArray(prev) ? prev.filter(m => m?.messageId !== msg.messageId) : prev));
+          } catch (e) {
+            console.log('Delete msg error', e?.response?.data || e?.message || e);
+            showToast('Failed to delete message');
+          }
+        }
+      }
+    ]);
+  };
   useEffect(() => {
     fetchMessages();
     // Clear message badge when entering the chat room
@@ -403,6 +431,12 @@ const truncate = (text, n = 60) => {
         });
       };
       socket?.on('messages:reaction', onReaction);
+      const onDeleted = (payload) => {
+        const { messageId } = payload || {};
+        if (!messageId) return;
+        setMessages(prev => (Array.isArray(prev) ? prev.filter(m => m?.messageId !== messageId) : prev));
+      };
+      socket?.on('messages:deleted', onDeleted);
 
       // Typing indicator from other user
       const onTyping = (payload) => {
@@ -448,6 +482,7 @@ const truncate = (text, n = 60) => {
         socket?.off('message:delivered', onDelivered);
         socket?.off('messages:read', onRead);
         socket?.off('messages:reaction', onReaction);
+        socket?.off('messages:deleted', onDeleted);
         socket?.off('user:block', onUserBlock);
         socket?.off('user:unblock', onUserUnblock);
       };
@@ -738,12 +773,20 @@ const truncate = (text, n = 60) => {
                     >
                       <Text style={{ color: colors.text }}>Reply</Text>
                     </Pressable>
-                    <Pressable
-                      onPress={() => setReactionPickerFor(null)}
-                      style={{ backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}
-                    >
-                      <Text style={{ color: colors.text }}>Cancel</Text>
-                    </Pressable>
+                      <Pressable
+                        onPress={() => setReactionPickerFor(null)}
+                        style={{ backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}
+                      >
+                        <Text style={{ color: colors.text }}>Cancel</Text>
+                      </Pressable>
+                      {item?.senderId === userId && (
+                        <Pressable
+                          onPress={() => { setReactionPickerFor(null); handleDeleteMessage(item); }}
+                          style={{ backgroundColor: colors.card, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, borderWidth: 1, borderColor: colors.border }}
+                        >
+                          <Text style={{ color: colors.danger }}>Delete</Text>
+                        </Pressable>
+                      )}
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     {['👍','❤️','😂'].map((emoji) => (

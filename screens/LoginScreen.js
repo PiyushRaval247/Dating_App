@@ -170,20 +170,24 @@ const LoginScreen = () => {
       setPasswordError('');
       setGeneralError('');
     } catch (error) {
-      const status = error?.response?.status;
-      const message = error?.response?.data?.message || error?.message;
-      console.log('Login error:', status, message);
-      if (status === 404) {
-        setEmailError('Email not found');
-      } else if (status === 401) {
-        setPasswordError('Incorrect password');
-      } else if (status === 400) {
-        setGeneralError('Email and password are required');
-      } else if (status === 403) {
-        setGeneralError(message || 'Account issue: check your email or reset password');
-      } else {
-        setGeneralError('Login failed. Please try again.');
-      }
+        console.log('Login error full:', error);
+        const status = error?.response?.status;
+        const serverMessage = error?.response?.data?.message;
+        const message = serverMessage || error?.message || 'Network Error';
+        // If there is no response object, it's likely a network/connectivity issue
+        if (!error?.response) {
+          setGeneralError('Network Error: could not reach the server. Check your network or backend URL.');
+        } else if (status === 404) {
+          setEmailError('Email not found');
+        } else if (status === 401) {
+          setPasswordError('Incorrect password');
+        } else if (status === 400) {
+          setGeneralError('Email and password are required');
+        } else if (status === 403) {
+          setGeneralError(message || 'Account issue: check your email or reset password');
+        } else {
+          setGeneralError(message || 'Login failed. Please try again.');
+        }
     }
   };
 
