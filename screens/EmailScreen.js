@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { Alert } from 'react-native';
 import { colors } from '../utils/theme';
 import Fontisto from '@react-native-vector-icons/fontisto';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -23,6 +24,7 @@ import {
 
 const EmailScreen = () => {
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();
   useEffect(() => {
     getRegistrationProgress('Email').then(progressData => {
@@ -32,12 +34,20 @@ const EmailScreen = () => {
     });
   }, []);
   const handleNext = () => {
-    if (email.trim() !== '') {
-      saveRegistrationProgress('Email', {email});
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (email.trim() === '') {
+      setError('Email is required');
+      Alert.alert('Missing information', 'Please enter your email to continue.');
+      return;
     }
-    navigation.navigate('Password', {
-      email: email,
-    });
+    if (!emailRegex.test(email)) {
+      setError('Enter a valid email address');
+      Alert.alert('Invalid email', 'Please enter a valid email address');
+      return;
+    }
+    setError('');
+    saveRegistrationProgress('Email', {email});
+    navigation.navigate('Password', { email: email });
   };
   return (
     <SafeAreaView
@@ -106,6 +116,7 @@ const EmailScreen = () => {
           autoCorrect={false}
           textContentType="emailAddress"
         />
+        {error ? <Text style={{color: '#d32f2f', marginTop: 8}}>{error}</Text> : null}
 
         <Text style={{color: colors.textMuted, marginTop: 7, fontSize: 15}}>
           Note: You will be asked to verify your email

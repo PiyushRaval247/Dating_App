@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import React, {useState,useEffect} from 'react';
+import { Alert } from 'react-native';
 import { colors } from '../utils/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import NextButton from '../components/NextButton';
@@ -19,6 +20,7 @@ import { getRegistrationProgress, saveRegistrationProgress } from '../utils/regi
 
 const GenderScreen = () => {
   const [gender, setGender] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();  
   useEffect(() => {
     getRegistrationProgress('Gender').then(progressData => {
@@ -28,9 +30,13 @@ const GenderScreen = () => {
     })
   },[]) 
   const handleNext = () => {
-    if(gender.trim() != ''){
-      saveRegistrationProgress('Gender',{gender});
+    if (gender.trim() === '') {
+      setError('Please select a gender');
+      Alert.alert('Missing information', 'Please select your gender to continue');
+      return;
     }
+    setError('');
+    saveRegistrationProgress('Gender',{gender});
     navigation.navigate("Type");
   }
   return (

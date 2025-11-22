@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React, {useState,useEffect} from 'react';
+import { Alert } from 'react-native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
@@ -18,6 +19,7 @@ import { getRegistrationProgress, saveRegistrationProgress } from '../utils/regi
 
 const DatingType = () => {
   const [datingPreferences, setDatingPreferences] = useState([]);
+  const [error, setError] = useState('');
   const navigation = useNavigation();
   const chooseOption = option => {
     if (datingPreferences.includes(option)) {
@@ -36,9 +38,13 @@ const DatingType = () => {
     })
   },[])
   const handleNext = () => {
-    if(datingPreferences.length > 0){
-      saveRegistrationProgress('Dating',{datingPreferences})
+    if (datingPreferences.length === 0) {
+      setError('Please select at least one dating preference');
+      Alert.alert('Missing information', 'Select at least one dating preference to continue');
+      return;
     }
+    setError('');
+    saveRegistrationProgress('Dating',{datingPreferences});
     navigation.navigate("LookingFor");
   }
   return (

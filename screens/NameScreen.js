@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { Alert } from 'react-native';
 import { colors } from '../utils/theme';
 import { getContrastingTextColor } from '../utils/colorUtils';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -23,6 +24,7 @@ import {
 
 const NameScreen = () => {
   const [firstName, setFirstName] = useState('');
+  const [error, setError] = useState('');
   const navigation = useNavigation();
   useEffect(() => {
     getRegistrationProgress('Name').then(progressData => {
@@ -32,9 +34,13 @@ const NameScreen = () => {
     });
   }, []);
   const handleNext = () => {
-    if (firstName.trim() !== '') {
-      saveRegistrationProgress('Name', {firstName});
+    if (firstName.trim() === '') {
+      setError('First name is required');
+      Alert.alert('Missing information', 'Please enter your first name to continue.');
+      return;
     }
+    setError('');
+    saveRegistrationProgress('Name', {firstName});
     navigation.navigate('Email');
   };
   return (
@@ -99,6 +105,7 @@ const NameScreen = () => {
               color: colors.text,
             }}
           />
+          {error ? <Text style={{color: '#d32f2f', marginTop: 8}}>{error}</Text> : null}
           <TextInput
             placeholder="Last Name"
             placeholderTextColor={colors.textSubtle}

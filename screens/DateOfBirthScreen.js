@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import React, {useRef, useState,useEffect} from 'react';
+import { Alert } from 'react-native';
 import { colors } from '../utils/theme';
 import Fontisto from '@react-native-vector-icons/fontisto';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -55,12 +56,27 @@ const DateOfBirthScreen = () => {
   },[])
 
   const handleNext = () => {
-    if(day.trim() !== '' && month.trim() !== '' && year.trim() !== ''){
-      const dateOfBirth = `${day}/${month}/${year}`;
-
-      saveRegistrationProgress('Birth',{dateOfBirth})
+    if(day.trim() === '' || month.trim() === '' || year.trim() === ''){
+      Alert.alert('Missing information', 'Please enter your full date of birth');
+      return;
     }
-    navigation.navigate("Location")
+    const d = parseInt(day,10);
+    const m = parseInt(month,10);
+    const y = parseInt(year,10);
+    if (isNaN(d) || isNaN(m) || isNaN(y) || d < 1 || d > 31 || m < 1 || m > 12 || y < 1900) {
+      Alert.alert('Invalid date', 'Please enter a valid date of birth');
+      return;
+    }
+    const dob = new Date(y, m - 1, d);
+    const now = new Date();
+    const age = now.getFullYear() - dob.getFullYear() - (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+    if (age < 18) {
+      Alert.alert('Age restriction', 'You must be 18 or older to register');
+      return;
+    }
+    const dateOfBirth = `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+    saveRegistrationProgress('Birth',{dateOfBirth});
+    navigation.navigate("Location");
   }
   return (
     <SafeAreaView
