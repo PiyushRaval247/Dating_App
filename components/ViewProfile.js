@@ -144,6 +144,30 @@ const ViewProfile = ({userInfo}) => {
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: 10,
+                    marginRight: 20,
+                    backgroundColor: '#F7F7F7',
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 16,
+                    borderColor: '#E0E0E0',
+                    borderWidth: 1,
+                  }}>
+                  <Ionicons name="heart-outline" size={20} color="black" />
+                  <Text style={{fontSize: 15, color: colors.text}}>{(() => {
+                    const prefs = Array.isArray(userInfo?.datingPreferences)
+                      ? userInfo.datingPreferences
+                      : typeof userInfo?.datingPreferences === 'string'
+                        ? userInfo.datingPreferences.split(',').map(s => s.trim()).filter(Boolean)
+                        : [];
+                    return prefs.length ? prefs.join(', ') : 'No preference set';
+                  })()}</Text>
+                </View>
+
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 10,
                     backgroundColor: '#F7F7F7',
                     paddingHorizontal: 12,
                     paddingVertical: 8,
