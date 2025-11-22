@@ -2670,6 +2670,7 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
   try {
     const authUserId = req.user?.userId;
     const userId = req.query?.userId || authUserId;
+    console.log('[call_logs] fetch request', { queryUserId: req.query?.userId, authUserId });
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
     if (!awsCredentials) return res.json({ logs: [] });
     const q = await docClient.send(new QueryCommand({
@@ -2678,6 +2679,7 @@ app.get('/call-logs', authenticateToken, async (req, res) => {
       ExpressionAttributeValues: { ':u': String(userId) },
     }));
     const items = q?.Items || [];
+    console.log('[call_logs] fetched items', { count: items.length, sample: items[0] ? { callId: items[0].callId, userId: items[0].userId, peerId: items[0].peerId } : null });
     items.sort((a, b) => {
       const ta = a?.startTime || a?.createdAt || '';
       const tb = b?.startTime || b?.createdAt || '';

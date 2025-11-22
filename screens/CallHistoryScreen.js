@@ -63,6 +63,7 @@ const CallHistoryScreen = () => {
           params: { userId },
           headers: { Authorization: `Bearer ${token}` },
         });
+        console.log('[CallHistory] fetch', { userId, status: resp?.status, dataPreview: resp?.data && typeof resp.data === 'object' ? { logsLength: Array.isArray(resp.data.logs) ? resp.data.logs.length : 0 } : resp?.data });
         const items = Array.isArray(resp?.data?.logs) ? resp.data.logs : [];
         setLogs(items);
 
