@@ -1,4 +1,5 @@
 import {StyleSheet, Text, View, Pressable, Image} from 'react-native';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import React, {useState, useEffect, useContext} from 'react';
 import {useNavigation, useIsFocused} from '@react-navigation/native';
 import {AuthContext} from '../AuthContext';
@@ -135,21 +136,41 @@ const UserChat = ({item, userId}) => {
         </NotificationBadge>
       </View>
 
-      <View>
-        <Text
-          style={{
-            fontWeight: '600',
-            fontSize: 16,
-            color: colors.text,
-          }}>
-          {item?.firstName}
-        </Text>
+      <View style={{flex: 1, justifyContent: 'center'}}>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+          <Text
+            style={{
+              fontWeight: '600',
+              fontSize: 16,
+              color: colors.text,
+            }}>
+            {item?.firstName}
+          </Text>
+          {lastMessage?.timestamp ? (
+            <Text style={{color: colors.textMuted, fontSize: 12}}>{new Date(lastMessage.timestamp).toLocaleString()}</Text>
+          ) : null}
+        </View>
 
-        <Text style={{fontWeight: '500', fontSize: 15, marginTop: 6, color: colors.text}}>
-          {lastMessage
-            ? maskBadWords(lastMessage?.message || '')
-            : `Start Chat with ${item?.firstName}`}
-        </Text>
+        <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 6}}>
+          {lastMessage?.isCallLog ? (
+            (() => {
+              const txt = lastMessage?.message || '';
+              const missed = String(txt).toLowerCase().includes('missed');
+              return (
+                <>
+                  <Ionicons name={missed ? 'call-outline' : 'videocam-outline'} size={16} color={missed ? '#d9534f' : colors.textMuted} />
+                  <Text style={{marginLeft: 8, color: missed ? '#d9534f' : colors.textMuted, fontSize: 14}} numberOfLines={1}>{txt}</Text>
+                </>
+              );
+            })()
+          ) : (
+            <Text style={{fontWeight: '500', fontSize: 15, color: colors.text}} numberOfLines={1}>
+              {lastMessage
+                ? maskBadWords(lastMessage?.message || '')
+                : `Start Chat with ${item?.firstName}`}
+            </Text>
+          )}
+        </View>
       </View>
     </Pressable>
   );

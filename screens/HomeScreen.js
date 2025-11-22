@@ -71,20 +71,22 @@ const HomeScreen = () => {
     }
   }, [isAnimating]);
 
-  const saveDislikedProfiles = async profiles => {
+  // Store rejected/hidden profiles as a map: { [userId]: expiryIso }
+  const saveRejectedMap = async map => {
     try {
-      await AsyncStorage.setItem('dislikedProfiles', JSON.stringify(profiles));
+      await AsyncStorage.setItem('rejectedProfiles', JSON.stringify(map));
     } catch (error) {
-      console.log('Error', error);
+      console.log('Error saving rejected map', error);
     }
   };
 
-  const loadDislikedProfiles = async () => {
+  const loadRejectedMap = async () => {
     try {
-      const data = await AsyncStorage.getItem('dislikedProfiles');
-      return data ? JSON.parse(data) : [];
+      const data = await AsyncStorage.getItem('rejectedProfiles');
+      return data ? JSON.parse(data) : {};
     } catch (error) {
-      console.log('Error', error);
+      console.log('Error loading rejected map', error);
+      return {};
     }
   };
 
@@ -106,44 +108,44 @@ const HomeScreen = () => {
 
     if (!currentProfile) return;
 
-    const updatedDislikedProfiles = [
-      ...dislikedProfiles,
-      {...currentProfile, dislikedAt: new Date().toISOString()},
-    ];
-
-    setDislikedProfiles(updatedDislikedProfiles);
-
-    await saveDislikedProfiles(updatedDislikedProfiles);
+    // Mark profile hidden for 24 hours
+    try {
+      const map = await loadRejectedMap();
+      const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      map[currentProfile.userId] = expiry;
+      await saveRejectedMap(map);
+    } catch (e) {
+      console.log('Error saving rejected profile', e);
+    }
 
     const remainingUsers = users.slice(1);
     setUsers(remainingUsers);
-
     setCurrentProfile(remainingUsers.length > 0 ? remainingUsers[0] : null);
   };
 
+  // Periodically clear expired hidden entries and refresh matches when needed
   useEffect(() => {
     const interval = setInterval(async () => {
-      const now = new Date();
-      const storedDislikedProfiles = await loadDislikedProfiles();
-
-      const profilesToKeep = [];
-      const profilesToReintroduce = [];
-
-      storedDislikedProfiles.forEach(profile => {
-        const dislikedAt = new Date(profile.dislikedAt);
-        const elapsedHours = (now - dislikedAt) / (1000 * 60 * 60);
-        if (elapsedHours >= 24) {
-          profilesToReintroduce.push(profile);
-        } else {
-          profilesToKeep.push(profile);
+      try {
+        const now = Date.now();
+        const map = await loadRejectedMap();
+        let changed = false;
+        for (const [uid, iso] of Object.entries(map)) {
+          if (!iso) { delete map[uid]; changed = true; continue; }
+          const t = Date.parse(iso);
+          if (!isFinite(t) || now > t) {
+            delete map[uid];
+            changed = true;
+          }
         }
-      });
-
-      if (profilesToReintroduce.length > 0) {
-        setUsers(prevUsers => [...prevUsers, ...profilesToReintroduce]);
+        if (changed) {
+          await saveRejectedMap(map);
+          // Refresh server matches so reintroduced profiles appear
+          fetchMatches();
+        }
+      } catch (e) {
+        console.log('Error cleaning rejected map', e);
       }
-      setDislikedProfiles(profilesToKeep);
-      await saveDislikedProfiles(profilesToKeep);
     }, 60 * 1000);
 
     return () => clearInterval(interval);
@@ -182,7 +184,8 @@ const HomeScreen = () => {
 
   const fetchMatches = async () => {
     try {
-      const dislikedProfiles = await loadDislikedProfiles();
+      const rejectedMap = await loadRejectedMap();
+      const now = Date.now();
 
       const response = await axios.get(
         `${BASE_URL}/matches?userId=${encodeURIComponent(userId)}`,
@@ -190,10 +193,13 @@ const HomeScreen = () => {
 
       const matches = response.data.matches || [];
 
-      const filteredMatches = matches.filter(
-        match =>
-          !dislikedProfiles.some(disliked => disliked.userId == match.userId),
-      );
+      const filteredMatches = matches.filter(match => {
+        const iso = rejectedMap[match.userId];
+        if (!iso) return true;
+        const t = Date.parse(iso);
+        if (!isFinite(t)) return true;
+        return now > t; // only include if expiry passed
+      });
 
       setUsers(filteredMatches);
     } catch (error) {

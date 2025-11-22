@@ -52,6 +52,7 @@ const CallHistoryScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userMap, setUserMap] = useState({});
+  const [expandedPeers, setExpandedPeers] = useState(new Set());
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -65,6 +66,12 @@ const CallHistoryScreen = () => {
         });
         console.log('[CallHistory] fetch', { userId, status: resp?.status, dataPreview: resp?.data && typeof resp.data === 'object' ? { logsLength: Array.isArray(resp.data.logs) ? resp.data.logs.length : 0 } : resp?.data });
         const items = Array.isArray(resp?.data?.logs) ? resp.data.logs : [];
+        // sort by most recent (endTime/startTime/createdAt desc)
+        items.sort((a, b) => {
+          const ta = new Date(b?.endTime || b?.startTime || b?.createdAt || 0).getTime();
+          const tb = new Date(a?.endTime || a?.startTime || a?.createdAt || 0).getTime();
+          return ta - tb;
+        });
         setLogs(items);
 
         // Build unique peerId list and fetch user details for display
@@ -101,6 +108,38 @@ const CallHistoryScreen = () => {
     if (userId) fetchLogs();
   }, [userId]);
 
+  // Build grouped view: group logs by peerId
+  const groups = React.useMemo(() => {
+    const map = {};
+    logs.forEach(l => {
+      const peerId = String(l?.peerId || '');
+      if (!peerId) return;
+      map[peerId] = map[peerId] || [];
+      map[peerId].push(l);
+    });
+    // convert to array and sort groups by most recent log
+    const arr = Object.keys(map).map(pid => ({ peerId: pid, logs: map[pid] }));
+    arr.forEach(g => g.logs.sort((a,b) => {
+      const ta = new Date(b?.endTime || b?.startTime || b?.createdAt || 0).getTime();
+      const tb = new Date(a?.endTime || a?.startTime || a?.createdAt || 0).getTime();
+      return ta - tb;
+    }));
+    arr.sort((a,b) => {
+      const ta = new Date(a.logs[0]?.endTime || a.logs[0]?.startTime || a.logs[0]?.createdAt || 0).getTime();
+      const tb = new Date(b.logs[0]?.endTime || b.logs[0]?.startTime || b.logs[0]?.createdAt || 0).getTime();
+      return tb - ta ? tb - ta : 0;
+    });
+    return arr;
+  }, [logs]);
+
+  const toggleExpand = (peerId) => {
+    setExpandedPeers(prev => {
+      const next = new Set(prev);
+      if (next.has(peerId)) next.delete(peerId); else next.add(peerId);
+      return next;
+    });
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <BackHeader title="Call History" />
@@ -120,12 +159,43 @@ const CallHistoryScreen = () => {
         </View>
       ) : (
         <ScrollView>
-          {logs.map((log, idx) => (
-            <View key={`${log?.callId || idx}-${idx}`}>
-              <CallItem log={log} userMap={userMap} />
-              <Separator />
-            </View>
-          ))}
+          {groups.map((g) => {
+            const peerId = g.peerId;
+            const groupLogs = g.logs;
+            const last = groupLogs[0];
+            const user = userMap[peerId] || {};
+            const name = user?.firstName || 'Unknown';
+            const avatar = Array.isArray(user?.imageUrls) ? user.imageUrls[0] : null;
+            const count = groupLogs.length;
+            const lastWhen = last?.endTime || last?.startTime || last?.createdAt || '';
+            const lastStatus = String(last?.status || '').toLowerCase();
+            const summaryText = lastStatus === 'missed' ? 'Missed' : lastStatus === 'completed' ? 'Completed' : (lastStatus || 'Call');
+            const expanded = expandedPeers.has(peerId);
+            return (
+              <View key={peerId}>
+                <Pressable onPress={() => toggleExpand(peerId)} style={{ flexDirection: 'row', alignItems: 'center', padding: spacing.lg, backgroundColor: colors.card }}>
+                  <View style={{ width: 56, height: 56, borderRadius: 28, overflow: 'hidden', backgroundColor: '#eee', marginRight: 12 }}>
+                    {avatar ? <Image source={{ uri: avatar }} style={{ width: 56, height: 56 }} /> : <Ionicons name="person-circle-outline" size={56} color="#999" />}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontWeight: '700', color: colors.text }}>{name}</Text>
+                    <Text style={{ color: colors.textMuted, marginTop: 4 }}>{summaryText} • {count} {count === 1 ? 'call' : 'calls'}</Text>
+                    <Text style={{ marginTop: 4, color: colors.textMuted, fontSize: 12 }}>{new Date(lastWhen).toLocaleString()}</Text>
+                  </View>
+                  <View style={{ paddingLeft: 8 }}>
+                    <Text style={{ color: colors.primary }}>{expanded ? 'Hide' : 'Details'}</Text>
+                  </View>
+                </Pressable>
+                <Separator />
+                {expanded && groupLogs.map((log, idx) => (
+                  <View key={`${peerId}-${log?.callId || idx}`}>
+                    <CallItem log={log} userMap={userMap} />
+                    <Separator />
+                  </View>
+                ))}
+              </View>
+            );
+          })}
         </ScrollView>
       )}
     </SafeAreaView>

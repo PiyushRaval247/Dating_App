@@ -36,6 +36,7 @@ import SendLikeScreen from '../screens/SendLikeScreen';
 import HandleLikeScreen from '../screens/HandleLikeScreen';
 import ChatRoom from '../screens/ChatRoom';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import ManageSubscription from '../screens/ManageSubscription';
 import ProfileDetailScreen from '../screens/ProfileDetailScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import NotificationBadge from '../components/NotificationBadge';
@@ -363,6 +364,11 @@ const StackNavigator = () => {
             name="Subscription"
             component={SubscriptionScreen}
             options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="ManageSubscription"
+            component={ManageSubscription}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="EditProfile"

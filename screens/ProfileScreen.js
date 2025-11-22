@@ -19,6 +19,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import Feather from '@react-native-vector-icons/feather';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import {AuthContext} from '../AuthContext';
+import StreakBadge from '../components/StreakBadge';
 import {TabBar, TabView} from 'react-native-tab-view';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
@@ -413,90 +414,52 @@ const ProfileScreen = () => {
         </Pressable>
       </View>
 
-      {/* Streak Tracker */}
+      {/* Streak Tracker (improved Snapchat-like) */}
       <View
         style={{
           marginVertical: 12,
-          padding: 12,
-          borderRadius: 8,
+          padding: 14,
+          borderRadius: 12,
           backgroundColor: colors.card,
           borderColor: colors.border,
           borderWidth: 1,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 12,
+          justifyContent: 'space-between'
         }}>
-        <View
-          style={{
-            height: 44,
-            width: 44,
-            borderRadius: 22,
-            backgroundColor: colors.primary,
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}>
-          <MaterialDesignIcons name="fire" size={22} color="white" />
-        </View>
-        <View style={{flex: 1}}>
-          <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>Keep your streak</Text>
-          <Text style={{color: colors.text, marginTop: 4}}>
-            Engage today to build momentum. Send a like or a message.
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 }}>
-            <View style={{
-              alignSelf: 'flex-start',
-              backgroundColor: colors.card,
-              paddingHorizontal: 10,
-              paddingVertical: 6,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-            }}>
-              <Text style={{color: colors.text, fontWeight: '600'}}>
-                Total streak: {userInfo?.streakCount || 0} day{(userInfo?.streakCount || 0) > 1 ? 's' : ''}
-              </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <StreakBadge count={userInfo?.streakCount || 0} size={72} />
+          <View style={{ maxWidth: 220 }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>Keep your streak</Text>
+            <Text style={{ color: colors.text, marginTop: 6 }}>Keep the momentum — like, message or check-in daily to maintain your streak.</Text>
+
+            {/* Small 7-day dots (recent week) */}
+            <View style={{ flexDirection: 'row', marginTop: 10, gap: 8 }}>
+              {(() => {
+                const now = Date.now();
+                const dots = [];
+                for (let i = 6; i >= 0; i--) {
+                  const d = new Date(now - i * 24 * 60 * 60 * 1000);
+                  const iso = d.toISOString().slice(0,10);
+                  const checked = activityDates.includes(iso);
+                  dots.push(<View key={iso} style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: checked ? '#ff7a00' : colors.card, borderWidth: 1, borderColor: colors.border }} />);
+                }
+                return dots;
+              })()}
             </View>
           </View>
-          {/* Streak calendar: last 14 days */}
-          <View style={{ flexDirection: 'row', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {(() => {
-              const days = [];
-              const now = Date.now();
-              for (let i = 13; i >= 0; i--) {
-                const d = new Date(now - i * 24 * 60 * 60 * 1000);
-                const iso = d.toISOString().slice(0, 10);
-                const day = d.getDate();
-                const checked = activityDates.includes(iso);
-                days.push({ iso, day, checked });
-              }
-              return days.map(d => (
-                <View key={d.iso} style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: d.checked ? colors.primary : colors.card,
-                  borderWidth: 1,
-                  borderColor: colors.border,
-                }}>
-                  <Text style={{ fontSize: 12, color: d.checked ? 'white' : colors.text }}>
-                    {String(d.day)}
-                  </Text>
-                </View>
-              ));
-            })()}
-          </View>
         </View>
+
         <Pressable
           onPress={handleCheckIn}
           style={{
-            paddingHorizontal: 12,
-            paddingVertical: 8,
-            borderRadius: 20,
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 22,
             backgroundColor: colors.primary,
+            alignSelf: 'center'
           }}>
-          <Text style={{color: 'white', fontWeight: '600'}}>Let’s Go</Text>
+          <Text style={{color: 'white', fontWeight: '700'}}>Check In</Text>
         </Pressable>
       </View>
 
@@ -782,7 +745,7 @@ const ProfileScreen = () => {
             {endDate && (
               <Text style={{fontSize: 13, color: '#606060'}}>Ends on {new Date(endDate).toLocaleDateString()} {typeof daysLeft === 'number' ? `(~${daysLeft} days)` : ''}</Text>
             )}
-            <Pressable onPress={() => navigation.navigate('Subscription')} style={{
+            <Pressable onPress={() => navigation.navigate('ManageSubscription')} style={{
               marginTop: 8,
               borderColor: planDisplay.border,
               borderWidth: 1,

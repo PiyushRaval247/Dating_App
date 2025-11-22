@@ -30,7 +30,6 @@ const ChatScreen = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       setMatches(response.data.matches);
     } catch (error) {
       console.log('Error', error);
@@ -73,18 +72,30 @@ const ChatScreen = () => {
           const messages = response.data;
           const lastMessage = messages[messages.length - 1];
 
+          // Attach lastMessage and categorize
+          const enriched = {...item, lastMessage};
           if (lastMessage?.senderId == userId) {
-            theirTurn.push({...item, lastMessage});
+            theirTurn.push(enriched);
           } else {
-            yourTurn.push({...item, lastMessage});
+            yourTurn.push(enriched);
           }
         } catch (error) {
           console.log('Error fetching', error);
         }
       }),
     );
+    // Sort both lists by lastMessage timestamp descending (most recent first)
+    const sortDesc = arr => arr.sort((a, b) => {
+      const at = new Date(b?.lastMessage?.timestamp || 0).getTime();
+      const bt = new Date(a?.lastMessage?.timestamp || 0).getTime();
+      return at - bt;
+    });
+    sortDesc(yourTurn);
+    sortDesc(theirTurn);
     setCategorizedChats({yourTurn, theirTurn});
   };
+
+  
 
   useEffect(() => {
     fetchAndCategorizeChats();

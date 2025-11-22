@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {jwtDecode} from 'jwt-decode';
+import jwtDecode from 'jwt-decode';
 import {createContext, useEffect, useState} from 'react';
 import "core-js/stable/atob";
 import axios from 'axios';

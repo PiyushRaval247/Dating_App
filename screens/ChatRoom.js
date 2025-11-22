@@ -699,8 +699,7 @@ const truncate = (text, n = 60) => {
                 <Text
                   style={{
                     fontSize: 11,
-                    color:' #F5f5f5',
-                    opacity: 0.6, 
+                    color: item?.senderId == userId ? 'rgba(255,255,255,0.85)' : colors.textMuted,
                   }}>
                   {formatTime(item?.timestamp)}
                 </Text>
