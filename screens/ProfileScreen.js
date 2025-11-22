@@ -1225,7 +1225,7 @@ const ProfileScreen = () => {
                     width: 200,
                   }}
                   key={index}>
-                  <Text style={{fontSize: 20, fontWeight: 'bold'}}>
+                  <Text style={{fontSize: 20, fontWeight: 'bold' ,color: '#000'}}>
                     {item?.plan}
                   </Text>
 

@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import React, {useState,useEffect} from 'react';
+import { colors } from '../utils/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
@@ -36,7 +37,7 @@ const LookingFor = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <View style={{marginTop: 80, marginHorizontal: 20}}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -63,14 +64,14 @@ const LookingFor = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: colors.text,
           }}>
           What's your dating intention?
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: 'gray'}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: colors.textSubtle}}>
           Select all people you're open to meeting
         </Text>
 
@@ -81,7 +82,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Life Partner</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Life Partner</Text>
             <Pressable onPress={() => setLookingFor('Life Partner')}>
               <FontAwesome
                 name="circle"
@@ -97,7 +98,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
               Long-term relationship
             </Text>
             <Pressable onPress={() => setLookingFor('Long-term relationship')}>
@@ -117,7 +118,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
               Long-term relationship open to short
             </Text>
             <Pressable
@@ -142,7 +143,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
              Short-term relationship open to long
             </Text>
             <Pressable
@@ -167,7 +168,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
               Short-term relationship
             </Text>
             <Pressable
@@ -192,7 +193,7 @@ const LookingFor = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
               Figuring out my dating goals
             </Text>
             <Pressable
@@ -221,9 +222,9 @@ const LookingFor = () => {
             <MaterialDesignIcons
               name="checkbox-marked"
               size={25}
-              color="#900C3F"
+              color={colors.primary}
             />
-            <Text style={{fontSize: 15}}>Visible on profile</Text>
+            <Text style={{fontSize: 15, color: colors.text}}>Visible on profile</Text>
           </View>
         </View>
 

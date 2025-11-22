@@ -538,22 +538,24 @@ const HomeScreen = () => {
                     <>
                       <View
                         style={{
-                          backgroundColor: 'white',
+                          backgroundColor: colors.card,
                           padding: 12,
                           borderRadius: 10,
                           height: 150,
                           justifyContent: 'center',
+                          borderColor: colors.border,
+                          borderWidth: 1,
                         }}>
-                        <Text style={{fontSize: 15, fontWeight: '500'}}>
+                        <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
                           {prompt.question}
                         </Text>
                         <Text
                           style={{
                             fontSize: 24,
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             marginTop: 20,
-  fontWeight: '400',
                             lineHeight: 30,
+                            color: colors.text,
                           }}>
                           {prompt.answer}
                         </Text>
@@ -569,22 +571,24 @@ const HomeScreen = () => {
                     <>
                       <View
                         style={{
-                          backgroundColor: 'white',
+                          backgroundColor: colors.card,
                           padding: 12,
                           borderRadius: 10,
                           height: 150,
                           justifyContent: 'center',
+                          borderColor: colors.border,
+                          borderWidth: 1,
                         }}>
-                        <Text style={{fontSize: 15, fontWeight: '500'}}>
+                        <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
                           {prompt.question}
                         </Text>
                         <Text
                           style={{
                             fontSize: 24,
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             marginTop: 20,
-  fontWeight: '400',
                             lineHeight: 30,
+                            color: colors.text,
                           }}>
                           {prompt.answer}
                         </Text>
@@ -602,22 +606,24 @@ const HomeScreen = () => {
                     <>
                       <View
                         style={{
-                          backgroundColor: 'white',
+                          backgroundColor: colors.card,
                           padding: 12,
                           borderRadius: 10,
                           height: 150,
                           justifyContent: 'center',
+                          borderColor: colors.border,
+                          borderWidth: 1,
                         }}>
-                        <Text style={{fontSize: 15, fontWeight: '500'}}>
+                        <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>
                           {prompt.question}
                         </Text>
                         <Text
                           style={{
                             fontSize: 24,
-                            fontWeight: 'bold',
+                            fontWeight: '600',
                             marginTop: 20,
-  fontWeight: '400',
                             lineHeight: 30,
+                            color: colors.text,
                           }}>
                           {prompt.answer}
                         </Text>

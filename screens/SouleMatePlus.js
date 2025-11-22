@@ -16,7 +16,7 @@ import axios from 'axios';
 import {BASE_URL, RAZORPAY_KEY_ID} from '../urls/url';
 import {useNavigation} from '@react-navigation/native';
 import { AuthContext } from '../AuthContext';
-import { colors } from '../utils/theme';
+import { colors, spacing, radii, shadows } from '../utils/theme';
 
 const SouleMatePlus = () => {
   const plans = [
@@ -142,7 +142,7 @@ const SouleMatePlus = () => {
             marginTop: 10,
             flex: 1,
             padding: 12,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}>
           <ImageBackground
             resizeMode="cover"
@@ -153,7 +153,7 @@ const SouleMatePlus = () => {
             }}>
             <View
               style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <View style={{
+                <View style={{
                 backgroundColor: 'rgba(0,0,0,0.45)',
                 paddingHorizontal: 12,
                 paddingVertical: 8,
@@ -162,8 +162,8 @@ const SouleMatePlus = () => {
                 <Text
                   style={{
                     fontSize: 30,
-                    color: 'white',
-                    fontWeight: 'bold',
+                    color: colors.onPrimary,
+                    fontWeight: '700',
                     width: 220,
                     textAlign: 'center',
                   }}>
@@ -174,215 +174,81 @@ const SouleMatePlus = () => {
           </ImageBackground>
 
           <View style={{marginTop: 25}}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {plans?.map((item, index) => (
-                <Pressable
-                  key={item?.id ?? String(index)}
-                  onPress={() => setPlan(item)}
-                  style={{marginRight: 10}}>
-                  <View
-                    style={{
-                      backgroundColor:
-                        plan?.name == item?.name ? '#8e33b5' : '#B0B0B0',
-                      padding: 10,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      borderTopLeftRadius: 10,
-                      borderTopRightRadius: 10,
-                    }}>
-                    <Text
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingLeft: 4, paddingRight: 8}}>
+              {plans?.map((item, index) => {
+                const selected = plan?.name === item?.name;
+                return (
+                  <Pressable
+                    key={item?.id ?? String(index)}
+                    onPress={() => setPlan(item)}
+                    style={{marginRight: 12}}>
+                    <View
                       style={{
-                        textAlign: 'center',
-                        color: 'white',
-                        fontWeight: '500',
+                        width: 160,
+                        borderRadius: radii.md,
+                        overflow: 'hidden',
+                        backgroundColor: selected ? colors.primary : colors.card,
+                        borderWidth: selected ? 0 : 1,
+                        borderColor: selected ? colors.primary : colors.border,
+                        padding: spacing.sm,
+                        ...shadows.card,
                       }}>
-                      {item?.name}
-                    </Text>
-                  </View>
-
-                  <View
-                    style={{
-                      padding: 10,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      backgroundColor: 'white',
-                      borderColor:
-                        plan?.name == item?.name ? '#8e33b5' : '#E0E0E0',
-                      borderWidth: 2,
-                      borderBottomLeftRadius: 10,
-                      borderBottomRightRadius: 10,
-                    }}>
-                    <Text style={{color: 'gray', fontSize: 15}}>
-                      {item?.plan}
-                    </Text>
-
-                    <Text
-                      style={{
-                        fontSize: 17,
-                        fontWeight: '600',
-                        marginTop: 8,
-                        letterSpacing: 0.6,
-                        color: colors.text,
-                      }}>
-                      {item?.price}
-                    </Text>
-                  </View>
-                </Pressable>
-              ))}
+                      <View style={{paddingVertical: 6, alignItems: 'center'}}>
+                        <Text style={{fontSize: 13, fontWeight: '700', color: selected ? colors.onPrimary : colors.text}}>{item?.name}</Text>
+                      </View>
+                      <View style={{marginTop: 6, alignItems: 'center'}}>
+                        <Text style={{fontSize: 13, color: colors.textSubtle}}>{item?.plan}</Text>
+                        <Text style={{fontSize: 18, fontWeight: '700', marginTop: 6, color: selected ? colors.onPrimary : colors.text}}>{item?.price}</Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                );
+              })}
             </ScrollView>
           </View>
 
           <View style={{marginTop: 30}}>
-            <View style={{flexDirection: 'row', gap: 14}}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#E0E0E0',
-                }}>
-                <Ionicons name="infinite-outline" size={22} color="black" />
+            {/** Feature rows: icon + text (consistent spacing & alignment) */}
+            {[
+              { icon: 'infinite-outline', text: 'Send unlimited likes*' },
+              { icon: 'person-outline', text: 'See everyone who likes you' },
+              { icon: 'filter-outline', text: 'Set more dating preferences' },
+              { icon: 'funnel-outline', text: "Sort all incoming likes" },
+              { icon: 'search-outline', text: "Browse by who's new or nearby" },
+            ].map((item, i) => (
+              <View key={i} style={{flexDirection: 'row', gap: 14, marginBottom: i === 1 || i === 3 ? 14 : 8, alignItems: 'center'}}>
+                <View style={{width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.border}}>
+                  <Ionicons name={item.icon} size={20} color={colors.text} />
+                </View>
+                <Text style={{fontSize: 16, fontWeight: '600', color: colors.text}}>{item.text}</Text>
               </View>
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 0.6,
-                  color: colors.text,
-                }}>
-                Send unlimited likes*
-              </Text>
-            </View>
-
-            <View style={{flexDirection: 'row', gap: 14, marginVertical: 15}}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#E0E0E0',
-                }}>
-                <Ionicons name="person-outline" size={22} color="black" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 0.6,
-                  color: colors.text,
-                }}>
-                See everyone who likes you
-              </Text>
-            </View>
-
-            <View style={{flexDirection: 'row', gap: 14}}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#E0E0E0',
-                }}>
-                <Ionicons name="filter-outline" size={22} color="black" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 0.6,
-                  color: colors.text,
-                }}>
-                Set more dating preferences
-              </Text>
-            </View>
-
-            <View style={{flexDirection: 'row', gap: 14, marginVertical: 15}}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#E0E0E0',
-                }}>
-                <Ionicons name="funnel-outline" size={22} color="black" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 0.6,
-                  color: colors.text,
-                }}>
-                Sort all incoming likes
-              </Text>
-            </View>
-
-            <View style={{flexDirection: 'row', gap: 14}}>
-              <View
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 21,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  backgroundColor: '#E0E0E0',
-                }}>
-                <Ionicons name="search-outline" size={22} color="black" />
-              </View>
-              <Text
-                style={{
-                  fontSize: 17,
-                  fontWeight: '600',
-                  marginTop: 8,
-                  letterSpacing: 0.6,
-                  color: colors.text,
-                }}>
-                Browse by who's new or nearby
-              </Text>
-            </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
-      {plan && (
+      <View style={{padding: 12, backgroundColor: 'transparent'}}>
         <Pressable
           onPress={pay}
-          style={{
-            backgroundColor: '#8e33b5',
-            marginTop: 'auto',
-            marginBottom: 10,
-            padding: 12,
-            marginHorizontal: 10,
-            borderRadius: 20,
-          }}>
+          disabled={!plan || isLoading}
+          style={({pressed}) => ({
+            backgroundColor: plan ? colors.primary : colors.border,
+            opacity: pressed ? 0.9 : 1,
+            paddingVertical: 14,
+            borderRadius: 28,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginHorizontal: 6,
+          })}>
           {isLoading ? (
-            <ActivityIndicator size="small" color="white" />
+            <ActivityIndicator size="small" color={colors.onPrimary} />
           ) : (
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '600',
-                textAlign: 'center',
-                letterSpacing: 0.6,
-                color: 'white',
-              }}>
-              Get {plan?.plan} for {plan?.price}
+            <Text style={{fontSize: 16, fontWeight: '700', color: plan ? colors.onPrimary : colors.text}}>
+              {plan ? `Get ${plan?.plan} for ${plan?.price}` : 'Choose a plan'}
             </Text>
           )}
         </Pressable>
-      )}
+      </View>
     </>
   );
 };

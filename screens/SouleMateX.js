@@ -7,6 +7,7 @@ import {
   Pressable,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import React, {useState, useContext} from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
@@ -16,7 +17,7 @@ import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { BASE_URL, RAZORPAY_KEY_ID } from '../urls/url';
-import { colors } from '../utils/theme';
+import { colors, spacing, radii, shadows } from '../utils/theme';
 
 const SouleMateX = () => {
   const planss = [
@@ -89,7 +90,7 @@ const SouleMateX = () => {
   };
   return (
     <ScrollView>
-      <View style={{flex: 1, backgroundColor: '#181818', padding: 12}}>
+      <View style={{flex: 1, backgroundColor: '#121212', padding: 12}}>
         <ImageBackground
           style={{width: '100%', height: 200, borderRadius: 10, overflow: 'hidden'}}
           imageStyle={{borderRadius: 10, opacity: 0.9}}
@@ -100,35 +101,42 @@ const SouleMateX = () => {
         </ImageBackground>
 
         <View style={{marginTop: 20}}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {planss.map((p, i) => (
-              <Pressable key={p.id} onPress={() => setPlan(p)} style={{marginRight: 12}}>
-                <View style={{backgroundColor: p.name === plan?.name ? colors.card : '#484848', padding: 12, borderTopLeftRadius: 8, borderTopRightRadius: 8, alignItems: 'center'}}>
-                  <Text style={{color: p.name === plan?.name ? colors.text : colors.white, fontWeight: '600'}}>{p.name}</Text>
-                </View>
-                <View style={{backgroundColor: '#101010', padding: 12, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, borderWidth: 1, borderColor: p.name === plan?.name ? colors.card : '#484848', alignItems: 'center'}}>
-                  <Text style={{color: '#D8D8D8'}}>{p.plan}</Text>
-                  <Text style={{color: colors.white, fontSize: 16, fontWeight: '700', marginTop: 6}}>{p.price}</Text>
-                </View>
-              </Pressable>
-            ))}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{paddingLeft: 4, paddingRight: 8}}>
+            {planss.map((p, i) => {
+              const selected = plan?.name === p.name;
+              return (
+                <Pressable key={p.id} onPress={() => setPlan(p)} style={{marginRight: 12}}>
+                  <View style={{width: 170, borderRadius: radii.md, overflow: 'hidden', backgroundColor: selected ? colors.primary : colors.card, borderWidth: selected ? 0 : 1, borderColor: selected ? colors.primary : colors.border, padding: spacing.sm, ...shadows.card}}>
+                    <View style={{alignItems: 'center'}}>
+                      <Text style={{fontSize: 13, fontWeight: '700', color: selected ? colors.onPrimary : colors.text}}>{p.name}</Text>
+                    </View>
+                    <View style={{marginTop: 8, alignItems: 'center'}}>
+                      <Text style={{fontSize: 13, color: colors.textSubtle}}>{p.plan}</Text>
+                      <Text style={{fontSize: 18, fontWeight: '800', marginTop: 6, color: selected ? colors.onPrimary : colors.text}}>{p.price}</Text>
+                    </View>
+                  </View>
+                </Pressable>
+              );
+            })}
           </ScrollView>
         </View>
 
         <View style={{marginTop: 24}}>
-          <View style={{flexDirection: 'row', gap: 12, alignItems: 'center'}}>
-            <View style={{width: 70, height: 70, borderRadius: 35, backgroundColor: '#333'}} />
-            <View style={{flex: 1}}>
-              <Text style={{color: colors.white, fontSize: 16, fontWeight: '600'}}>Skip the line</Text>
-              <Text style={{color: colors.textSubtle, marginTop: 6}}>Get recommended to matches sooner</Text>
+            <View style={{flexDirection: 'row', gap: 12, alignItems: 'center'}}>
+              <View style={styles.logoCircle}>
+                <Ionicons name="star-outline" size={28} color={colors.primary} />
+              </View>
+              <View style={{flex: 1}}>
+                <Text style={{color: colors.white, fontSize: 16, fontWeight: '600'}}>Skip the line</Text>
+                <Text style={{color: colors.textSubtle, marginTop: 6}}>Get recommended to matches sooner</Text>
+              </View>
             </View>
-          </View>
 
           <View style={{height: 1, backgroundColor: colors.border, marginVertical: 18}} />
 
           <View style={{flexDirection: 'row', gap: 12, alignItems: 'center'}}>
-            <View style={{width: 42, height: 42, borderRadius: 21, backgroundColor: '#484848', alignItems: 'center', justifyContent: 'center'}}>
-              <Ionicons name="infinite-outline" size={20} color={colors.white} />
+            <View style={styles.iconTile}>
+              <Ionicons name="infinite-outline" size={20} color={colors.primary} />
             </View>
             <Text style={{color: colors.white, fontWeight: '600'}}>Send unlimited likes*</Text>
           </View>
@@ -137,14 +145,57 @@ const SouleMateX = () => {
 
           <Text style={{color: colors.white, textAlign: 'center', fontSize: 18, fontWeight: '700', marginTop: 8}}>Includes SouleMate+ benefits</Text>
         </View>
+            <View style={{marginTop: 24}}>
+              <View style={{flexDirection: 'row', gap: 12, alignItems: 'center'}}>
+                <View style={styles.cardTile}>
+                  <Ionicons name="star-outline" size={26} color={colors.primary} />
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={{color: colors.white, fontSize: 16, fontWeight: '700'}}>Skip the line</Text>
+                  <Text style={{color: colors.textSubtle, marginTop: 6}}>Get recommended to matches sooner</Text>
+                </View>
+              </View>
 
-        {plan && (
-          <View style={{padding: 12, marginTop: 18}}>
-            <Pressable onPress={pay} style={{backgroundColor: colors.card, padding: 14, borderRadius: 18, alignItems: 'center'}}>
-              <Text style={{color: colors.text, fontWeight: '600'}}>Get {plan?.plan} for {plan?.price}</Text>
-            </Pressable>
-          </View>
-        )}
+              <View style={{height: 1, backgroundColor: colors.border, marginVertical: 18}} />
+
+              {[
+                { icon: 'infinite-outline', text: 'Send unlimited likes*' },
+                { icon: 'person-outline', text: 'Priority recommendations' },
+                { icon: 'search-outline', text: 'Browse premium filters' },
+              ].map((it, idx) => (
+                <View key={idx} style={{flexDirection: 'row', gap: 12, alignItems: 'center', marginBottom: 12}}>
+                  <View style={styles.iconTileSmall}>
+                    <Ionicons name={it.icon} size={20} color={colors.primary} />
+                  </View>
+                  <Text style={{color: colors.white, fontWeight: '600'}}>{it.text}</Text>
+                </View>
+              ))}
+
+              <View style={{height: 1, backgroundColor: colors.border, marginVertical: 18}} />
+
+            </View>
+
+        <View style={{padding: 12, marginTop: 18}}>
+          <Pressable
+            onPress={pay}
+            disabled={!plan || isLoading}
+            style={({pressed}) => ({
+              backgroundColor: plan ? colors.primary : colors.border,
+              opacity: pressed ? 0.95 : 1,
+              paddingVertical: 14,
+              borderRadius: 28,
+              alignItems: 'center',
+              justifyContent: 'center',
+            })}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color={colors.onPrimary} />
+            ) : (
+              <Text style={{fontSize: 16, fontWeight: '700', color: plan ? colors.onPrimary : colors.text}}>
+                {plan ? `Get ${plan?.plan} for ${plan?.price}` : 'Choose a plan'}
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
     </ScrollView>
   );
@@ -152,4 +203,47 @@ const SouleMateX = () => {
 
 export default SouleMateX;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  logoCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
+  },
+  cardTile: {
+    width: 70,
+    height: 70,
+    borderRadius: 12,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadows.card,
+  },
+  iconTile: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.card,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  iconTileSmall: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+});
