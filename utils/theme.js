@@ -9,6 +9,8 @@ export const colors = {
   border: '#E5E7EB',
   success: '#16a34a',
   danger: '#dc2626',
+  white: '#FFFFFF',
+  onPrimary: '#FFFFFF',
 };
 
 export const spacing = {

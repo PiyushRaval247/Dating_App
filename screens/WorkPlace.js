@@ -4,7 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { getContrastingTextColor } from '../utils/colorUtils';
+import { colors } from '../utils/theme';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 import { AuthContext } from '../AuthContext';
 import axios from 'axios';
@@ -66,7 +66,7 @@ const WorkPlace = () => {
     style={{
       paddingTop: Platform.OS === 'android' ? 35 : 0,
       flex: 1,
-      backgroundColor: 'white',
+      backgroundColor: colors.card,
     }}>
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} style={{flex:1}}>
     <ScrollView contentContainerStyle={{flexGrow:1}} keyboardShouldPersistTaps="handled">
@@ -78,7 +78,7 @@ const WorkPlace = () => {
             height: 44,
             borderRadius: 22,
             borderWidth: 2,
-            borderColor: 'black',
+            borderColor: colors.text,
             justifyContent: 'center',
             alignItems: 'center',
           }}>
@@ -92,12 +92,12 @@ const WorkPlace = () => {
         />
       </View>
 
-      <Text
+        <Text
         style={{
           fontSize: 25,
           fontWeight: '700',
           marginTop: 15,
-          color: getContrastingTextColor('white'),
+          color: colors.text,
         }}>
         Where do you work?
       </Text>
@@ -110,12 +110,12 @@ const WorkPlace = () => {
         style={{
           width: 340,
           marginTop: 25,
-          borderBottomColor: 'black',
+          borderBottomColor: colors.text,
           borderBottomWidth: 1,
           paddingBottom: 10,
   fontWeight: '700',
           fontSize: workPlace ? 22 : 22,
-          color: '#000',
+          color: colors.text,
         }}
         placeholderTextColor={'#BEBEBE'}
       />
@@ -127,7 +127,7 @@ const WorkPlace = () => {
         <Ionicons
           name="chevron-forward-circle-outline"
           size={45}
-          color="#581845"
+          color={colors.primary}
         />
       </TouchableOpacity>
     </View>

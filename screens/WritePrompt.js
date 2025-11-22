@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import React, {useMemo, useState, useEffect, useRef} from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { colors } from '../utils/theme';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -140,13 +141,13 @@ const WritePrompt = () => {
       }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} style={{flex:1}}>
       <ScrollView contentContainerStyle={{flexGrow:1}} keyboardShouldPersistTaps="handled">
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: 'white',
-        }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            backgroundColor: colors.card,
+          }}>
         <View
           style={{
             flexDirection: 'row',
@@ -157,13 +158,13 @@ const WritePrompt = () => {
           <Pressable onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back-outline" size={25} color="black" />
           </Pressable>
-            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Write Answer</Text>
+            <Text style={{fontSize: 15, color: colors.text}}>Write Answer</Text>
         </View>
         <Pressable onPress={handleDone} disabled={!(answer && answer.trim().length > 0) || answer.length > MAX_CHARS}>
           <Text
             style={{
               fontSize: 15,
-              color: (!(answer && answer.trim().length > 0) || answer.length > MAX_CHARS) ? '#999' : '#5a0763',
+              color: (!(answer && answer.trim().length > 0) || answer.length > MAX_CHARS) ? colors.textSubtle : colors.primary,
               marginRight: 10,
               fontWeight: '500',
             }}>
@@ -172,15 +173,15 @@ const WritePrompt = () => {
         </Pressable>
       </View>
 
-      <View style={{padding: 12}}>
-        <View style={{backgroundColor: 'white', padding: 15, borderRadius: 5}}>
-          <Text style={{color: getContrastingTextColor('white')}}>{question}</Text>
+        <View style={{padding: 12}}>
+        <View style={{backgroundColor: colors.card, padding: 15, borderRadius: 5}}>
+          <Text style={{color: colors.text}}>{question}</Text>
 
         </View>
 
         {/* Suggestions chips */}
         <View style={{marginTop: 12}}>
-          <Text style={{marginBottom: 8, color: '#555'}}>Suggestions</Text>
+          <Text style={{marginBottom: 8, color: colors.textMuted}}>Suggestions</Text>
           <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 8}}>
             {suggestions.map((s, idx) => (
               <Pressable
@@ -188,13 +189,13 @@ const WritePrompt = () => {
                 onPress={() => setAnswer(s)}
                 style={{
                   backgroundColor: '#f2e9f5',
-                  borderColor: '#5a0763',
+                  borderColor: colors.primary,
                   borderWidth: 0.5,
                   paddingVertical: 6,
                   paddingHorizontal: 10,
                   borderRadius: 16,
                 }}>
-                <Text style={{color: '#5a0763'}}>{s}</Text>
+                <Text style={{color: colors.primary}}>{s}</Text>
               </Pressable>
             ))}
           </View>
@@ -206,7 +207,7 @@ const WritePrompt = () => {
               borderRadius: 10,
               height: 100,
               marginTop: 15,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
             }}>
           <TextInput
               multiline
@@ -220,15 +221,15 @@ const WritePrompt = () => {
 
           {/* Character counter and autosave status */}
           <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, paddingHorizontal: 2}}>
-            <Text style={{color: answer.length > MAX_CHARS ? '#c0392b' : '#666'}}>
+              <Text style={{color: answer.length > MAX_CHARS ? colors.danger : colors.textMuted}}>
               Characters: {answer.length}/{MAX_CHARS}
             </Text>
             {isSaving ? (
-              <Text style={{color: '#666'}}>Saving…</Text>
+                <Text style={{color: colors.textMuted}}>Saving…</Text>
             ) : savedDraft ? (
-              <Text style={{color: '#2d7d46'}}>Draft saved</Text>
+                <Text style={{color: colors.success}}>Draft saved</Text>
             ) : (
-              <Text style={{color: '#666'}}>No draft</Text>
+                <Text style={{color: colors.textMuted}}>No draft</Text>
             )}
           </View>
 
@@ -236,11 +237,11 @@ const WritePrompt = () => {
           <View style={{flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12}}>
             <Pressable
               onPress={() => setAnswer('')}
-              style={{
+                style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 6,
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
                 borderRadius: 8,
                 paddingVertical: 10,
                 paddingHorizontal: 12,
@@ -248,7 +249,7 @@ const WritePrompt = () => {
                 borderWidth: 1,
               }}>
               <Ionicons name="refresh-outline" size={18} color="#333" />
-                <Text style={{color: getContrastingTextColor('white')}}>Clear</Text>
+                <Text style={{color: colors.text}}>Clear</Text>
             </Pressable>
 
             <Pressable
@@ -262,18 +263,18 @@ const WritePrompt = () => {
                 paddingVertical: 10,
                 paddingHorizontal: 12,
               }}>
-              <Ionicons name="flash-outline" size={18} color="#fff" />
-              <Text style={{color: 'white'}}>Quick Fill</Text>
+              <Ionicons name="flash-outline" size={18} color={colors.white} />
+              <Text style={{color: colors.white}}>Quick Fill</Text>
             </Pressable>
 
             <Pressable
               onPress={handleRestoreDraft}
               disabled={!savedDraft || savedDraft === answer}
-              style={{
+                style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 6,
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
                 borderRadius: 8,
                 paddingVertical: 10,
                 paddingHorizontal: 12,
@@ -282,17 +283,17 @@ const WritePrompt = () => {
                 opacity: !savedDraft || savedDraft === answer ? 0.6 : 1,
               }}>
               <Ionicons name="download-outline" size={18} color="#333" />
-                <Text style={{color: getContrastingTextColor('white')}}>Restore Draft</Text>
+                <Text style={{color: colors.text}}>Restore Draft</Text>
             </Pressable>
 
             <Pressable
               onPress={handleClearDraft}
               disabled={!savedDraft}
-              style={{
+                style={{
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 6,
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
                 borderRadius: 8,
                 paddingVertical: 10,
                 paddingHorizontal: 12,
@@ -301,7 +302,7 @@ const WritePrompt = () => {
                 opacity: !savedDraft ? 0.6 : 1,
               }}>
               <Ionicons name="trash-outline" size={18} color="#333" />
-                <Text style={{color: getContrastingTextColor('white')}}>Clear Draft</Text>
+                <Text style={{color: colors.text}}>Clear Draft</Text>
             </Pressable>
           </View>
       </View>

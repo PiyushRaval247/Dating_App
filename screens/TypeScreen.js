@@ -13,7 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation } from '@react-navigation/native';
-import { getContrastingTextColor } from '../utils/colorUtils';
+import { colors } from '../utils/theme';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 
 const TypeScreen = () => {
@@ -37,7 +37,7 @@ const TypeScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <View style={{marginTop: 80, marginHorizontal: 20}}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -47,7 +47,7 @@ const TypeScreen = () => {
               height: 44,
               borderRadius: 22,
               borderWidth: 2,
-              borderColor: 'black',
+              borderColor: colors.text,
               justifyContent: 'center',
               alignItems: 'center',
             }}>
@@ -66,12 +66,12 @@ const TypeScreen = () => {
             fontSize: 25,
             fontWeight: '700',
             marginTop: 15,
-            color: getContrastingTextColor('white'),
+            color: colors.text,
           }}>
           What's your sexuality?
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: getContrastingTextColor('white')}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: colors.text}}>
   SouleMate users are matched based on these gender groups. You can add more
           about gender after registering
         </Text>
@@ -83,12 +83,12 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Straight</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Straight</Text>
             <Pressable onPress={() => setType('Straight')}>
               <FontAwesome
                 name="circle"
                 size={26}
-                color={type == 'Straight' ? '#581845' : '#F0F0F0'}
+                color={type == 'Straight' ? colors.primary : colors.border}
               />
             </Pressable>
           </View>
@@ -99,12 +99,12 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Gay</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Gay</Text>
             <Pressable onPress={() => setType('Gay')}>
               <FontAwesome
                 name="circle"
                 size={26}
-                color={type == 'Gay' ? '#581845' : '#F0F0F0'}
+                color={type == 'Gay' ? colors.primary : colors.border}
               />
             </Pressable>
           </View>
@@ -115,12 +115,12 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Lesbian</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Lesbian</Text>
             <Pressable onPress={() => setType('Lesbian')}>
               <FontAwesome
                 name="circle"
                 size={26}
-                color={type == 'Lesbian' ? '#581845' : '#F0F0F0'}
+                color={type == 'Lesbian' ? colors.primary : colors.border}
               />
             </Pressable>
           </View>
@@ -131,12 +131,12 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Bisexual</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Bisexual</Text>
             <Pressable onPress={() => setType('Bisexual')}>
               <FontAwesome
                 name="circle"
                 size={26}
-                color={type == 'Bisexual' ? '#581845' : '#F0F0F0'}
+                color={type == 'Bisexual' ? colors.primary : colors.border}
               />
             </Pressable>
           </View>
@@ -151,9 +151,9 @@ const TypeScreen = () => {
             <MaterialDesignIcons
               name="checkbox-marked"
               size={25}
-              color="#900C3F"
+              color={colors.primaryAlt}
             />
-            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Visible on profile</Text>
+            <Text style={{fontSize: 15, color: colors.text}}>Visible on profile</Text>
           </View>
         </View>
 
@@ -164,7 +164,7 @@ const TypeScreen = () => {
           <Ionicons
             name="chevron-forward-circle-outline"
             size={45}
-            color="#581845"
+            color={colors.primary}
           />
         </TouchableOpacity>
       </View>

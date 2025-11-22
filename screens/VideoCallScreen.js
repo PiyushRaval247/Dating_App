@@ -140,9 +140,9 @@ const VideoCallScreen = () => {
           ) : (
             <Ionicons name="person-circle-outline" size={120} color="#888" style={{ marginBottom: 18 }} />
           )}
-          <Ionicons name="videocam" size={28} color="#eee" />
-          <Text style={{marginTop: 10, fontSize: 20, color: '#fff', fontWeight: '600'}}>{displayName}</Text>
-          <Text style={{marginTop: 6, fontSize: 14, color: '#aaa'}}>Calling… Waiting for acceptance</Text>
+          <Ionicons name="videocam" size={28} color={colors.textSubtle} />
+          <Text style={{marginTop: 10, fontSize: 20, color: colors.white, fontWeight: '600'}}>{displayName}</Text>
+          <Text style={{marginTop: 6, fontSize: 14, color: colors.textSubtle}}>Calling… Waiting for acceptance</Text>
           {isCaller ? (
             <TouchableOpacity
               onPress={() => {
@@ -153,7 +153,7 @@ const VideoCallScreen = () => {
               }}
               style={{ position: 'absolute', bottom: 40, width: 66, height: 66, borderRadius: 33, backgroundColor: '#e53935', alignItems: 'center', justifyContent: 'center' }}
             >
-              <Ionicons name="close" size={28} color="#fff" />
+              <Ionicons name="close" size={28} color={colors.white} />
             </TouchableOpacity>
           ) : null}
         </View>

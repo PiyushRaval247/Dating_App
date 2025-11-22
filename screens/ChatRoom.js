@@ -547,8 +547,8 @@ const truncate = (text, n = 60) => {
       {/* Report & Block actions */}
       <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}>
         <Pressable style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center'}} onPress={() => setShowActions(false)}>
-          <View style={{ width: '86%', backgroundColor: 'white', borderRadius: 12, padding: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: getContrastingTextColor('white') }}>Conversation Options</Text>
+          <View style={{ width: '86%', backgroundColor: colors.card, borderRadius: 12, padding: 16 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: colors.text }}>Conversation Options</Text>
             <Pressable
               onPress={async () => {
                 try {
@@ -589,7 +589,7 @@ const truncate = (text, n = 60) => {
             </Pressable>
             <View style={{ height: 1, backgroundColor: colors.border }} />
             <Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 12 }}>
-              <Text style={{ color: getContrastingTextColor('white'), fontSize: 15 }}>Cancel</Text>
+              <Text style={{ color: colors.text, fontSize: 15 }}>Cancel</Text>
             </Pressable>
           </View>
         </Pressable>

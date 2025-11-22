@@ -13,7 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation } from '@react-navigation/native';
-import { getContrastingTextColor } from '../utils/colorUtils';
+import { colors } from '../utils/theme';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 
 const DatingType = () => {
@@ -46,7 +46,7 @@ const DatingType = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <View style={{marginTop: 80, marginHorizontal: 20}}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -56,7 +56,7 @@ const DatingType = () => {
               height: 44,
               borderRadius: 22,
               borderWidth: 2,
-              borderColor: 'black',
+              borderColor: colors.text,
               justifyContent: 'center',
               alignItems: 'center',
             }}>
@@ -75,12 +75,12 @@ const DatingType = () => {
             fontSize: 25,
             fontWeight: '700',
             marginTop: 15,
-            color: getContrastingTextColor('white'),
+            color: colors.text,
           }}>
           Who do you want to date?
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: getContrastingTextColor('white')}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: colors.text}}>
           Select all people you're open to meeting
         </Text>
 
@@ -91,13 +91,13 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Men</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Men</Text>
             <Pressable onPress={() => chooseOption('Men')}>
               <FontAwesome
                 name="circle"
                 size={26}
                 color={
-                  datingPreferences.includes('Men') ? '#581845' : '#F0F0F0'
+                  datingPreferences.includes('Men') ? colors.primary : colors.border
                 }
               />
             </Pressable>
@@ -109,13 +109,13 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Women</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Women</Text>
             <Pressable onPress={() => chooseOption('Women')}>
               <FontAwesome
                 name="circle"
                 size={26}
                 color={
-                  datingPreferences.includes('Women') ? '#581845' : '#F0F0F0'
+                  datingPreferences.includes('Women') ? colors.primary : colors.border
                 }
               />
             </Pressable>
@@ -127,13 +127,13 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Everyone</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Everyone</Text>
             <Pressable onPress={() => chooseOption('Everyone')}>
               <FontAwesome
                 name="circle"
                 size={26}
                 color={
-                  datingPreferences.includes('Everyone') ? '#581845' : '#F0F0F0'
+                  datingPreferences.includes('Everyone') ? colors.primary : colors.border
                 }
               />
             </Pressable>
@@ -149,9 +149,9 @@ const DatingType = () => {
             <MaterialDesignIcons
               name="checkbox-marked"
               size={25}
-              color="#900C3F"
+              color={colors.primaryAlt}
             />
-            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Visible on profile</Text>
+            <Text style={{fontSize: 15, color: colors.text}}>Visible on profile</Text>
           </View>
         </View>
 
