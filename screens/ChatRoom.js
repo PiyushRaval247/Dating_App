@@ -257,8 +257,27 @@ const truncate = (text, n = 60) => {
             // Optimistic UI update
             setMessages(prev => (Array.isArray(prev) ? prev.filter(m => m?.messageId !== msg.messageId) : prev));
           } catch (e) {
-            console.log('Delete msg error', e?.response?.data || e?.message || e);
+            console.log('Delete msg error full:', e);
+            const status = e?.response?.status;
+            const serverMessage = e?.response?.data?.message || e?.response?.data || e?.message;
+            // If backend doesn't support DELETE /messages/:id, try a fallback endpoint
+            if (status === 404 || status === 405) {
+              try {
+                const token = await AsyncStorage.getItem('token');
+                const resp = await axios.post(`${BASE_URL}/messages/delete`, { messageId: msg.messageId, userId }, { headers: { Authorization: `Bearer ${token}` } });
+                // remove locally on success
+                setMessages(prev => (Array.isArray(prev) ? prev.filter(m => m?.messageId !== msg.messageId) : prev));
+                socket?.emit('messages:deleted', { messageId: msg.messageId, senderId: msg.senderId, receiverId: route?.params?.receiverId });
+                showToast('Message deleted');
+                return;
+              } catch (e2) {
+                console.log('Fallback delete error:', e2);
+              }
+            }
             showToast('Failed to delete message');
+            try {
+              Alert.alert('Delete failed', String(serverMessage || 'Server error while deleting message'));
+            } catch {}
           }
         }
       }
