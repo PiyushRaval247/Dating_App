@@ -11,6 +11,8 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { colors } from '../utils/theme';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import NextButton from '../components/NextButton';
 import {useNavigation} from '@react-navigation/native';
@@ -42,7 +44,7 @@ const NameScreen = () => {
         flex: 1,
         backgroundColor: 'white',
       }}>
-      <Text style={{marginTop: 50, textAlign: 'center', color: 'gray'}}>
+      <Text style={{marginTop: 50, textAlign: 'center', color: getContrastingTextColor('white')}}>
         NO BACKGROUND CHECKS ARE CONDUCTED
       </Text>
 
@@ -74,8 +76,8 @@ const NameScreen = () => {
           <Text
             style={{
               fontSize: 25,
-              fontWeight: 'bold',
-  fontWeight: '700',
+              fontWeight: '700',
+              color: getContrastingTextColor('white'),
             }}>
             What's your name?
           </Text>
@@ -84,7 +86,7 @@ const NameScreen = () => {
             onChangeText={text => setFirstName(text)}
             autoFocus={true}
             placeholder="First name (required)"
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             style={{
               width: 340,
               marginVertical: 10,
@@ -94,12 +96,12 @@ const NameScreen = () => {
               paddingBottom: 10,
   fontWeight: '700',
               fontSize: firstName ? 22 : 22,
-              color: '#000',
+              color: colors.text,
             }}
           />
           <TextInput
             placeholder="Last Name"
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             style={{
               width: 340,
               marginVertical: 10,
@@ -109,10 +111,10 @@ const NameScreen = () => {
               paddingBottom: 10,
   fontWeight: '700',
               fontSize: firstName ? 22 : 22,
-              color: '#000',
+              color: colors.text,
             }}
           />
-          <Text style={{fontSize: 15, color: 'gray', fontWeight: '500'}}>
+          <Text style={{fontSize: 15, color: colors.textMuted, fontWeight: '500'}}>
             Last name is optional
           </Text>
         </View>

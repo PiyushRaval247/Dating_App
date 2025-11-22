@@ -11,6 +11,7 @@ import {
   Image,
 } from 'react-native';
 import React, { useEffect } from 'react';
+import { colors } from '../utils/theme';
 import MaterialDesignIcons from '@react-native-vector-icons/material-icons';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import {useState} from 'react';
@@ -104,9 +105,9 @@ const PasswordScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: colors.text,
           }}>
           Please choose a password
         </Text>
@@ -128,11 +129,11 @@ const PasswordScreen = () => {
             autoFocus={true}
             placeholder="Enter your Password"
             secureTextEntry={!showPassword}
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             style={{
   fontWeight: '700',
               fontSize: 22,
-              color: '#000',
+              color: colors.text,
               paddingRight: 40,
             }}
           />
@@ -155,7 +156,7 @@ const PasswordScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={{color: 'gray', marginTop: 7, fontSize: 15}}>
+        <Text style={{color: colors.textMuted, marginTop: 7, fontSize: 15}}>
           Note: You details will be safe with us
         </Text>
 

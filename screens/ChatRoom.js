@@ -19,6 +19,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import React, {useState, useContext, useEffect, useLayoutEffect, useRef} from 'react';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import {AuthContext} from '../AuthContext';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import axios from 'axios';
 import {BASE_URL} from '../urls/url';
@@ -547,7 +548,7 @@ const truncate = (text, n = 60) => {
       <Modal visible={showActions} transparent animationType="fade" onRequestClose={() => setShowActions(false)}>
         <Pressable style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center'}} onPress={() => setShowActions(false)}>
           <View style={{ width: '86%', backgroundColor: 'white', borderRadius: 12, padding: 16 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12 }}>Conversation Options</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', marginBottom: 12, color: getContrastingTextColor('white') }}>Conversation Options</Text>
             <Pressable
               onPress={async () => {
                 try {
@@ -588,7 +589,7 @@ const truncate = (text, n = 60) => {
             </Pressable>
             <View style={{ height: 1, backgroundColor: colors.border }} />
             <Pressable onPress={() => setShowActions(false)} style={{ paddingVertical: 12 }}>
-              <Text style={{ color: colors.text, fontSize: 15 }}>Cancel</Text>
+              <Text style={{ color: getContrastingTextColor('white'), fontSize: 15 }}>Cancel</Text>
             </Pressable>
           </View>
         </Pressable>

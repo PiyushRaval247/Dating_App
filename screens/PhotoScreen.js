@@ -14,6 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { colors } from '../utils/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import EvilIcons from '@react-native-vector-icons/evil-icons';
 import MaterialIcons from '@react-native-vector-icons/material-icons';
@@ -439,9 +440,9 @@ const PhotoScreen = () => {
           <Text
             style={{
               fontSize: 25,
-              fontWeight: 'bold',
-  fontWeight: '700',
+              fontWeight: '700',
               marginTop: 15,
+              color: colors.text,
             }}>
             Pick your photos and videos
           </Text>
@@ -556,7 +557,7 @@ const PhotoScreen = () => {
             </View>
 
             <View style={{marginVertical: 10}}>
-              <Text style={{color: 'gray', fontSize: 15}}>Drag to reorder</Text>
+              <Text style={{color: colors.textMuted, fontSize: 15}}>Drag to reorder</Text>
               <Text
                 style={{
                   marginTop: 4,
@@ -569,14 +570,14 @@ const PhotoScreen = () => {
             </View>
 
             <View style={{marginTop: 25}}>
-              <Text style={{fontSize: 16, fontWeight: '500', color: '#333'}}>Add photos easily</Text>
-              <Text style={{fontSize: 14, color: 'gray', marginTop: 5}}>
+              <Text style={{fontSize: 16, fontWeight: '500', color: colors.text}}>Add photos easily</Text>
+              <Text style={{fontSize: 14, color: colors.textMuted, marginTop: 5}}>
                 Tap on any empty slot above to add photos, or use the options below:
               </Text>
               
               {/* URL Input Section */}
               <View style={{marginTop: 15}}>
-                <Text style={{fontSize: 14, marginBottom: 8}}>Enter Image URL:</Text>
+                <Text style={{fontSize: 14, marginBottom: 8, color: colors.text}}>Enter Image URL:</Text>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -587,17 +588,17 @@ const PhotoScreen = () => {
                     paddingVertical: 8,
                     paddingHorizontal: 12,
                   }}>
-                  <EvilIcons name="image" size={22} color="black" />
+                  <EvilIcons name="image" size={22} color={colors.text} />
                   <TextInput
                     value={imageUrl}
                     onChangeText={text => setImageUrl(text)}
                     style={{
                       flex: 1,
-                      color: 'black',
+                      color: colors.text,
                       fontSize: 16,
                     }}
                     placeholder="https://example.com/image.jpg"
-                    placeholderTextColor="gray"
+                    placeholderTextColor={colors.textSubtle}
                   />
                 </View>
                 <TouchableOpacity
@@ -631,8 +632,8 @@ const PhotoScreen = () => {
               
               {/* Camera/Gallery Section */}
               <View style={{marginTop: 20}}>
-                <Text style={{fontSize: 14, marginBottom: 8}}>Or choose from device:</Text>
-                <Text style={{fontSize: 12, color: 'gray', marginBottom: 10}}>
+                <Text style={{fontSize: 14, marginBottom: 8, color: colors.text}}>Or choose from device:</Text>
+                <Text style={{fontSize: 12, color: colors.textMuted, marginBottom: 10}}>
                   Note: Camera and gallery access requires permissions. If denied, please enable them in Settings.
                 </Text>
                 <View style={{flexDirection: 'row', gap: 10}}>

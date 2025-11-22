@@ -13,6 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation } from '@react-navigation/native';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 
 const DatingType = () => {
@@ -72,14 +73,14 @@ const DatingType = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: getContrastingTextColor('white'),
           }}>
           Who do you want to date?
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: 'gray'}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: getContrastingTextColor('white')}}>
           Select all people you're open to meeting
         </Text>
 
@@ -90,7 +91,7 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Men</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Men</Text>
             <Pressable onPress={() => chooseOption('Men')}>
               <FontAwesome
                 name="circle"
@@ -108,7 +109,7 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Women</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Women</Text>
             <Pressable onPress={() => chooseOption('Women')}>
               <FontAwesome
                 name="circle"
@@ -126,7 +127,7 @@ const DatingType = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Everyone</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Everyone</Text>
             <Pressable onPress={() => chooseOption('Everyone')}>
               <FontAwesome
                 name="circle"
@@ -150,7 +151,7 @@ const DatingType = () => {
               size={25}
               color="#900C3F"
             />
-            <Text style={{fontSize: 15}}>Visible on profile</Text>
+            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Visible on profile</Text>
           </View>
         </View>
 

@@ -4,6 +4,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 import { AuthContext } from '../AuthContext';
 import axios from 'axios';
@@ -94,9 +95,9 @@ const WorkPlace = () => {
       <Text
         style={{
           fontSize: 25,
-          fontWeight: 'bold',
-  fontWeight: '700',
+          fontWeight: '700',
           marginTop: 15,
+          color: getContrastingTextColor('white'),
         }}>
         Where do you work?
       </Text>

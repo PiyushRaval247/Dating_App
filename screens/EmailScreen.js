@@ -11,6 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
+import { colors } from '../utils/theme';
 import Fontisto from '@react-native-vector-icons/fontisto';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import NextButton from '../components/NextButton';
@@ -72,14 +73,14 @@ const EmailScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: colors.text,
           }}>
           Provide your email
         </Text>
 
-        <Text style={{marginTop: 10, fontSize: 15, color: 'gray'}}>
+        <Text style={{marginTop: 10, fontSize: 15, color: colors.textMuted}}>
           Email Verification helps us keep the account secure
         </Text>
 
@@ -88,7 +89,7 @@ const EmailScreen = () => {
           onChangeText={text => setEmail(text)}
           autoFocus={true}
           placeholder="Enter your email"
-          placeholderTextColor={'#BEBEBE'}
+          placeholderTextColor={colors.textSubtle}
           style={{
             width: 340,
             marginVertical: 10,
@@ -98,7 +99,7 @@ const EmailScreen = () => {
             paddingBottom: 10,
   fontWeight: '700',
             fontSize: email ? 22 : 22,
-            color: '#000',
+            color: colors.text,
           }}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -106,7 +107,7 @@ const EmailScreen = () => {
           textContentType="emailAddress"
         />
 
-        <Text style={{color: 'gray', marginTop: 7, fontSize: 15}}>
+        <Text style={{color: colors.textMuted, marginTop: 7, fontSize: 15}}>
           Note: You will be asked to verify your email
         </Text>
 

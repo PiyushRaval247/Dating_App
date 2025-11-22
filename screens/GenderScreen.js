@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import React, {useState,useEffect} from 'react';
+import { colors } from '../utils/theme';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import NextButton from '../components/NextButton';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
@@ -64,14 +65,14 @@ const GenderScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: colors.text,
           }}>
           Which gender describes you the best
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: 'gray'}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: colors.textMuted}}>
   SouleMate users are matched based on these gender groups. You can add more
           about gender after registering
         </Text>
@@ -83,7 +84,7 @@ const GenderScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Men</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Men</Text>
             <Pressable onPress={() => setGender('Men')}>
               <FontAwesome
                 name="circle"
@@ -100,7 +101,7 @@ const GenderScreen = () => {
               justifyContent: 'space-between',
               marginVertical: 12,
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Women</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Women</Text>
             <Pressable onPress={() => setGender('Women')}>
               <FontAwesome
                 name="circle"
@@ -116,7 +117,7 @@ const GenderScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Non Binary</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: colors.text}}>Non Binary</Text>
             <Pressable onPress={() => setGender('Non Binary')}>
               <FontAwesome
                 name="circle"
@@ -134,7 +135,7 @@ const GenderScreen = () => {
             gap: 8,
           }}>
          <MaterialDesignIcons name="checkbox-marked" size={25} color="#900C3F" />
-          <Text style={{fontSize: 15}}>Visible on profile</Text>
+          <Text style={{fontSize: 15, color: colors.text}}>Visible on profile</Text>
         </View>
 
 

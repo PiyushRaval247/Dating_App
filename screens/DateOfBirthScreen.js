@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import React, {useRef, useState,useEffect} from 'react';
+import { colors } from '../utils/theme';
 import Fontisto from '@react-native-vector-icons/fontisto';
 import Ionicons from '@react-native-vector-icons/ionicons';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
@@ -97,9 +98,9 @@ const DateOfBirthScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: colors.text,
           }}>
           What's your date of birth?
         </Text>
@@ -118,7 +119,7 @@ const DateOfBirthScreen = () => {
             autoFocus={true}
             placeholder="DD"
           
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             style={{
               borderBottomWidth: 1,
               borderColor: 'black',
@@ -127,7 +128,7 @@ const DateOfBirthScreen = () => {
 
   fontWeight: '700',
               fontSize: day ? 22 : 22,
-              color: '#000',
+              color: colors.text,
             }}
           />
           <TextInput
@@ -139,7 +140,7 @@ const DateOfBirthScreen = () => {
             maxLength={2}
             placeholder="MM"
  
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             style={{
               borderBottomWidth: 1,
               borderColor: 'black',
@@ -147,7 +148,7 @@ const DateOfBirthScreen = () => {
               width: 60,
   fontWeight: '700',
               fontSize: month ? 22 : 22,
-              color: '#000',
+              color: colors.text,
             }}
           />
           <TextInput
@@ -157,7 +158,7 @@ const DateOfBirthScreen = () => {
             autoFocus={true}
             placeholder="YYYY"
 
-            placeholderTextColor={'#BEBEBE'}
+            placeholderTextColor={colors.textSubtle}
             max={4}
             keyboardType="numeric"
             style={{
@@ -167,7 +168,7 @@ const DateOfBirthScreen = () => {
               width: 80,
   fontWeight: '700',
               fontSize: year ? 22 : 22,
-              color: '#000',
+              color: colors.text,
             }}
           />
         </View>

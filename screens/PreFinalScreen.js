@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import React, {useState, useEffect, useContext} from 'react';
+import { colors } from '../utils/theme';
 import LottieView from 'lottie-react-native';
 import {useNavigation} from '@react-navigation/native';
 import {getRegistrationProgress} from '../utils/registrationUtils';
@@ -136,9 +137,9 @@ const PreFinalScreen = () => {
         <Text
           style={{
             fontSize: 32,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginLeft: 20,
+            color: colors.text,
           }}>
           All set to register.
         </Text>
@@ -146,10 +147,10 @@ const PreFinalScreen = () => {
         <Text
           style={{
             fontSize: 32,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginLeft: 20,
             marginTop: 10,
+            color: colors.text,
           }}>
           Setting up your profile for you.
         </Text>

@@ -8,6 +8,7 @@ import {
   Button,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
+import { colors } from '../utils/theme';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import axios from 'axios';
 import { BASE_URL } from '../urls/url';
@@ -96,8 +97,8 @@ const OtpScreen = () => {
           alignItems: 'center',
           marginTop: 50,
         }}>
-        <Text style={{fontSize: 18, fontWeight: '500'}}>Verification code</Text>
-        <Text style={{fontSize: 14, color: 'gray', marginTop: 5}}>
+        <Text style={{fontSize: 18, fontWeight: '500', color: colors.text}}>Verification code</Text>
+        <Text style={{fontSize: 14, color: colors.textMuted, marginTop: 5}}>
           Enter the 6 digit code sent to your email
         </Text>
       </View>
@@ -120,7 +121,7 @@ const OtpScreen = () => {
               borderRadius: 8,
               textAlign: 'center',
               fontSize: 18,
-              color: '#333',
+              color: colors.text,
             }}
             ref={el => (inputs.current[index] = el)}
             keyboardType="number-pad"

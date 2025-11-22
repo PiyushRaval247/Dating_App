@@ -17,6 +17,7 @@ import axios from 'axios';
 import {BASE_URL} from '../urls/url';
 import LottieView from 'lottie-react-native';
 import {AuthContext} from '../AuthContext';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import {extractNumber} from '../utils/dynamoUtils';
 import BackHeader from '../components/BackHeader';
 
@@ -182,7 +183,7 @@ const SendLikeScreen = () => {
             marginBottom: 'auto',
             marginHorizontal: 25,
           }}>
-          <Text style={{fontSize: 22, fontWeight: 'bold'}}>
+          <Text style={{fontSize: 22, fontWeight: 'bold', color: getContrastingTextColor('rgba(240,240,240,1)')}}>
             {route?.params?.name}
           </Text>
 
@@ -256,7 +257,7 @@ const SendLikeScreen = () => {
               </Text>
               <Text
                 numberOfLines={3}
-                style={{fontSize: 22, fontWeight: 'bold', textAlign: 'left'}}>
+                style={{fontSize: 22, fontWeight: 'bold', textAlign: 'left', color: getContrastingTextColor('white')}}>
                 {route?.params?.prompt?.answer}
               </Text>
             </View>

@@ -13,6 +13,7 @@ import Ionicons from '@react-native-vector-icons/ionicons';
 import FontAwesome from '@react-native-vector-icons/fontawesome';
 import MaterialDesignIcons from '@react-native-vector-icons/material-design-icons';
 import { useNavigation } from '@react-navigation/native';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 
 const TypeScreen = () => {
@@ -63,14 +64,14 @@ const TypeScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: getContrastingTextColor('white'),
           }}>
           What's your sexuality?
         </Text>
 
-        <Text style={{fontSize: 15, marginTop: 20, color: 'gray'}}>
+        <Text style={{fontSize: 15, marginTop: 20, color: getContrastingTextColor('white')}}>
   SouleMate users are matched based on these gender groups. You can add more
           about gender after registering
         </Text>
@@ -82,7 +83,7 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Straight</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Straight</Text>
             <Pressable onPress={() => setType('Straight')}>
               <FontAwesome
                 name="circle"
@@ -98,7 +99,7 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Gay</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Gay</Text>
             <Pressable onPress={() => setType('Gay')}>
               <FontAwesome
                 name="circle"
@@ -114,7 +115,7 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Lesbian</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Lesbian</Text>
             <Pressable onPress={() => setType('Lesbian')}>
               <FontAwesome
                 name="circle"
@@ -130,7 +131,7 @@ const TypeScreen = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
-            <Text style={{fontSize: 15, fontWeight: '500'}}>Bisexual</Text>
+            <Text style={{fontSize: 15, fontWeight: '500', color: getContrastingTextColor('white')}}>Bisexual</Text>
             <Pressable onPress={() => setType('Bisexual')}>
               <FontAwesome
                 name="circle"
@@ -152,7 +153,7 @@ const TypeScreen = () => {
               size={25}
               color="#900C3F"
             />
-            <Text style={{fontSize: 15}}>Visible on profile</Text>
+            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Visible on profile</Text>
           </View>
         </View>
 

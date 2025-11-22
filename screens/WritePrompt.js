@@ -157,7 +157,7 @@ const WritePrompt = () => {
           <Pressable onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back-outline" size={25} color="black" />
           </Pressable>
-          <Text style={{fontSize: 15}}>Write Answer</Text>
+            <Text style={{fontSize: 15, color: getContrastingTextColor('white')}}>Write Answer</Text>
         </View>
         <Pressable onPress={handleDone} disabled={!(answer && answer.trim().length > 0) || answer.length > MAX_CHARS}>
           <Text
@@ -174,7 +174,7 @@ const WritePrompt = () => {
 
       <View style={{padding: 12}}>
         <View style={{backgroundColor: 'white', padding: 15, borderRadius: 5}}>
-          <Text>{question}</Text>
+          <Text style={{color: getContrastingTextColor('white')}}>{question}</Text>
 
         </View>
 
@@ -248,7 +248,7 @@ const WritePrompt = () => {
                 borderWidth: 1,
               }}>
               <Ionicons name="refresh-outline" size={18} color="#333" />
-              <Text>Clear</Text>
+                <Text style={{color: getContrastingTextColor('white')}}>Clear</Text>
             </Pressable>
 
             <Pressable
@@ -282,7 +282,7 @@ const WritePrompt = () => {
                 opacity: !savedDraft || savedDraft === answer ? 0.6 : 1,
               }}>
               <Ionicons name="download-outline" size={18} color="#333" />
-              <Text>Restore Draft</Text>
+                <Text style={{color: getContrastingTextColor('white')}}>Restore Draft</Text>
             </Pressable>
 
             <Pressable
@@ -301,7 +301,7 @@ const WritePrompt = () => {
                 opacity: !savedDraft ? 0.6 : 1,
               }}>
               <Ionicons name="trash-outline" size={18} color="#333" />
-              <Text>Clear Draft</Text>
+                <Text style={{color: getContrastingTextColor('white')}}>Clear Draft</Text>
             </Pressable>
           </View>
       </View>

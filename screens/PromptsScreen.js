@@ -14,6 +14,7 @@ import EvilIcons from '@react-native-vector-icons/evil-icons';
 import AntDesign from '@react-native-vector-icons/ant-design';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import { saveRegistrationProgress } from '../utils/registrationUtils';
+import { getContrastingTextColor } from '../utils/colorUtils';
 import BackHeader from '../components/BackHeader';
 
 const PromptsScreen = () => {
@@ -67,9 +68,9 @@ const PromptsScreen = () => {
         <Text
           style={{
             fontSize: 25,
-            fontWeight: 'bold',
-  fontWeight: '700',
+            fontWeight: '700',
             marginTop: 15,
+            color: getContrastingTextColor('white'),
           }}>
           Write your profile answers
         </Text>
@@ -98,6 +99,7 @@ const PromptsScreen = () => {
                       fontStyle: 'italic',
                       fontSize: 15,
                       textAlign: 'center',
+                      color: getContrastingTextColor('white'),
                     }}>
                     {item?.question}
                   </Text>
@@ -108,6 +110,7 @@ const PromptsScreen = () => {
                       fontSize: 15,
                       marginTop: 3,
                       textAlign: 'center',
+                      color: getContrastingTextColor('white'),
                     }}>
                     {item?.answer}
                   </Text>
