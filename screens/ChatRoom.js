@@ -700,17 +700,18 @@ const truncate = (text, n = 60) => {
                   style={{
                     fontSize: 11,
                     color:' #F5f5f5',
+                    opacity: 0.6, 
                   }}>
                   {formatTime(item?.timestamp)}
                 </Text>
                 {item?.senderId == userId ? (
                   <>
                     {item?.readAt ? (
-                      <Ionicons name="checkmark-done-outline" size={14} color={colors.primaryAlt} />
+                      <Ionicons name="checkmark-done-outline" size={14} color="rgba(255,255,255,0.6)"/>
                     ) : item?.deliveredAt ? (
-                      <Ionicons name="checkmark-done-outline" size={14} color={colors.textMuted} />
+                      <Ionicons name="checkmark-done-outline" size={14} color="rgba(255,255,255,0.6)"/>
                     ) : (
-                      <Ionicons name="checkmark-outline" size={14} color={colors.textMuted} />
+                      <Ionicons name="checkmark-outline" size={14} color="rgba(255,255,255,0.6)"/>
                     )}
                   </>
                 ) : null}
