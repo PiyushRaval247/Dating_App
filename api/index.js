@@ -2400,6 +2400,51 @@ app.post('/register-device-token', authenticateToken, async (req, res) => {
   }
 });
 
+// Admin: send push notification to all users or selected users
+app.post('/admin/send-notification', authenticateAdmin, async (req, res) => {
+  try {
+    const { title, body, data = {}, userIds = null } = req.body || {};
+    if (!title || !body) {
+      return res.status(400).json({ message: 'Missing title or body' });
+    }
+
+    // If userIds provided (array), limit to those users; otherwise broadcast to all users with deviceToken
+    let scanParams = { TableName: 'usercollection', ProjectionExpression: 'userId, deviceToken' };
+    const resp = await docClient.send(new ScanCommand(scanParams));
+    const items = resp?.Items || [];
+
+    const filtered = Array.isArray(userIds) && userIds.length
+      ? items.filter(i => userIds.includes(i.userId) && i.deviceToken)
+      : items.filter(i => i.deviceToken);
+
+    const tokens = filtered.map(i => ({ userId: i.userId, token: i.deviceToken })).filter(Boolean);
+
+    if (!tokens.length) return res.status(200).json({ sent: 0, message: 'No device tokens found' });
+
+    // Send notifications in parallel but limit concurrency to avoid bursts
+    const concurrency = 20;
+    const results = [];
+    for (let i = 0; i < tokens.length; i += concurrency) {
+      const batch = tokens.slice(i, i + concurrency);
+      const promises = batch.map(t => sendPushNotification(t.token, title, body, { ...data, toUserId: t.userId }).then(() => ({ userId: t.userId, ok: true })).catch(err => ({ userId: t.userId, ok: false, error: err?.message || err })));
+      // eslint-disable-next-line no-await-in-loop
+      const settled = await Promise.allSettled(promises);
+      settled.forEach(s => {
+        if (s.status === 'fulfilled') results.push(s.value);
+        else results.push({ ok: false, error: s.reason?.message || s.reason });
+      });
+    }
+
+    const successCount = results.filter(r => r && r.ok).length;
+    const failed = results.filter(r => !r || !r.ok).map(r => ({ userId: r?.userId, error: r?.error }));
+
+    return res.status(200).json({ sent: successCount, failedCount: failed.length, failed });
+  } catch (error) {
+    console.log('Admin send notification error', error?.message || error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 app.post('/subscribe', authenticateToken, async (req, res) => {
   const {userId, plan, type} = req.body;
 

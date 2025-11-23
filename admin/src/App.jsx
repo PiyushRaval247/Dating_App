@@ -4,6 +4,7 @@ import ReportedUsers from './pages/ReportedUsers.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import Payments from './pages/Payments.jsx'
 import Subscriptions from './pages/Subscriptions.jsx'
+import Notifications from './pages/Notifications.jsx'
 
 export default function App() {
   const [token, setToken] = useState('')
@@ -194,6 +195,13 @@ export default function App() {
             Subscriptions
           </button>
           <button
+            className={`flex items-center gap-2 w-full text-left rounded-md px-3 py-2 transition ${activePage === 'notifications' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium ring-1 ring-indigo-200 dark:ring-indigo-800' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
+            onClick={() => { setActivePage('notifications'); setMobileNavOpen(false) }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-indigo-600"><path d="M12 22c1.1 0 2-.9 2-2H10c0 1.1.9 2 2 2zm6-6V10c0-3.07-1.63-5.64-4.5-6.32V3a1.5 1.5 0 10-3 0v.68C7.63 4.36 6 6.92 6 10v6l-2 2v1h16v-1l-2-2z" fill="currentColor"/></svg>
+            Notifications
+          </button>
+          <button
             className={`flex items-center gap-2 w-full text-left rounded-md px-3 py-2 transition ${activePage === 'reported' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium ring-1 ring-indigo-200 dark:ring-indigo-800' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200'}`}
             onClick={() => { setActivePage('reported'); setMobileNavOpen(false) }}
           >
@@ -230,6 +238,15 @@ export default function App() {
               <p className="text-sm text-gray-600 dark:text-gray-300">Search, filter, and review subscriptions.</p>
             </div>
             <Subscriptions />
+          </>
+        )}
+        {activePage === 'notifications' && (
+          <>
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Compose and broadcast push notifications to users.</p>
+            </div>
+            <Notifications />
           </>
         )}
         {activePage === 'reported' && (
