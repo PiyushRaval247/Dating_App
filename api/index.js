@@ -1620,12 +1620,9 @@ io.on('connection', socket => {
   });
 });
 
-// Helper to load FCM server key from env or optional file
 function getFcmServerKey() {
   try {
     if (process.env.FCM_SERVER_KEY) return process.env.FCM_SERVER_KEY;
-    const fs = require('fs');
-    const path = require('path');
     const p = path.join(__dirname, 'fcm-server-key.txt');
     if (fs.existsSync(p)) {
       const raw = fs.readFileSync(p, 'utf8');
@@ -1635,57 +1632,108 @@ function getFcmServerKey() {
   return '';
 }
 
-// FCM push notification helper (legacy API key)
-const sendPushNotification = async (deviceToken, title, body, data = {}) => {
+function getServiceAccount() {
   try {
-    const serverKey = getFcmServerKey();
-    if (!serverKey || !deviceToken) return;
-    await axios.post(
-      'https://fcm.googleapis.com/fcm/send',
-      {
-        to: deviceToken,
-        notification: {title, body},
-        data,
-        priority: 'high',
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `key=${serverKey}`,
-        },
-      },
-    );
-  } catch (error) {
-    console.log('FCM send error', error?.response?.data || error?.message || error);
+    const fp = path.join(__dirname, 'firebase-service-account.json');
+    if (!fs.existsSync(fp)) return null;
+    const raw = fs.readFileSync(fp, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    try {
+      const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON || '';
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return null;
   }
-};
+}
 
-// Send to topic 'all' (broadcast) using legacy FCM API
-const sendTopicNotification = async (title, body, data = {}) => {
+async function getFcmAccessToken() {
   try {
+    const sa = getServiceAccount();
+    if (!sa?.private_key || !sa?.client_email || !sa?.token_uri) return '';
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      iss: sa.client_email,
+      scope: 'https://www.googleapis.com/auth/firebase.messaging',
+      aud: sa.token_uri,
+      iat: now,
+      exp: now + 3600,
+    };
+    const assertion = jwt.sign(payload, sa.private_key, { algorithm: 'RS256' });
+    const body = new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion,
+    }).toString();
+    const resp = await axios.post(sa.token_uri, body, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+    return resp?.data?.access_token || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+async function sendPushNotification(deviceToken, title, body, data = {}) {
+  try {
+    const sa = getServiceAccount();
+    const access = await getFcmAccessToken();
+    if (sa?.project_id && access && deviceToken) {
+      const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+      const resp = await axios.post(
+        url,
+        { message: { token: deviceToken, notification: { title, body }, data, android: { priority: 'high' } } },
+        { headers: { Authorization: `Bearer ${access}` } },
+      );
+      return resp?.status >= 200 && resp?.status < 300;
+    }
     const serverKey = getFcmServerKey();
-    if (!serverKey) return;
-    await axios.post(
-      'https://fcm.googleapis.com/fcm/send',
-      {
-        to: '/topics/all',
-        notification: { title, body },
-        data,
-        priority: 'high',
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `key=${serverKey}`,
-        },
-      },
-    );
-    return true;
+    if (serverKey && deviceToken) {
+      await axios.post(
+        'https://fcm.googleapis.com/fcm/send',
+        { to: deviceToken, notification: { title, body }, data, priority: 'high' },
+        { headers: { 'Content-Type': 'application/json', Authorization: `key=${serverKey}` } },
+      );
+      return true;
+    }
+    return false;
   } catch (error) {
-    console.log('FCM topic send error', error?.response?.data || error?.message || error);
     return false;
   }
-};
+}
+
+// Send to topic 'all' (broadcast) using legacy FCM API
+async function sendTopicNotification(title, body, data = {}) {
+  try {
+    const sa = getServiceAccount();
+    const access = await getFcmAccessToken();
+    if (sa?.project_id && access) {
+      const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
+      const resp = await axios.post(
+        url,
+        { message: { topic: 'all', notification: { title, body }, data, android: { priority: 'high' } } },
+        { headers: { Authorization: `Bearer ${access}` } },
+      );
+      const code = resp?.status || 0;
+      if (code >= 200 && code < 300) return { ok: true };
+      return { ok: false, error: `HTTP ${code}` };
+    }
+    const serverKey = getFcmServerKey();
+    if (serverKey) {
+      const resp = await axios.post(
+        'https://fcm.googleapis.com/fcm/send',
+        { to: '/topics/all', notification: { title, body }, data, priority: 'high' },
+        { headers: { 'Content-Type': 'application/json', Authorization: `key=${serverKey}` } },
+      );
+      const code = resp?.status || 0;
+      if (code >= 200 && code < 300) return { ok: true };
+      return { ok: false, error: `HTTP ${code}` };
+    }
+    return { ok: false, error: 'FCM not configured' };
+  } catch (error) {
+    const err = error?.response?.data || error?.message || String(error);
+    return { ok: false, error: err };
+  }
+}
 
 // Presence API: returns online state and lastSeen
 app.get('/presence', async (req, res) => {
@@ -1715,6 +1763,17 @@ app.get('/debug/device-token-count', async (req, res) => {
   } catch (error) {
     console.log('Debug token count error', error?.message || error);
     return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Debug: FCM configuration status
+app.get('/debug/fcm-status', async (req, res) => {
+  try {
+    const key = getFcmServerKey();
+    const configured = !!key && key.length > 20;
+    return res.status(200).json({ configured, length: (key || '').length });
+  } catch (e) {
+    return res.status(200).json({ configured: false, error: e?.message || String(e) });
   }
 });
 
@@ -2502,8 +2561,11 @@ app.post('/admin/send-notification', authenticateAdmin, async (req, res) => {
     }
     // Broadcast to topic when no specific userIds were provided
     if (!Array.isArray(userIds) || !userIds.length) {
-      const ok = await sendTopicNotification(title, body, data);
-      return res.status(200).json({ sent: ok ? 'topic' : 0, topic: 'all', message: ok ? 'Broadcast via FCM topic' : 'Failed to broadcast via topic' });
+      const { ok, error } = await sendTopicNotification(title, body, data);
+      if (ok) {
+        return res.status(200).json({ sent: 'topic', topic: 'all', message: 'Broadcast via FCM topic' });
+      }
+      return res.status(500).json({ sent: 0, topic: 'all', message: 'Failed to broadcast via topic', reason: error });
     }
 
     // Send notifications in parallel but limit concurrency to avoid bursts
