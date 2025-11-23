@@ -31,7 +31,7 @@ const PrimaryButton = ({ title, onPress, disabled, style, textStyle, iconName, v
           <Ionicons name={iconName} size={18} color={isOutline ? '#fff' : '#fff'} style={{ marginRight: 8 }} />
         )}
         <Text style={[{
-          color: 'white',
+          color: colors.white,
           fontSize: 16,
           fontWeight: '700',
         }, textStyle]}>{title}</Text>

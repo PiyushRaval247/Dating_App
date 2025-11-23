@@ -209,7 +209,7 @@ const LoginScreen = () => {
               <Ionicons name="heart" size={34} color="#fff" />
             </Animated.View>
           </View>
-          <Text style={{ marginTop: 12, textAlign: 'center', fontSize: 24, fontWeight: '700', color: 'white' }}>SouleMate</Text>
+          <Text style={{ marginTop: 12, textAlign: 'center', fontSize: 24, fontWeight: '700', color: colors.white }}>SouleMate</Text>
           <Text style={{ marginTop: 4, textAlign: 'center', fontSize: 13, color: '#F0E6F5' }}>Find meaningful connections</Text>
         </View>
       </View>

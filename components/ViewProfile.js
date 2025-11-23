@@ -47,7 +47,7 @@ const ViewProfile = ({userInfo}) => {
                     paddingVertical: 4,
                     borderRadius: 20,
                   }}>
-                  <Text style={{textAlign: 'center', color: 'white'}}>
+                  <Text style={{textAlign: 'center', color: colors.white}}>
                     new here
                   </Text>
                 </View>
@@ -69,7 +69,7 @@ const ViewProfile = ({userInfo}) => {
 
             <View
               style={{
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
                 padding: 10,
                 borderRadius: 8,
               }}>
@@ -261,7 +261,7 @@ const ViewProfile = ({userInfo}) => {
                 <React.Fragment key={prompt?.id ?? String(index)}>
                   <View
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: colors.card,
                       padding: 12,
                       borderRadius: 10,
                       height: 150,
@@ -297,7 +297,7 @@ const ViewProfile = ({userInfo}) => {
                   <View
                     key={prompt.id}
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: colors.card,
                       padding: 12,
                       borderRadius: 10,
                       height: 150,
@@ -334,7 +334,7 @@ const ViewProfile = ({userInfo}) => {
                   <View
                     key={prompt.id}
                     style={{
-                      backgroundColor: 'white',
+                      backgroundColor: colors.card,
                       padding: 12,
                       borderRadius: 10,
                       height: 150,

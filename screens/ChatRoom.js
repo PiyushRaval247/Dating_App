@@ -942,7 +942,7 @@ const truncate = (text, n = 60) => {
               }}
               style={{ backgroundColor: colors.primary, paddingVertical: 8, borderRadius: 20, paddingHorizontal: 12 }}
             >
-              <Text style={{ color: 'white' }}>Send Image</Text>
+              <Text style={{ color: colors.white }}>Send Image</Text>
             </Pressable>
           </View>
         </View>
@@ -1061,7 +1061,7 @@ const truncate = (text, n = 60) => {
             borderRadius: 20,
             paddingHorizontal: 12,
           }}>
-          <Text style={{textAlign: 'center', color: 'white'}}>{isBlocked || blockedByPeer ? 'Blocked' : 'Send'}</Text>
+          <Text style={{textAlign: 'center', color: colors.white}}>{isBlocked || blockedByPeer ? 'Blocked' : 'Send'}</Text>
         </Pressable>
       </View>
 

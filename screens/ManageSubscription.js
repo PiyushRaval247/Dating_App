@@ -70,7 +70,7 @@ const ManageSubscription = ({ navigation }) => {
             ) : (
               <>
                 <Pressable onPress={() => onUpgrade('soulemateX')} style={{ marginTop: 8, padding: 12, borderRadius: 10, backgroundColor: '#9f4ec2' }}>
-                  <Text style={{ color: 'white', fontWeight: '700' }}>Upgrade to SouleMateX</Text>
+                  <Text style={{ color: colors.white, fontWeight: '700' }}>Upgrade to SouleMateX</Text>
                 </Pressable>
 
                 <Pressable onPress={() => onUpgrade('soulemateplus')} style={{ marginTop: 12, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>

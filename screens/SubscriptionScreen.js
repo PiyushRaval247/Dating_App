@@ -4,6 +4,7 @@ import { useRoute } from '@react-navigation/native';
 import {TabBar, TabView} from 'react-native-tab-view';
 import SouleMatePlus from './SouleMatePlus';
 import SouleMateX from './SouleMateX';
+import { colors } from '../utils/theme';
 import BackHeader from '../components/BackHeader';
 
 const SubscriptionScreen = () => {
@@ -38,13 +39,13 @@ const SubscriptionScreen = () => {
             <TabBar
               {...props}
               indicatorStyle={{
-                backgroundColor: index === 1 ? 'white' : '#9f4ec2',
+                backgroundColor: index === 1 ? colors.white : '#9f4ec2',
               }}
               style={{
                 backgroundColor: index === 1 ? '#181818' : '#F8F8F8',
               }}
               labelStyle={{fontWeight: 'bold', fontSize: 16}}
-              activeColor={index === 1 ? 'white' : '#9f4ec2'}
+              activeColor={index === 1 ? colors.white : '#9f4ec2'}
               inactiveColor={index === 1 ? '#C0C0C0' : '#202020'}
             />
           )}

@@ -18,6 +18,7 @@ import {BASE_URL} from '../urls/url';
 import LottieView from 'lottie-react-native';
 import {AuthContext} from '../AuthContext';
 import { getContrastingTextColor } from '../utils/colorUtils';
+import { colors } from '../utils/theme';
 import {extractNumber} from '../utils/dynamoUtils';
 import BackHeader from '../components/BackHeader';
 
@@ -183,19 +184,19 @@ const SendLikeScreen = () => {
             marginBottom: 'auto',
             marginHorizontal: 25,
           }}>
-          <Text style={{fontSize: 22, fontWeight: 'bold', color: getContrastingTextColor('rgba(240,240,240,1)')}}>
+          <Text style={{fontSize: 22, fontWeight: 'bold', color: colors.text}}>
             {route?.params?.name}
           </Text>
 
           {route?.params?.type == 'image' ? (
             <View
-              style={{
+                style={{
                 width: '100%',
                 height: 350,
                 borderRadius: 10,
                 marginTop: 20,
                 overflow: 'hidden',
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
               }}>
               {profile && (
                 <Image
@@ -231,9 +232,9 @@ const SendLikeScreen = () => {
               )}
             </View>
           ) : (
-            <View
-              style={{
-                backgroundColor: 'white',
+              <View
+                style={{
+                backgroundColor: colors.card,
                 padding: 20,
                 borderRadius: 10,
                 shadowColor: '#000',
@@ -257,7 +258,7 @@ const SendLikeScreen = () => {
               </Text>
               <Text
                 numberOfLines={3}
-                style={{fontSize: 22, fontWeight: 'bold', textAlign: 'left', color: getContrastingTextColor('white')}}>
+                style={{fontSize: 22, fontWeight: 'bold', textAlign: 'left', color: colors.text}}>
                 {route?.params?.prompt?.answer}
               </Text>
             </View>
@@ -269,7 +270,7 @@ const SendLikeScreen = () => {
             onChangeText={text => setComment(text)}
             style={{
               padding: 15,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               borderRadius: 8,
               marginTop: 14,
               fontSize: comment ? 17 : 17,

@@ -407,7 +407,7 @@ const PhotoScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <ScrollView
         contentContainerStyle={{
@@ -624,7 +624,7 @@ const PhotoScreen = () => {
                     alignItems: 'center',
                     marginTop: 10,
                   }}>
-                  <Text style={{color: 'white', fontSize: 14, fontWeight: '500'}}>
+                  <Text style={{color: colors.white, fontSize: 14, fontWeight: '500'}}>
                     Add from URL
                   </Text>
                 </TouchableOpacity>
@@ -655,7 +655,7 @@ const PhotoScreen = () => {
                       alignItems: 'center',
                       flex: 1,
                     }}>
-                    <Text style={{color: 'white', fontSize: 14, fontWeight: '500'}}>
+                    <Text style={{color: colors.white, fontSize: 14, fontWeight: '500'}}>
                       📷 Camera
                     </Text>
                   </TouchableOpacity>
@@ -678,7 +678,7 @@ const PhotoScreen = () => {
                       alignItems: 'center',
                       flex: 1,
                     }}>
-                    <Text style={{color: 'white', fontSize: 14, fontWeight: '500'}}>
+                    <Text style={{color: colors.white, fontSize: 14, fontWeight: '500'}}>
                       🖼️ Gallery
                     </Text>
                   </TouchableOpacity>
@@ -694,7 +694,7 @@ const PhotoScreen = () => {
                     alignItems: 'center',
                     marginTop: 10,
                   }}>
-                  <Text style={{color: 'white', fontSize: 12}}>
+                  <Text style={{color: colors.white, fontSize: 12}}>
                     ⚙️ Having permission issues? Open Settings
                   </Text>
                 </TouchableOpacity>

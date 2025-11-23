@@ -8,6 +8,7 @@ import {
   Pressable,
 } from 'react-native';
 import React, {useState} from 'react';
+import { colors } from '../utils/theme';
 import {useNavigation, useRoute} from '@react-navigation/native';
 import BackHeader from '../components/BackHeader';
 
@@ -241,7 +242,7 @@ const ShowPromptsScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <BackHeader title="Select a Prompt" />
       <ScrollView>
@@ -273,16 +274,16 @@ const ShowPromptsScreen = () => {
                 <Pressable
                   onPress={() => setOption(item?.name)}
                   style={{
-                    padding: 12,
-                    borderRadius: 20,
-                    backgroundColor: option == item?.name ? '#581845' : 'white',
-                  }}>
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      color: option == item?.name ? 'white' : 'black',
-                      fontSize: 13,
+                      padding: 12,
+                      borderRadius: 20,
+                      backgroundColor: option == item?.name ? colors.primary : colors.card,
                     }}>
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        color: option == item?.name ? colors.onPrimary : colors.text,
+                        fontSize: 13,
+                      }}>
                     {item?.name}
                   </Text>
                 </Pressable>

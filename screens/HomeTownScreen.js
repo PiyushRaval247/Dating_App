@@ -17,6 +17,7 @@ import MaterialDesignIcons from '@react-native-vector-icons/material-design-icon
 import { useNavigation } from '@react-navigation/native';
 import { getRegistrationProgress, saveRegistrationProgress } from '../utils/registrationUtils';
 
+import { colors } from '../utils/theme';
 const HomeTownScreen = () => {
   const [hometown, setHomeTown] = useState('');
   const navigation = useNavigation();
@@ -38,7 +39,7 @@ const HomeTownScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0} style={{flex: 1}}>
       <ScrollView contentContainerStyle={{flexGrow: 1}} keyboardShouldPersistTaps="handled">

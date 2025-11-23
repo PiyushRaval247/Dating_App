@@ -72,7 +72,7 @@ const IncomingCallBanner = () => {
     <>
       {/* Top banner (non-blocking) */}
       <SafeAreaView style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10000 }} pointerEvents="box-none">
-        <View style={{ marginTop: 6, marginHorizontal: 10, backgroundColor: 'white', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, elevation: 12 }}>
+        <View style={{ marginTop: 6, marginHorizontal: 10, backgroundColor: colors.card, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#ddd', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 8, elevation: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden', backgroundColor: '#eee', marginRight: 10 }}>
               {(() => {
@@ -97,7 +97,7 @@ const IncomingCallBanner = () => {
               <Text style={{ color: colors.text }}>Reject</Text>
             </Pressable>
             <Pressable onPress={accept} style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: '#25D366', borderRadius: 8 }}>
-              <Text style={{ color: 'white' }}>Accept</Text>
+              <Text style={{ color: colors.white }}>Accept</Text>
             </Pressable>
           </View>
         </View>
@@ -106,7 +106,7 @@ const IncomingCallBanner = () => {
       {/* Full-screen modal fallback to ensure visibility */}
       <Modal visible={!!incomingCall} transparent animationType="fade">
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ width: '86%', backgroundColor: 'white', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#ddd' }}>
+          <View style={{ width: '86%', backgroundColor: colors.card, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#ddd' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View style={{ width: 52, height: 52, borderRadius: 26, overflow: 'hidden', backgroundColor: '#eee', marginRight: 12 }}>
                 {(() => {
@@ -131,7 +131,7 @@ const IncomingCallBanner = () => {
                 <Text style={{ color: colors.text }}>Reject</Text>
               </Pressable>
               <Pressable onPress={accept} style={{ paddingVertical: 12, paddingHorizontal: 16, backgroundColor: '#25D366', borderRadius: 10 }}>
-                <Text style={{ color: 'white' }}>Accept</Text>
+                <Text style={{ color: colors.white }}>Accept</Text>
               </Pressable>
             </View>
           </View>

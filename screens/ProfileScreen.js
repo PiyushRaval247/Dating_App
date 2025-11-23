@@ -378,7 +378,7 @@ const ProfileScreen = () => {
           marginVertical: 12,
           padding: 14,
           borderRadius: 10,
-          backgroundColor: 'white',
+          backgroundColor: colors.card,
           borderColor: '#E0E0E0',
           borderWidth: 1,
           flexDirection: 'row',
@@ -410,7 +410,7 @@ const ProfileScreen = () => {
             borderRadius: 20,
             backgroundColor: '#800080',
           }}>
-          <Text style={{color: 'white', fontWeight: '600'}}>Try Boost</Text>
+          <Text style={{color: colors.white, fontWeight: '600'}}>Try Boost</Text>
         </Pressable>
       </View>
 
@@ -459,7 +459,7 @@ const ProfileScreen = () => {
             backgroundColor: colors.primary,
             alignSelf: 'center'
           }}>
-          <Text style={{color: 'white', fontWeight: '700'}}>Check In</Text>
+          <Text style={{color: colors.white, fontWeight: '700'}}>Check In</Text>
         </Pressable>
       </View>
 
@@ -472,7 +472,7 @@ const ProfileScreen = () => {
           borderWidth: 1,
           padding: 10,
           borderRadius: 10,
-          backgroundColor: 'white',
+          backgroundColor: colors.card,
         }}>
         <View
           style={{
@@ -514,7 +514,7 @@ const ProfileScreen = () => {
             borderColor: '#E0E0E0',
             padding: 10,
             borderRadius: 8,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}>
           <View
             style={{
@@ -551,7 +551,7 @@ const ProfileScreen = () => {
             borderColor: '#E0E0E0',
             padding: 10,
             borderRadius: 8,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}>
           <View
             style={{
@@ -581,7 +581,7 @@ const ProfileScreen = () => {
             borderColor: '#E0E0E0',
             padding: 10,
             borderRadius: 8,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             marginVertical: 20,
           }}>
           <View
@@ -622,7 +622,7 @@ const ProfileScreen = () => {
               gap: 10,
               borderColor: '#E0E0E0',
               borderWidth: 0.7,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               flex: 1,
             }}>
             <MaterialDesignIcons name="phone-outline" size={22} color="black" />
@@ -640,7 +640,7 @@ const ProfileScreen = () => {
               gap: 10,
               borderColor: '#E0E0E0',
               borderWidth: 0.7,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               flex: 1,
             }}>
             <MaterialDesignIcons name="help-box" size={22} color="black" />
@@ -655,7 +655,7 @@ const ProfileScreen = () => {
             alignItems: 'center',
             flexDirection: 'column',
             gap: 15,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             borderColor: '#E0E0E0',
             borderWidth: 0.7,
             borderRadius: 8,
@@ -692,7 +692,7 @@ const ProfileScreen = () => {
                 marginTop: 16,
                 padding: 14,
                 borderRadius: 8,
-                backgroundColor: 'white',
+                backgroundColor: colors.card,
                 borderColor: '#E0E0E0',
                 borderWidth: 0.8,
                 flexDirection: 'row',
@@ -725,7 +725,7 @@ const ProfileScreen = () => {
               borderWidth: 1,
               padding: 12,
               borderRadius: 8,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
             }}>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
               <Ionicons name="medal-outline" size={22} color={planDisplay.border} />
@@ -780,7 +780,7 @@ const ProfileScreen = () => {
               flex: 1,
               padding: 12,
               borderRadius: 8,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               borderColor: '#E0E0E0',
               borderWidth: 0.7,
               alignItems: 'center',
@@ -799,7 +799,7 @@ const ProfileScreen = () => {
               flex: 1,
               padding: 12,
               borderRadius: 8,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               borderColor: '#E0E0E0',
               borderWidth: 0.7,
               alignItems: 'center',
@@ -823,7 +823,7 @@ const ProfileScreen = () => {
               flex: 1,
               padding: 12,
               borderRadius: 8,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               borderColor: '#E0E0E0',
               borderWidth: 0.7,
               alignItems: 'center',
@@ -840,7 +840,7 @@ const ProfileScreen = () => {
           marginVertical: 12,
           padding: 12,
           borderRadius: 8,
-          backgroundColor: 'white',
+          backgroundColor: colors.card,
           borderColor: '#E0E0E0',
           borderWidth: 1,
         }}>
@@ -910,7 +910,7 @@ const ProfileScreen = () => {
             borderWidth: 1,
             padding: 10,
             borderRadius: 8,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}>
           <View
             style={{
@@ -940,7 +940,7 @@ const ProfileScreen = () => {
             borderWidth: 1,
             padding: 10,
             borderRadius: 8,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
           }}>
           <View
             style={{
@@ -973,7 +973,7 @@ const ProfileScreen = () => {
             alignItems: 'center',
             flexDirection: 'column',
             gap: 15,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             borderColor: '#E0E0E0',
             borderWidth: 0.7,
             borderRadius: 7,
@@ -1103,7 +1103,7 @@ const ProfileScreen = () => {
             paddingHorizontal: 12,
             paddingVertical: 6,
             borderRadius: 16,
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             borderColor: '#E0E0E0',
             borderWidth: 1,
           }}>
@@ -1123,7 +1123,7 @@ const ProfileScreen = () => {
               marginTop: 12,
               padding: 12,
               borderRadius: 10,
-              backgroundColor: 'white',
+              backgroundColor: colors.card,
               borderColor: '#E0E0E0',
               borderWidth: 1,
               width: '85%',
@@ -1149,7 +1149,7 @@ const ProfileScreen = () => {
               <Pressable
                 onPress={() => navigation.navigate('EditProfile', {userInfo})}
                 style={{marginTop: 4, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#662d91'}}>
-                <Text style={{color: 'white', fontWeight: '600'}}>Update Profile</Text>
+                <Text style={{color: colors.white, fontWeight: '600'}}>Update Profile</Text>
               </Pressable>
             </View>
           );
@@ -1249,7 +1249,7 @@ const ProfileScreen = () => {
                       marginTop: 10,
                       width: 110,
                     }}>
-                    <Text style={{textAlign: 'center', color: 'white'}}>
+                    <Text style={{textAlign: 'center', color: colors.white}}>
                       Select
                     </Text>
                   </Pressable>

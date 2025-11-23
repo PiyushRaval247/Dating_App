@@ -14,6 +14,7 @@ import LottieView from 'lottie-react-native';
 import {useNavigation} from '@react-navigation/native';
 import Ionicons from '@react-native-vector-icons/ionicons';
 
+import { colors } from '../utils/theme';
 const BasicInfo = () => {
   const navigation = useNavigation();
   const screenWidth = Dimensions.get('window').width;
@@ -202,7 +203,7 @@ const BasicInfo = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       {/* Soft tint backdrop at top */}
       <View
@@ -350,7 +351,7 @@ const BasicInfo = () => {
         <Text
           style={{
             textAlign: 'center',
-            color: 'white',
+            color: colors.white,
             fontWeight: '600',
             fontSize: 15,
           }}>

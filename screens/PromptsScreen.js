@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import Ionicons from '@react-native-vector-icons/ionicons';
+import { colors } from '../utils/theme';
 import EvilIcons from '@react-native-vector-icons/evil-icons';
 import AntDesign from '@react-native-vector-icons/ant-design';
 import {useNavigation, useRoute} from '@react-navigation/native';
@@ -40,7 +41,7 @@ const PromptsScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <BackHeader title="Prompts" />
       <View style={{marginTop: 20, marginHorizontal: 20}}>
@@ -70,7 +71,7 @@ const PromptsScreen = () => {
             fontSize: 25,
             fontWeight: '700',
             marginTop: 15,
-            color: getContrastingTextColor('white'),
+            color: colors.text,
           }}>
           Write your profile answers
         </Text>
@@ -99,7 +100,7 @@ const PromptsScreen = () => {
                       fontStyle: 'italic',
                       fontSize: 15,
                       textAlign: 'center',
-                      color: getContrastingTextColor('white'),
+                      color: colors.text,
                     }}>
                     {item?.question}
                   </Text>
@@ -110,7 +111,7 @@ const PromptsScreen = () => {
                       fontSize: 15,
                       marginTop: 3,
                       textAlign: 'center',
-                      color: getContrastingTextColor('white'),
+                      color: colors.text,
                     }}>
                     {item?.answer}
                   </Text>

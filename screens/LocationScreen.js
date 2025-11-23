@@ -18,6 +18,7 @@ import {useNavigation} from '@react-navigation/native';
 import { saveRegistrationProgress } from '../utils/registrationUtils';
 import NextButton from '../components/NextButton';
 
+import { colors } from '../utils/theme';
 const LocationScreen = () => {
   const [region, setRegion] = useState(null);
   const navigation = useNavigation();
@@ -114,7 +115,7 @@ const LocationScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       {/* Top-right Next button overlay for map page */}
       <NextButton onPress={handleNext} placement="top-right" />
@@ -172,7 +173,7 @@ const LocationScreen = () => {
             textAlign: 'center',
             fontSize: 14,
             fontWeight: '500',
-            color: 'white',
+            color: colors.white,
           }}
         >
           {location || 'Fetching location...'}

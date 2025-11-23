@@ -401,7 +401,7 @@ const HomeScreen = () => {
                         paddingVertical: 4,
                         borderRadius: 20,
                       }}>
-                      <Text style={{textAlign: 'center', color: 'white'}}>
+                      <Text style={{textAlign: 'center', color: colors.white}}>
                         new here
                       </Text>
                     </View>
@@ -455,7 +455,7 @@ const HomeScreen = () => {
                               paddingVertical: 4,
                               borderRadius: 20,
                             }}>
-                            <Text style={{color: 'white', fontSize: 12}}>new here</Text>
+                            <Text style={{color: colors.white, fontSize: 12}}>new here</Text>
                           </View>
                         </View>
                         <View style={{flexDirection: 'row', alignItems: 'center', gap: 8}}>
@@ -510,7 +510,7 @@ const HomeScreen = () => {
                           position: 'absolute',
                           bottom: 12,
                           right: 12,
-                          backgroundColor: 'white',
+                          backgroundColor: colors.card,
                           width: 50,
                           height: 50,
                           borderRadius: 25,
@@ -664,7 +664,7 @@ const HomeScreen = () => {
           position: 'absolute',
           bottom: 15,
           left: 12,
-          backgroundColor: 'white',
+          backgroundColor: colors.card,
           width: 60,
           height: 60,
           borderRadius: 30,

@@ -87,7 +87,7 @@ const OtpScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
         alignItems: 'center',
       }}>
       <View

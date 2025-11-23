@@ -83,7 +83,7 @@ const DateOfBirthScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <View style={{marginTop: 80, marginHorizontal: 20}}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>

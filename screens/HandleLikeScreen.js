@@ -18,6 +18,7 @@ import {BASE_URL} from '../urls/url';
 import ImageCarousel from '../components/ImageCarousel';
 import { useNotification } from '../context/NotificationContext';
 
+import { colors } from '../utils/theme';
 const HandleLikeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -73,7 +74,7 @@ const HandleLikeScreen = () => {
   };
   return (
     <>
-      <ScrollView style={{flex: 1, backgroundColor: 'white'}}>
+      <ScrollView style={{flex: 1, backgroundColor: colors.card}}>
         {/* Header */}
         <View
           style={{
@@ -161,7 +162,7 @@ const HandleLikeScreen = () => {
                   paddingVertical: 3,
                   borderRadius: 14,
                 }}>
-                <Text style={{textAlign: 'center', color: 'white'}}>
+                <Text style={{textAlign: 'center', color: colors.white}}>
                   new here
                 </Text>
               </View>
@@ -178,7 +179,7 @@ const HandleLikeScreen = () => {
                     position: 'absolute',
                     top: 28,
                     right: 0,
-                    backgroundColor: 'white',
+                    backgroundColor: colors.card,
                     borderRadius: 8,
                     borderWidth: 1,
                     borderColor: '#E0E0E0',
@@ -218,7 +219,7 @@ const HandleLikeScreen = () => {
                 <View
                   key={prompt?.id ?? String(prompt?.question ?? '0')}
                   style={{
-                    backgroundColor: 'white',
+                    backgroundColor: colors.card,
                     padding: 12,
                     borderRadius: 10,
                     minHeight: 120,
@@ -248,7 +249,7 @@ const HandleLikeScreen = () => {
                 <View
                   key={prompt?.id ?? String(prompt?.question ?? '1')}
                   style={{
-                    backgroundColor: 'white',
+                    backgroundColor: colors.card,
                     padding: 12,
                     borderRadius: 10,
                     minHeight: 120,
@@ -276,7 +277,7 @@ const HandleLikeScreen = () => {
                 <View
                   key={prompt?.id ?? String(prompt?.question ?? '2')}
                   style={{
-                    backgroundColor: 'white',
+                    backgroundColor: colors.card,
                     padding: 12,
                     borderRadius: 10,
                     minHeight: 120,
@@ -315,7 +316,7 @@ const HandleLikeScreen = () => {
         <Pressable
           onPress={match}
           style={{
-            backgroundColor: 'white',
+            backgroundColor: colors.card,
             width: 64,
             height: 64,
             borderRadius: 32,

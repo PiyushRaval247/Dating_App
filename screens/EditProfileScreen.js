@@ -7,6 +7,7 @@ import { BASE_URL } from '../urls/url';
 import { AuthContext } from '../AuthContext';
 import { launchImageLibrary } from 'react-native-image-picker';
 
+import { colors } from '../utils/theme';
 const EditProfileScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
@@ -105,7 +106,7 @@ const EditProfileScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{flex:1, backgroundColor:'white'}}>
+    <SafeAreaView style={{flex:1, backgroundColor: colors.card}}>
       <BackHeader title="Edit Profile" />
       <ScrollView style={{padding: 16}}>
         <Text style={{fontSize: 18, fontWeight: '600', marginBottom: 12}}>Edit Profile</Text>
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 12,
-    backgroundColor: 'white',
+    backgroundColor: colors.card,
     borderRadius: 8,
     borderColor: '#E0E0E0',
     borderWidth: 0.6,
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    color: 'white',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },

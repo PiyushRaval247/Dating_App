@@ -134,7 +134,7 @@ const ChatScreen = () => {
       style={{marginTop: 0}}
       contentContainerStyle={{
         flexGrow: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
         justifyContent: matches?.length > 0 ? 'flex-start' : 'center',
       }}>
       <View>
@@ -197,7 +197,7 @@ const ChatScreen = () => {
                     textAlign: 'center',
                     fontWeight: '500',
                     fontSize: 15,
-                    color: 'white',
+                    color: colors.white,
                   }}>
                   Boost Your Profile
                 </Text>

@@ -4,6 +4,7 @@ import axios from 'axios';
 import { BASE_URL } from '../urls/url';
 import { AuthContext } from '../AuthContext';
 
+import { colors } from '../utils/theme';
 const BlockedUsersScreen = () => {
   const { userId } = useContext(AuthContext);
   const [blocked, setBlocked] = useState([]);
@@ -55,7 +56,7 @@ const BlockedUsersScreen = () => {
               <Text style={{ fontSize: 12, color: '#666' }}>{user?.location || ''}</Text>
             </View>
             <Pressable onPress={() => unblock(user?.userId)} style={{ backgroundColor: '#662d91', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 }}>
-              <Text style={{ color: 'white' }}>Unblock</Text>
+              <Text style={{ color: colors.white }}>Unblock</Text>
             </Pressable>
           </View>
         ))

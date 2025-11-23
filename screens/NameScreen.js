@@ -48,9 +48,9 @@ const NameScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
-      <Text style={{marginTop: 50, textAlign: 'center', color: getContrastingTextColor('white')}}>
+      <Text style={{marginTop: 50, textAlign: 'center', color: colors.text}}>
         NO BACKGROUND CHECKS ARE CONDUCTED
       </Text>
 
@@ -83,7 +83,7 @@ const NameScreen = () => {
             style={{
               fontSize: 25,
               fontWeight: '700',
-              color: getContrastingTextColor('white'),
+              color: colors.text,
             }}>
             What's your name?
           </Text>

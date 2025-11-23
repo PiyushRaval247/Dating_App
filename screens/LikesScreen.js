@@ -23,6 +23,7 @@ import {BASE_URL} from '../urls/url';
 import LottieView from 'lottie-react-native';
 import ImageCarousel from '../components/ImageCarousel';
 
+import { colors } from '../utils/theme';
 const LikesScreen = () => {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +88,7 @@ const LikesScreen = () => {
       style={{
         width: profileWidth,
         marginVertical: 10,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
         borderColor: '#E0E0E0',
         borderWidth: 0.5,
         borderRadius: 8,
@@ -212,7 +213,7 @@ const LikesScreen = () => {
             <Text
               style={{
                 textAlign: 'center',
-                color: 'white',
+                color: colors.white,
                 fontWeight: 'bold',
               }}>
               Boost
@@ -345,7 +346,7 @@ const LikesScreen = () => {
                 borderRadius: 18,
               }}>
               <Text
-                style={{textAlign: 'center', color: 'white', fontSize: 13}}>
+                style={{textAlign: 'center', color: colors.white, fontSize: 13}}>
           Get SouleMate +
               </Text>
             </Pressable>
@@ -365,7 +366,7 @@ const LikesScreen = () => {
                 transform: [{rotate: '-10deg'}],
                 zIndex: 2,
                 borderWidth: 2,
-                borderColor: 'white',
+                borderColor: colors.white,
               }}
             />
 
@@ -383,7 +384,7 @@ const LikesScreen = () => {
                 transform: [{rotate: '10deg'}],
                 zIndex: 1,
                 borderWidth: 2,
-                borderColor: 'white',
+                borderColor: colors.white,
               }}
             />
           </View>
@@ -392,7 +393,7 @@ const LikesScreen = () => {
     );
 
     return (
-      <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
+      <SafeAreaView style={{flex: 1, backgroundColor: colors.card}}>
         <FlatList
           data={likes?.slice(1)}
           renderItem={renderProfile}
@@ -412,7 +413,7 @@ const LikesScreen = () => {
 
   // Empty state (no ScrollView to avoid nesting VirtualizedList)
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: 'white'}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: colors.card}}>
       <View
         style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <Image
@@ -454,7 +455,7 @@ const LikesScreen = () => {
               textAlign: 'center',
               fontWeight: '500',
               fontSize: 15,
-              color: 'white',
+              color: colors.white,
             }}>
             Boost Your Profile
           </Text>

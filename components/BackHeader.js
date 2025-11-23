@@ -21,7 +21,7 @@ const BackHeader = ({title, right}) => {
         justifyContent: 'space-between',
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <Pressable onPress={onBack} style={{paddingRight: 6, paddingVertical: 4}}>
         <Ionicons name="chevron-back" size={24} color={colors.text} />

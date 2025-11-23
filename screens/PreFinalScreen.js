@@ -131,7 +131,7 @@ const PreFinalScreen = () => {
       style={{
         paddingTop: Platform.OS === 'android' ? 35 : 0,
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: colors.card,
       }}>
       <View style={{marginTop: 80}}>
         <Text
@@ -181,7 +181,7 @@ const PreFinalScreen = () => {
           <Text
             style={{
               textAlign: 'center',
-              color: 'white',
+              color: colors.white,
               fontWeight: '600',
               fontSize: 15,
             }}>
