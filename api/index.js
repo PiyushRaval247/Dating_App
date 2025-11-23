@@ -1673,6 +1673,24 @@ app.get('/presence', async (req, res) => {
   }
 });
 
+// Debug: count users with deviceToken stored
+app.get('/debug/device-token-count', async (req, res) => {
+  try {
+    const scanParams = {
+      TableName: 'usercollection',
+      ProjectionExpression: 'userId, deviceToken',
+    };
+    const result = await docClient.send(new ScanCommand(scanParams));
+    const items = result?.Items || [];
+    const withToken = items.filter(i => !!i.deviceToken);
+    const sample = withToken.slice(0, 10).map(i => i.userId);
+    return res.status(200).json({ count: withToken.length, sample });
+  } catch (error) {
+    console.log('Debug token count error', error?.message || error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 app.post('/sendMessage', async (req, res) => {
   try {
     const {senderId, receiverId, message, type, audioUrl, imageUrl} = req.body;
