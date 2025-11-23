@@ -71,6 +71,37 @@ const AuthProvider = ({children}) => {
       // ignore decode errors
     }
   }, [token]);
+
+  // Initialize notification handlers once on mount (defensive)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const notifications = await import('./utils/notifications');
+        if (notifications && notifications.initNotificationHandlers) {
+          notifications.initNotificationHandlers();
+        }
+      } catch (e) {
+        // ignore import errors
+      }
+    })();
+    return () => { mounted = false };
+  }, []);
+
+  // When token and userId are available, request permission and register device token with backend
+  useEffect(() => {
+    if (!token || !userId) return;
+    (async () => {
+      try {
+        const notifications = await import('./utils/notifications');
+        if (notifications && notifications.requestPermissionAndRegister) {
+          await notifications.requestPermissionAndRegister({ userId, authToken: token });
+        }
+      } catch (e) {
+        console.log('notifications registration error', e?.message || e);
+      }
+    })();
+  }, [token, userId]);
   return (
     <AuthContext.Provider
       value={{

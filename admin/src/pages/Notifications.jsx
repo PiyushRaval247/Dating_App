@@ -1,5 +1,6 @@
 import React, {useState} from 'react'
 import { notificationTemplates } from '../notificationsTemplates'
+import { BASE_URL } from '../config.js'
 
 export default function Notifications() {
   const [title, setTitle] = useState('')
@@ -28,7 +29,7 @@ export default function Notifications() {
     setSending(true)
     try {
       const token = localStorage.getItem('admin_token') || ''
-      const resp = await fetch('/admin/send-notification', {
+      const resp = await fetch(`${BASE_URL}/admin/send-notification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,6 +97,9 @@ export default function Notifications() {
         {result && result.ok && (
           <div className="p-3 rounded bg-green-50 border border-green-200 text-green-800">
             Sent: {result.json.sent} — failed: {result.json.failedCount}
+            {result.json.message && (
+              <div className="mt-1 text-xs text-gray-700">{result.json.message}</div>
+            )}
           </div>
         )}
         {result && !result.ok && (
