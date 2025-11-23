@@ -100,6 +100,9 @@ export default function Notifications() {
             {result.json.message && (
               <div className="mt-1 text-xs text-gray-700">{result.json.message}</div>
             )}
+            {typeof result.json.socketBroadcasted === 'number' && (
+              <div className="mt-1 text-xs text-gray-700">Online users notified: {result.json.socketBroadcasted}</div>
+            )}
           </div>
         )}
         {result && !result.ok && (

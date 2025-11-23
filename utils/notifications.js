@@ -14,6 +14,8 @@ export async function requestPermissionAndRegister({ userId, authToken }) {
   const messaging = requireSafe('@react-native-firebase/messaging')
   if (!messaging) return null
   try {
+    try { await messaging().setAutoInitEnabled(true) } catch {}
+    try { await messaging().registerDeviceForRemoteMessages() } catch {}
     const status = await messaging().requestPermission()
     const ok = status === messaging.AuthorizationStatus.AUTHORIZED || status === messaging.AuthorizationStatus.PROVISIONAL
     if (!ok) return null

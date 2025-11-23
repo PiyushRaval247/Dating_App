@@ -11,6 +11,10 @@ admin/dist/
 api/.env
 admin/.env
 admin/.env.local
+.env.local
+api/.env.local
+.runtimeconfig.json
+api/fcm-server-key.txt
 .DS_Store
 .vscode/
 *.log

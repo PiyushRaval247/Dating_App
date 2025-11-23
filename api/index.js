@@ -573,6 +573,25 @@ function authenticateAdmin(req, res, next) {
   });
 }
 
+// Optional authentication: if token present, verify; otherwise continue
+function authenticateOptional(req, res, next) {
+  try {
+    const authHeader = req.headers['authorization'];
+    if (authHeader) {
+      const token = authHeader.split(' ')[1];
+      const secretKey = process.env.JWT_SECRET || 'insecure_dev_secret';
+      jwt.verify(token, secretKey, (err, payload) => {
+        if (!err && payload) req.user = payload;
+        next();
+      });
+    } else {
+      next();
+    }
+  } catch {
+    next();
+  }
+}
+
 // Update profile fields (partial updates)
 app.patch('/user-info', authenticateToken, async (req, res) => {
   try {
@@ -1601,10 +1620,25 @@ io.on('connection', socket => {
   });
 });
 
+// Helper to load FCM server key from env or optional file
+function getFcmServerKey() {
+  try {
+    if (process.env.FCM_SERVER_KEY) return process.env.FCM_SERVER_KEY;
+    const fs = require('fs');
+    const path = require('path');
+    const p = path.join(__dirname, 'fcm-server-key.txt');
+    if (fs.existsSync(p)) {
+      const raw = fs.readFileSync(p, 'utf8');
+      return (raw || '').trim();
+    }
+  } catch {}
+  return '';
+}
+
 // FCM push notification helper (legacy API key)
 const sendPushNotification = async (deviceToken, title, body, data = {}) => {
   try {
-    const serverKey = process.env.FCM_SERVER_KEY;
+    const serverKey = getFcmServerKey();
     if (!serverKey || !deviceToken) return;
     await axios.post(
       'https://fcm.googleapis.com/fcm/send',
@@ -2379,11 +2413,14 @@ app.post('/upload-image', async (req, res) => {
 });
 
 // Store a device token for push notifications
-app.post('/register-device-token', authenticateToken, async (req, res) => {
+app.post('/register-device-token', authenticateOptional, async (req, res) => {
   try {
     const {userId, deviceToken} = req.body;
     if (!userId || !deviceToken) {
       return res.status(400).json({message: 'Missing userId or deviceToken'});
+    }
+    if (req.user && req.user.userId && req.user.userId !== userId) {
+      return res.status(403).json({ message: 'Unauthorized action' });
     }
     await docClient.send(
       new UpdateCommand({
