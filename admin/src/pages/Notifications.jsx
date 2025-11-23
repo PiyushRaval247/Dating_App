@@ -96,12 +96,23 @@ export default function Notifications() {
       <div className="mt-4">
         {result && result.ok && (
           <div className="p-3 rounded bg-green-50 border border-green-200 text-green-800">
-            Sent: {result.json.sent} — failed: {result.json.failedCount}
-            {result.json.message && (
-              <div className="mt-1 text-xs text-gray-700">{result.json.message}</div>
-            )}
-            {typeof result.json.socketBroadcasted === 'number' && (
-              <div className="mt-1 text-xs text-gray-700">Online users notified: {result.json.socketBroadcasted}</div>
+            {result.json.topic === 'all' ? (
+              <>
+                <div>Broadcasted to topic "all"</div>
+                {result.json.message && (
+                  <div className="mt-1 text-xs text-gray-700">{result.json.message}</div>
+                )}
+              </>
+            ) : (
+              <>
+                <div>Sent: {result.json.sent}{typeof result.json.failedCount === 'number' ? ` — failed: ${result.json.failedCount}` : ''}</div>
+                {result.json.message && (
+                  <div className="mt-1 text-xs text-gray-700">{result.json.message}</div>
+                )}
+                {typeof result.json.socketBroadcasted === 'number' && (
+                  <div className="mt-1 text-xs text-gray-700">Online users notified: {result.json.socketBroadcasted}</div>
+                )}
+              </>
             )}
           </div>
         )}

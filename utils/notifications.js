@@ -21,6 +21,7 @@ export async function requestPermissionAndRegister({ userId, authToken }) {
     if (!ok) return null
     const token = await messaging().getToken()
     if (!token) return null
+    try { await messaging().subscribeToTopic('all') } catch {}
     try {
       await fetch(`${BASE_URL}/register-device-token`, {
         method: 'POST',

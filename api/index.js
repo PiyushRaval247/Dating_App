@@ -1660,6 +1660,33 @@ const sendPushNotification = async (deviceToken, title, body, data = {}) => {
   }
 };
 
+// Send to topic 'all' (broadcast) using legacy FCM API
+const sendTopicNotification = async (title, body, data = {}) => {
+  try {
+    const serverKey = getFcmServerKey();
+    if (!serverKey) return;
+    await axios.post(
+      'https://fcm.googleapis.com/fcm/send',
+      {
+        to: '/topics/all',
+        notification: { title, body },
+        data,
+        priority: 'high',
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `key=${serverKey}`,
+        },
+      },
+    );
+    return true;
+  } catch (error) {
+    console.log('FCM topic send error', error?.response?.data || error?.message || error);
+    return false;
+  }
+};
+
 // Presence API: returns online state and lastSeen
 app.get('/presence', async (req, res) => {
   try {
@@ -2463,18 +2490,21 @@ app.post('/admin/send-notification', authenticateAdmin, async (req, res) => {
       return res.status(400).json({ message: 'Missing title or body' });
     }
 
-    // If userIds provided (array), limit to those users; otherwise broadcast to all users with deviceToken
-    let scanParams = { TableName: 'usercollection', ProjectionExpression: 'userId, deviceToken' };
-    const resp = await docClient.send(new ScanCommand(scanParams));
-    const items = resp?.Items || [];
-
-    const filtered = Array.isArray(userIds) && userIds.length
-      ? items.filter(i => userIds.includes(i.userId) && i.deviceToken)
-      : items.filter(i => i.deviceToken);
-
-    const tokens = filtered.map(i => ({ userId: i.userId, token: i.deviceToken })).filter(Boolean);
-
-    if (!tokens.length) return res.status(200).json({ sent: 0, message: 'No device tokens found' });
+    // If userIds provided (array), limit to those users; otherwise prefer topic broadcast
+    let tokens = [];
+    if (Array.isArray(userIds) && userIds.length) {
+      const resp = await docClient.send(new ScanCommand({ TableName: 'usercollection', ProjectionExpression: 'userId, deviceToken' }));
+      const items = resp?.Items || [];
+      tokens = items.filter(i => userIds.includes(i.userId) && i.deviceToken).map(i => ({ userId: i.userId, token: i.deviceToken }));
+      if (!tokens.length) {
+        return res.status(200).json({ sent: 0, message: 'No device tokens found for selected users' });
+      }
+    }
+    // Broadcast to topic when no specific userIds were provided
+    if (!Array.isArray(userIds) || !userIds.length) {
+      const ok = await sendTopicNotification(title, body, data);
+      return res.status(200).json({ sent: ok ? 'topic' : 0, topic: 'all', message: ok ? 'Broadcast via FCM topic' : 'Failed to broadcast via topic' });
+    }
 
     // Send notifications in parallel but limit concurrency to avoid bursts
     const concurrency = 20;
