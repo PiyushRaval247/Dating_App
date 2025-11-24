@@ -101,7 +101,36 @@ const PreFinalScreen = () => {
   const registerUser = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`${BASE_URL}/register`, userData);
+      const imgs = Array.isArray(userData?.imageUrls) ? userData.imageUrls : [];
+      const toUpload = imgs.filter(u => typeof u === 'string' && /base64,/.test(u));
+      const uploaded = await Promise.all(
+        toUpload.map(async (dataUrl) => {
+          try {
+            const match = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+            const ext = (match && match[1] && match[1].includes('png')) ? 'png' : 'jpg';
+            const base64 = match ? match[2] : '';
+            if (!base64) return null;
+            const resp = await axios.post(`${BASE_URL}/upload-image`, { imageBase64: base64, ext });
+            const url = resp?.data?.url;
+            if (typeof url === 'string' && url.startsWith('/')) return `${BASE_URL}${url}`;
+            return typeof url === 'string' ? url : null;
+          } catch (e) {
+            return null;
+          }
+        })
+      );
+      const uploadedMap = new Map();
+      toUpload.forEach((k, i) => uploadedMap.set(k, uploaded[i]));
+      const normalized = imgs.map((u) => {
+        if (typeof u !== 'string' || !u.trim()) return null;
+        if (/^https?:\/\//i.test(u)) return u;
+        if (u.startsWith('/uploads/')) return `${BASE_URL}${u}`;
+        if (/base64,/.test(u)) return uploadedMap.get(u) || null;
+        return null;
+      }).filter(Boolean);
+
+      const payload = { ...userData, imageUrls: normalized };
+      const response = await axios.post(`${BASE_URL}/register`, payload);
       
       console.log('Response', response);
       const token = response?.data?.token;

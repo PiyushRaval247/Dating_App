@@ -37,9 +37,12 @@ export default function Notifications() {
         },
         body: JSON.stringify({ title, body, data: dataObj, userIds: userIds.length ? userIds : null }),
       })
-      const json = await resp.json()
-      if (!resp.ok) throw new Error(json?.message || 'Request failed')
-      setResult({ ok: true, json })
+      const json = await resp.json().catch(() => ({}))
+      if (resp.ok) {
+        setResult({ ok: true, json })
+      } else {
+        setResult({ ok: false, status: resp.status, error: json?.message || 'Request failed', reason: json?.reason })
+      }
     } catch (err) {
       setResult({ ok: false, error: err?.message || String(err) })
     } finally {
@@ -117,7 +120,12 @@ export default function Notifications() {
           </div>
         )}
         {result && !result.ok && (
-          <div className="p-3 rounded bg-red-50 border border-red-200 text-red-800">Error: {result.error}</div>
+          <div className="p-3 rounded bg-red-50 border border-red-200 text-red-800">
+            <div>Error: {result.error}{result.status ? ` (HTTP ${result.status})` : ''}</div>
+            {result.reason && (
+              <div className="mt-1 text-xs text-gray-700">Reason: {String(result.reason)}</div>
+            )}
+          </div>
         )}
       </div>
     </div>

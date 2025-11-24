@@ -366,6 +366,17 @@ app.get('/matches', async (req, res) => {
 
     const scanResult = await docClient.send(new ScanCommand(scanParams));
 
+    const origin = (process.env.PUBLIC_BASE_URL && String(process.env.PUBLIC_BASE_URL).trim()) || `${req.protocol}://${req.get('host')}`;
+    const toAbsolute = (u) => {
+      if (!u || typeof u !== 'string') return null;
+      const s = u.trim();
+      if (!s) return null;
+      if (/^https?:\/\//i.test(s)) return s;
+      if (s.startsWith('/')) return `${origin}${s}`;
+      return null;
+    };
+    const normalizeList = (list) => Array.isArray(list) ? list.map(toAbsolute).filter(Boolean) : [];
+
     const matches = scanResult.Items.map(item => ({
       userId: item?.userId,
       email: item?.email,
@@ -378,7 +389,7 @@ app.get('/matches', async (req, res) => {
       type: item.type,
       jobTitle: item.jobTitle,
       workPlace: item.workPlace,
-      imageUrls: item.imageUrls || [],
+      imageUrls: normalizeList(item.imageUrls),
       prompts: item?.prompts || [],
     }));
 
@@ -959,6 +970,17 @@ app.get('/received-likes/:userId', authenticateToken, async (req, res) => {
 
     const receivedLikes = data?.Item?.receivedLikes || [];
 
+    const origin = (process.env.PUBLIC_BASE_URL && String(process.env.PUBLIC_BASE_URL).trim()) || `${req.protocol}://${req.get('host')}`;
+    const toAbsolute = (u) => {
+      if (!u || typeof u !== 'string') return null;
+      const s = u.trim();
+      if (!s) return null;
+      if (/^https?:\/\//i.test(s)) return s;
+      if (s.startsWith('/')) return `${origin}${s}`;
+      return null;
+    };
+    const normalizeList = (list) => Array.isArray(list) ? list.map(toAbsolute).filter(Boolean) : [];
+
     const enrichedLikes = await Promise.all(
       receivedLikes.map(async like => {
         const userParams = {
@@ -974,7 +996,7 @@ app.get('/received-likes/:userId', authenticateToken, async (req, res) => {
           ? {
               userId: userData.Item.userId,
               firstName: userData.Item.firstName,
-              imageUrls: userData.Item.imageUrls || null,
+              imageUrls: normalizeList(userData.Item.imageUrls),
               prompts: userData.Item.prompts,
             }
           : {userId: like.userId, firstName: null, imageUrl: null};

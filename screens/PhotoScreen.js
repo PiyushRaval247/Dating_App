@@ -189,7 +189,7 @@ const PhotoScreen = () => {
         quality: 0.7,
         maxWidth: 1000,
         maxHeight: 1000,
-        includeBase64: false,
+        includeBase64: true,
         saveToPhotos: false,
       };
 
@@ -215,9 +215,11 @@ const PhotoScreen = () => {
         }
 
         if (response.assets && response.assets[0]) {
-          const imageUri = response.assets[0].uri;
-          console.log('Selected image URI:', imageUri);
-          addImageToSlot(imageUri);
+          const a = response.assets[0];
+          const mime = a.type || 'image/jpeg';
+          const base64 = a.base64;
+          const dataUrl = base64 ? `data:${mime};base64,${base64}` : a.uri;
+          addImageToSlot(dataUrl);
         } else {
           Alert.alert('No Photo Taken', 'Please take a photo or use the URL option.');
         }
@@ -260,7 +262,7 @@ const PhotoScreen = () => {
         quality: 0.7,
         maxWidth: 1000,
         maxHeight: 1000,
-        includeBase64: false,
+        includeBase64: true,
         selectionLimit: 1,
       };
 
@@ -286,9 +288,11 @@ const PhotoScreen = () => {
         }
 
         if (response.assets && response.assets[0]) {
-          const imageUri = response.assets[0].uri;
-          console.log('Selected image URI:', imageUri);
-          addImageToSlot(imageUri);
+          const a = response.assets[0];
+          const mime = a.type || 'image/jpeg';
+          const base64 = a.base64;
+          const dataUrl = base64 ? `data:${mime};base64,${base64}` : a.uri;
+          addImageToSlot(dataUrl);
         } else {
           Alert.alert('No Image Selected', 'Please select an image or use the URL option.');
         }
